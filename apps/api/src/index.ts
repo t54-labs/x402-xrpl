@@ -395,6 +395,8 @@ app.post("/verify", async (req, res) => {
     const discoveredUrls = new Set<string>();
     let discoveryChecked = false;
     let discoveryFound = 0;
+    let discoveredMerchantName: string | null = null;
+    let discoveredMerchantDescription: string | null = null;
 
     try {
       const discoveryResp = await axios.get(`${origin}/.well-known/x402`, {
@@ -403,13 +405,27 @@ app.post("/verify", async (req, res) => {
       });
       if (discoveryResp.status === 200) {
         discoveryChecked = true;
-        const resources = Array.isArray(discoveryResp.data?.resources) ? discoveryResp.data.resources : [];
+        const discoveryData = discoveryResp.data;
+
+        if (typeof discoveryData?.name === "string") discoveredMerchantName = discoveryData.name;
+        if (typeof discoveryData?.description === "string") discoveredMerchantDescription = discoveryData.description;
+
+        const resources = Array.isArray(discoveryData?.resources) ? discoveryData.resources : [];
         for (const entry of resources) {
-          if (typeof entry !== "string") continue;
-          try {
-            const normalized = new URL(entry.replace(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+/i, "").trim(), origin);
-            if (normalized.protocol === "http:" || normalized.protocol === "https:") discoveredUrls.add(normalized.toString());
-          } catch { /* skip */ }
+          if (typeof entry === "string") {
+            try {
+              const normalized = new URL(entry.replace(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+/i, "").trim(), origin);
+              if (normalized.protocol === "http:" || normalized.protocol === "https:") discoveredUrls.add(normalized.toString());
+            } catch { /* skip */ }
+          } else if (entry && typeof entry === "object") {
+            const resUrl = entry.url || entry.id || entry.resource;
+            if (typeof resUrl === "string") {
+              try {
+                const normalized = new URL(resUrl.replace(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+/i, "").trim(), origin);
+                if (normalized.protocol === "http:" || normalized.protocol === "https:") discoveredUrls.add(normalized.toString());
+              } catch { /* skip */ }
+            }
+          }
         }
         discoveryFound = discoveredUrls.size;
       }
@@ -437,10 +453,14 @@ app.post("/verify", async (req, res) => {
         });
         if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
 
+        const merchantUpdate: Record<string, string> = { website: origin };
+        if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
+        if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
+
         await prisma.merchant.upsert({
           where: { address: xrplReq.payTo },
-          update: { website: origin },
-          create: { address: xrplReq.payTo, website: origin },
+          update: merchantUpdate,
+          create: { address: xrplReq.payTo, ...merchantUpdate },
         });
         const resource = await prisma.resource.upsert({
           where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
