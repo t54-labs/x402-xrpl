@@ -10,6 +10,17 @@ interface PageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
+type TxRow = {
+  hash: string;
+  timestamp: Date;
+  buyerAddress: string;
+  merchantAddr: string;
+  amount: string;
+  asset: string;
+  merchant?: { name: string | null } | null;
+  resource?: { url: string; name: string | null } | null;
+};
+
 export default async function AddressPage({ params, searchParams }: PageProps) {
   const { address } = await params;
   const { page: pageStr } = await searchParams;
@@ -63,7 +74,7 @@ async function MerchantView({
   merchant: NonNullable<Awaited<ReturnType<typeof prisma.merchant.findUnique>> & {
     resources: Awaited<ReturnType<typeof prisma.resource.findMany>>;
   }>;
-  transactions: any[];
+  transactions: TxRow[];
   totalTxCount: number;
   page: number;
   pageSize: number;
@@ -260,16 +271,7 @@ function TxTable({
   totalPages,
   basePath,
 }: {
-  transactions: Array<{
-    hash: string;
-    timestamp: Date;
-    buyerAddress: string;
-    merchantAddr: string;
-    amount: string;
-    asset: string;
-    merchant?: { name: string | null } | null;
-    resource?: { url: string; name: string | null } | null;
-  }>;
+  transactions: TxRow[];
   perspective: "merchant" | "buyer";
   page: number;
   totalPages: number;

@@ -36,17 +36,27 @@ export default function RootLayout({
           <AutoRefresh />
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2.5 shrink-0">
-                <div className="w-9 h-9 rounded-full bg-[#4b9cf5] flex items-center justify-center shrink-0 shadow-lg shadow-[#4b9cf5]/25">
-                  <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14.5 10C13 10 11.5 10.5 11.5 12.5V15C11.5 16 11 17 9.5 18C11 19 11.5 20 11.5 21V23.5C11.5 25.5 13 26 14.5 26" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M21.5 10C23 10 24.5 10.5 24.5 12.5V15C24.5 16 25 17 26.5 18C25 19 24.5 20 24.5 21V23.5C24.5 25.5 23 26 21.5 26" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <line x1="15" y1="13" x2="21" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                    <line x1="21" y1="13" x2="15" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
+              <Link href="/" className="flex items-center gap-2 shrink-0">
+                <svg
+                  width="42"
+                  height="42"
+                  viewBox="0 0 128 128"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-label="x402 logo"
+                  className="shrink-0"
+                >
+                  <rect width="128" height="128" fill="#020848" />
+                  <circle cx="64" cy="64" r="49" fill="#2AAEFF" />
+                  <g stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M50 43C45 43 42 46 42 50V58C42 61 40 64 35 66C40 68 42 71 42 74V82C42 86 45 89 50 89" />
+                    <path d="M78 43C83 43 86 46 86 50V58C86 61 88 64 93 66C88 68 86 71 86 74V82C86 86 83 89 78 89" />
+                    <path d="M56 53L72 77" />
+                    <path d="M72 53L56 77" />
+                  </g>
+                </svg>
                 <span className="text-xl font-semibold tracking-tight text-white">
-                  x402<span className="text-[#4b9cf5] font-light">scan</span>
+                  AI
                 </span>
               </Link>
               

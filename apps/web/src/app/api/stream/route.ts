@@ -22,7 +22,7 @@ export async function GET() {
             lastId = latestTx.hash;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ hash: lastId })}\n\n`));
           }
-        } catch (e) {
+        } catch {
           // Ignore polling errors
         }
       };
