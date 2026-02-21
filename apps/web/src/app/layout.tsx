@@ -4,6 +4,7 @@ import Link from "next/link";
 import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
 import { AutoRefresh } from "./components/AutoRefresh";
+import { NavLinks } from "./components/NavLinks";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,13 +60,7 @@ export default function RootLayout({
                 </span>
               </Link>
               
-              <div className="hidden md:flex items-center gap-5 text-sm font-medium">
-                <Link href="/" className="text-gray-400 hover:text-white transition-colors">Dashboard</Link>
-                <Link href="/transactions" className="text-gray-400 hover:text-white transition-colors">Transactions</Link>
-                <Link href="/merchants" className="text-gray-400 hover:text-white transition-colors">Merchants</Link>
-                <Link href="/agora" className="text-gray-400 hover:text-white transition-colors">Agora</Link>
-                <Link href="/resources/register" className="text-gray-400 hover:text-white transition-colors">Register</Link>
-              </div>
+              <NavLinks />
             </div>
 
             <div className="flex items-center gap-3">
