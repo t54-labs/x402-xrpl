@@ -11,14 +11,33 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ── In-memory cache ─────────────────────────────────────────
+const cache = new Map<string, { data: unknown; expiresAt: number }>();
+
+function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry || Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCache(key: string, data: unknown, ttlMs: number) {
+  cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
 // ── Health ──────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// ── Stats ───────────────────────────────────────────────────
+// ── Stats (cached 10s) ──────────────────────────────────────
 app.get("/stats", async (_req, res) => {
   try {
+    const cached = getCached("stats");
+    if (cached) return res.json(cached);
+
     const [totalTransactions, totalMerchants, totalResources, indexerState] = await Promise.all([
       prisma.transaction.count(),
       prisma.merchant.count(),
@@ -30,23 +49,28 @@ app.get("/stats", async (_req, res) => {
       `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
     );
 
-    res.json({
+    const data = {
       totalTransactions,
       totalMerchants,
       totalResources,
       totalVolumeXrp: parseFloat(volumeResult[0]?.total || "0"),
       lastLedgerIndex: indexerState?.lastLedgerIndex ?? 0,
       updatedAt: indexerState?.updatedAt ?? null,
-    });
+    };
+    setCache("stats", data, 10_000);
+    res.json(data);
   } catch (err) {
     console.error("GET /stats error:", err);
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 
-// ── Dashboard (combined stats + recent data) ────────────────
+// ── Dashboard (cached 10s) ───────────────────────────────────
 app.get("/dashboard", async (_req, res) => {
   try {
+    const cached = getCached("dashboard");
+    if (cached) return res.json(cached);
+
     const [totalTransactions, totalMerchants, totalResources, recentTransactions, recentResources] = await Promise.all([
       prisma.transaction.count(),
       prisma.merchant.count(),
@@ -87,7 +111,7 @@ app.get("/dashboard", async (_req, res) => {
       volume: parseFloat(String(m.volume)),
     }));
 
-    res.json({
+    const data = {
       totalTransactions,
       totalMerchants,
       totalResources,
@@ -95,7 +119,9 @@ app.get("/dashboard", async (_req, res) => {
       recentTransactions,
       recentResources,
       topMerchants,
-    });
+    };
+    setCache("dashboard", data, 10_000);
+    res.json(data);
   } catch (err) {
     console.error("GET /dashboard error:", err);
     res.status(500).json({ error: "Failed to fetch dashboard" });
