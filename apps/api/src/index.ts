@@ -461,58 +461,67 @@ app.post("/verify", async (req, res) => {
       discoveredUrls.add(parsedInput.toString());
     }
 
+    async function verifyAndRegister(resourceUrl: string) {
+      const response = await axios.get(resourceUrl, {
+        timeout: 7000,
+        validateStatus: (status: number) => status === 402 || status === 200,
+      });
+      if (response.status !== 402) throw new Error(`Returned ${response.status}, not 402`);
+      const headerVal = response.headers["payment-required"];
+      if (!headerVal) throw new Error("Missing PAYMENT-REQUIRED header");
+      const decoded = JSON.parse(Buffer.from(headerVal, "base64").toString("utf-8"));
+      const reqs = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.accepts) ? decoded.accepts : [];
+      const xrplReq = reqs.find((r: any) => {
+        const n = String(r?.network || "").toLowerCase();
+        return n === "xrpl" || n.startsWith("xrpl:") || n === "testnet";
+      });
+      if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
+
+      const rawAmount = String(xrplReq.amount ?? "0");
+      const asset = xrplReq.asset || "XRP";
+      let priceAmount = rawAmount;
+      if (asset === "XRP" && /^\d+$/.test(rawAmount)) {
+        priceAmount = (Number(rawAmount) / 1_000_000).toString();
+      }
+
+      const resDescription = decoded?.resource?.description;
+      const resourceName = typeof resDescription === "string" && resDescription
+        ? resDescription
+        : (typeof decoded?.description === "string" ? decoded.description : null);
+
+      const merchantUpdate: Record<string, string> = { website: origin };
+      if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
+      if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
+
+      await prisma.merchant.upsert({
+        where: { address: xrplReq.payTo },
+        update: merchantUpdate,
+        create: { address: xrplReq.payTo, ...merchantUpdate },
+      });
+      return prisma.resource.upsert({
+        where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
+        update: { priceAmount, priceAsset: asset, isActive: true, ...(resourceName ? { name: resourceName } : {}) },
+        create: {
+          merchantAddr: xrplReq.payTo, url: resourceUrl,
+          priceAmount, priceAsset: asset,
+          schema: "x402", network: xrplReq.network || "xrpl",
+          name: resourceName || "Registered Resource",
+        },
+      });
+    }
+
+    const results = await Promise.allSettled(
+      [...discoveredUrls].map((url) => verifyAndRegister(url))
+    );
+
     const registered = [];
-    for (const resourceUrl of discoveredUrls) {
-      try {
-        const response = await axios.get(resourceUrl, {
-          timeout: 7000,
-          validateStatus: (status: number) => status === 402 || status === 200,
-        });
-        if (response.status !== 402) throw new Error(`Returned ${response.status}, not 402`);
-        const headerVal = response.headers["payment-required"];
-        if (!headerVal) throw new Error("Missing PAYMENT-REQUIRED header");
-        const decoded = JSON.parse(Buffer.from(headerVal, "base64").toString("utf-8"));
-        const reqs = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.accepts) ? decoded.accepts : [];
-        const xrplReq = reqs.find((r: any) => {
-          const n = String(r?.network || "").toLowerCase();
-          return n === "xrpl" || n.startsWith("xrpl:") || n === "testnet";
-        });
-        if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
-
-        const rawAmount = String(xrplReq.amount ?? "0");
-        const asset = xrplReq.asset || "XRP";
-        let priceAmount = rawAmount;
-        if (asset === "XRP" && /^\d+$/.test(rawAmount)) {
-          priceAmount = (Number(rawAmount) / 1_000_000).toString();
-        }
-
-        const resDescription = decoded?.resource?.description;
-        const resourceName = typeof resDescription === "string" && resDescription
-          ? resDescription
-          : (typeof decoded?.description === "string" ? decoded.description : null);
-
-        const merchantUpdate: Record<string, string> = { website: origin };
-        if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
-        if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
-
-        await prisma.merchant.upsert({
-          where: { address: xrplReq.payTo },
-          update: merchantUpdate,
-          create: { address: xrplReq.payTo, ...merchantUpdate },
-        });
-        const resource = await prisma.resource.upsert({
-          where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
-          update: { priceAmount, priceAsset: asset, isActive: true, ...(resourceName ? { name: resourceName } : {}) },
-          create: {
-            merchantAddr: xrplReq.payTo, url: resourceUrl,
-            priceAmount, priceAsset: asset,
-            schema: "x402", network: xrplReq.network || "xrpl",
-            name: resourceName || "Registered Resource",
-          },
-        });
-        registered.push(resource);
-      } catch (error: unknown) {
-        failed.push({ url: resourceUrl, error: error instanceof Error ? error.message : "Unknown error" });
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      const url = [...discoveredUrls][i];
+      if (result.status === "fulfilled") {
+        registered.push(result.value);
+      } else {
+        failed.push({ url, error: result.reason instanceof Error ? result.reason.message : "Unknown error" });
       }
     }
 
