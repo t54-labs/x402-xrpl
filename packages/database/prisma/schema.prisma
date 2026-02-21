@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// CORE XRPL TRACKING
+// -----------------------------------------------------------------------------
+
+// Track the highest ledger indexed to resume syncing after restarts
+model IndexerState {
+  id              String   @id @default("default")
+  lastLedgerIndex Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+// -----------------------------------------------------------------------------
+// X402 ECOSYSTEM
+// -----------------------------------------------------------------------------
+
+// A Merchant (or API Provider) receiving x402 payments on XRPL
+model Merchant {
+  address      String     @id // The XRPL address (e.g. r...)
+  name         String?    // Optional human-readable name
+  description  String?
+  website      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  resources    Resource[]
+  transactions Transaction[]
+}
+
+// A specific API endpoint or service listed on the x402scan bazaar
+model Resource {
+  id           String     @id @default(uuid())
+  merchantAddr String
+  merchant     Merchant   @relation(fields: [merchantAddr], references: [address])
+  
+  url          String     // e.g., https://api.example.com/v1/generate
+  name         String?
+  description  String?
+  
+  // Pricing details parsed from the 402 Payment Required response
+  priceAmount  String     // String to handle large numbers/precision
+  priceAsset   String     // e.g., "XRP" or a specific Issued Token currency code
+  
+  schema       String?    // e.g., "x402"
+  network      String?    @default("xrpl")
+  
+  // Registration and discovery
+  isDiscovered Boolean    @default(false) // True if found via .well-known/x402
+  isActive     Boolean    @default(true)
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  transactions Transaction[]
+
+  @@unique([merchantAddr, url])
+}
+
+// An actual x402 payment that occurred on the XRPL
+model Transaction {
+  hash         String     @id // The XRPL transaction hash
+  ledgerIndex  Int
+  timestamp    DateTime
+  
+  buyerAddress String     // The sender of the payment
+  
+  merchantAddr String
+  merchant     Merchant   @relation(fields: [merchantAddr], references: [address])
+  
+  resourceId   String?
+  resource     Resource?  @relation(fields: [resourceId], references: [id])
+  
+  amount       String     // Amount paid
+  asset        String     // XRP or token code
+  
+  // Optional: If a specific facilitator verified this
+  facilitator  String?
+  
+  // We can store the raw memo data if needed for debugging
+  rawMemo      String?
+  
+  createdAt    DateTime   @default(now())
+
+  @@index([buyerAddress])
+  @@index([merchantAddr])
+  @@index([timestamp])
+}
