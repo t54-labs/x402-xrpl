@@ -9,13 +9,14 @@ dotenv.config();
 
 const XRPL_WSS = process.env.XRPL_WSS || "wss://s.altnet.rippletest.net:51233";
 const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "4000", 10);
+const FLUSH_INTERVAL_MS = 500;
+const QUEUE_WARN_SIZE = 10_000;
 
 let indexerHealthy = false;
 let lastLedger = 0;
 
-// In-memory cache of known x402 facilitator source tags.
-// Loaded from the database on startup and refreshed periodically.
-let knownSourceTags = new Map<number, string>(); // sourceTag → facilitator name
+// ── Facilitator tag cache ───────────────────────────────────
+let knownSourceTags = new Map<number, string>();
 
 async function loadFacilitatorTags() {
   const tags = await prisma.facilitatorTag.findMany({ where: { isActive: true } });
@@ -25,6 +26,7 @@ async function loadFacilitatorTags() {
   console.log(`Loaded ${fresh.size} facilitator tag(s): ${[...fresh.entries()].map(([k, v]) => `${k} (${v})`).join(", ") || "none"}`);
 }
 
+// ── Helpers ─────────────────────────────────────────────────
 function getTxResult(txStream: any, tx: any): string | undefined {
   return txStream?.meta?.TransactionResult
     || tx?.meta?.TransactionResult
@@ -50,17 +52,80 @@ function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
   return Number.isFinite(start) && start > 0 ? start : null;
 }
 
-// -------------------------------------------------------------
-// Core Transaction Processing Logic
-//
-// Detection: A Payment is an x402 payment if its SourceTag
-// matches a known facilitator tag in our FacilitatorTag table.
-//
-// Per the XRPL x402 Exact Scheme, the facilitator embeds a
-// fixed SourceTag (e.g. 804681468) into every settlement tx.
-// This is the on-chain fingerprint for x402 payments on XRPL.
-// -------------------------------------------------------------
-async function processTransaction(txStream: any, tx: any) {
+// ── Write queue types ───────────────────────────────────────
+type QueuedTx = {
+  hash: string;
+  ledgerIndex: number;
+  timestamp: Date;
+  buyerAddress: string;
+  merchantAddr: string;
+  amount: string;
+  asset: string;
+  assetIssuer: string | null;
+  facilitator: string;
+  sourceTag: number;
+  destinationTag: number | null;
+  invoiceId: string | null;
+  rawMemo: string | null;
+};
+
+// ── Write queue ─────────────────────────────────────────────
+const writeQueue: QueuedTx[] = [];
+let highestQueuedLedger = 0;
+let flushing = false;
+
+async function flushQueue() {
+  if (flushing || writeQueue.length === 0) return;
+  flushing = true;
+
+  const batch = writeQueue.splice(0);
+  const batchLedger = highestQueuedLedger;
+
+  const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
+
+  try {
+    await prisma.$transaction([
+      prisma.merchant.createMany({
+        data: uniqueMerchants.map((addr) => ({ address: addr })),
+        skipDuplicates: true,
+      }),
+      prisma.transaction.createMany({
+        data: batch.map((tx) => ({
+          hash: tx.hash,
+          ledgerIndex: tx.ledgerIndex,
+          timestamp: tx.timestamp,
+          buyerAddress: tx.buyerAddress,
+          merchantAddr: tx.merchantAddr,
+          amount: tx.amount,
+          asset: tx.asset,
+          assetIssuer: tx.assetIssuer,
+          facilitator: tx.facilitator,
+          sourceTag: tx.sourceTag,
+          destinationTag: tx.destinationTag,
+          invoiceId: tx.invoiceId,
+          rawMemo: tx.rawMemo,
+        })),
+        skipDuplicates: true,
+      }),
+      prisma.indexerState.upsert({
+        where: { id: "default" },
+        update: { lastLedgerIndex: batchLedger },
+        create: { id: "default", lastLedgerIndex: batchLedger },
+      }),
+    ]);
+
+    lastLedger = batchLedger;
+    console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+  } catch (err) {
+    console.error(`❌ Flush failed (${batch.length} txs):`, err);
+    writeQueue.unshift(...batch);
+  } finally {
+    flushing = false;
+  }
+}
+
+// ── Transaction detection (no DB calls, pushes to queue) ────
+function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
 
   const txResult = getTxResult(txStream, tx);
@@ -74,8 +139,6 @@ async function processTransaction(txStream: any, tx: any) {
 
   const receiver = tx.Destination;
   if (!receiver || typeof receiver !== "string") return;
-
-  console.log(`🚨 x402 payment detected (facilitator: ${facilitatorName})! Hash: ${tx.hash}`);
 
   let amountPaid: string;
   if (typeof tx.Amount === "string") {
@@ -92,53 +155,43 @@ async function processTransaction(txStream: any, tx: any) {
   const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
   const invoiceId = tx.InvoiceID || null;
   const rawMemo = decodeMemoData(tx);
+  const ledgerIndex = txStream.ledger_index ?? 0;
 
-  try {
-    await prisma.merchant.upsert({
-      where: { address: receiver },
-      update: {},
-      create: { address: receiver },
-    });
+  writeQueue.push({
+    hash: tx.hash,
+    ledgerIndex,
+    timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
+    buyerAddress: tx.Account,
+    merchantAddr: receiver,
+    amount: amountPaid,
+    asset,
+    assetIssuer,
+    facilitator: facilitatorName,
+    sourceTag,
+    destinationTag,
+    invoiceId,
+    rawMemo: rawMemo || null,
+  });
 
-    await prisma.transaction.upsert({
-      where: { hash: tx.hash },
-      update: {},
-      create: {
-        hash: tx.hash,
-        ledgerIndex: txStream.ledger_index,
-        timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
-        buyerAddress: tx.Account,
-        merchantAddr: receiver,
-        amount: amountPaid,
-        asset,
-        assetIssuer,
-        facilitator: facilitatorName,
-        sourceTag,
-        destinationTag,
-        invoiceId,
-        rawMemo: rawMemo || null,
-      },
-    });
-    console.log(`✅ Saved x402 transaction ${tx.hash}`);
-  } catch (err) {
-    console.error(`❌ Failed to persist transaction ${tx.hash}:`, err);
+  if (ledgerIndex > highestQueuedLedger) {
+    highestQueuedLedger = ledgerIndex;
+  }
+
+  if (writeQueue.length >= QUEUE_WARN_SIZE) {
+    console.warn(`⚠️  Write queue size: ${writeQueue.length} — DB may be slow`);
   }
 }
 
-// -------------------------------------------------------------
-// Backfill Logic
-// -------------------------------------------------------------
+// ── Backfill ────────────────────────────────────────────────
 async function backfillLedgers(
   client: Client,
   currentLiveIndex: number,
   earliestAvailableLedger: number | null
 ) {
-  // Try to find the existing state
   let state = await prisma.indexerState.findUnique({
     where: { id: "default" }
   });
 
-  // If none exists, this is a fresh db. Choose a sensible starting point.
   if (!state) {
     const configuredStartRaw = process.env.BACKFILL_START_LEDGER;
     const configuredStart = configuredStartRaw ? parseInt(configuredStartRaw, 10) : NaN;
@@ -183,34 +236,28 @@ async function backfillLedgers(
       const ledger = response.result.ledger;
       if (ledger.transactions) {
         for (const tx of ledger.transactions as any[]) {
-          const txStreamWrapper = {
-            ledger_index: i,
-            date: ledger.close_time
-          };
-          await processTransaction(txStreamWrapper, tx);
+          const txStreamWrapper = { ledger_index: i, date: ledger.close_time };
+          processTransaction(txStreamWrapper, tx);
         }
       }
 
       if (i % 10 === 0 || i === currentLiveIndex) {
-        await prisma.indexerState.update({
-          where: { id: "default" },
-          data: { lastLedgerIndex: i }
-        });
+        highestQueuedLedger = Math.max(highestQueuedLedger, i);
+        await flushQueue();
         console.log(`[Backfill] Processed up to ledger ${i}`);
       }
 
     } catch (err) {
       console.error(`❌ Failed to fetch ledger ${i}:`, err);
-      break; 
+      break;
     }
   }
 
+  await flushQueue();
   console.log(`✅ Backfill complete.`);
 }
 
-// -------------------------------------------------------------
-// Main Loop
-// -------------------------------------------------------------
+// ── Main ────────────────────────────────────────────────────
 async function startIndexer() {
   console.log(`Starting x402 XRPL Indexer on ${XRPL_WSS}...`);
 
@@ -221,7 +268,7 @@ async function startIndexer() {
   }
 
   const client = new Client(XRPL_WSS);
-  
+
   client.on("error", (error) => {
     console.error("XRPL Client Error:", error);
   });
@@ -248,32 +295,21 @@ async function startIndexer() {
 
   client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
-
-    void (async () => {
-      try {
-        await processTransaction(txStream, txStream.transaction);
-
-        lastLedger = txStream.ledger_index;
-        await prisma.indexerState.upsert({
-          where: { id: "default" },
-          update: { lastLedgerIndex: txStream.ledger_index },
-          create: { id: "default", lastLedgerIndex: txStream.ledger_index }
-        });
-      } catch (err) {
-        console.error("❌ Failed processing live transaction:", err);
-      }
-    })();
+    processTransaction(txStream, txStream.transaction);
   });
+
+  // Flush the write queue every 500ms
+  setInterval(() => { flushQueue().catch(console.error); }, FLUSH_INTERVAL_MS);
 
   indexerHealthy = true;
 
-  // Refresh facilitator tags and run auto-discovery every hour
   cron.schedule("0 * * * *", () => {
     loadFacilitatorTags().catch(console.error);
     runAutoDiscoverySync().catch(console.error);
   });
 }
 
+// ── Health check ────────────────────────────────────────────
 function startHealthServer() {
   const server = createServer(async (_req, res) => {
     if (_req.url === "/health") {
@@ -282,6 +318,7 @@ function startHealthServer() {
       res.end(JSON.stringify({
         status: indexerHealthy ? "healthy" : "starting",
         lastLedgerIndex: state?.lastLedgerIndex ?? lastLedger,
+        queueSize: writeQueue.length,
         updatedAt: state?.updatedAt ?? null,
         xrplNode: XRPL_WSS,
       }));
