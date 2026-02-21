@@ -63,9 +63,29 @@ app.get("/dashboard", async (_req, res) => {
       }),
     ]);
 
-    const volumeResult = await prisma.$queryRawUnsafe<[{ total: string }]>(
-      `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
-    );
+    const [volumeResult, topMerchantsRaw] = await Promise.all([
+      prisma.$queryRawUnsafe<[{ total: string }]>(
+        `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
+      ),
+      prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: bigint; volume: string }>>(
+        `SELECT "merchantAddr", COUNT(*) as tx_count,
+         COALESCE(SUM(CASE WHEN asset = 'XRP' THEN CAST(amount AS DOUBLE PRECISION) ELSE 0 END), 0) as volume
+         FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`
+      ),
+    ]);
+
+    const merchantAddrs = topMerchantsRaw.map((m) => m.merchantAddr);
+    const merchantDetails = merchantAddrs.length > 0
+      ? await prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } })
+      : [];
+    const nameMap = new Map(merchantDetails.map((m) => [m.address, m.name]));
+
+    const topMerchants = topMerchantsRaw.map((m) => ({
+      address: m.merchantAddr,
+      name: nameMap.get(m.merchantAddr) || null,
+      txCount: Number(m.tx_count),
+      volume: parseFloat(String(m.volume)),
+    }));
 
     res.json({
       totalTransactions,
@@ -74,6 +94,7 @@ app.get("/dashboard", async (_req, res) => {
       totalVolumeXrp: parseFloat(volumeResult[0]?.total || "0"),
       recentTransactions,
       recentResources,
+      topMerchants,
     });
   } catch (err) {
     console.error("GET /dashboard error:", err);
