@@ -322,6 +322,129 @@ app.get("/search", async (req, res) => {
   }
 });
 
+// ── SSE Stream (live transaction updates) ───────────────────
+app.get("/stream", (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+  });
+
+  let lastId = "";
+  const checkNewTx = async () => {
+    try {
+      const latestTx = await prisma.transaction.findFirst({
+        orderBy: { createdAt: "desc" },
+        select: { hash: true },
+      });
+      if (latestTx && latestTx.hash !== lastId) {
+        lastId = latestTx.hash;
+        res.write(`data: ${JSON.stringify({ hash: lastId })}\n\n`);
+      }
+    } catch {
+      /* ignore polling errors */
+    }
+  };
+
+  checkNewTx();
+  const interval = setInterval(checkNewTx, 3000);
+  req.on("close", () => clearInterval(interval));
+});
+
+// ── Verify / Register ───────────────────────────────────────
+app.post("/verify", async (req, res) => {
+  try {
+    const { default: axios } = await import("axios");
+    const { url } = req.body;
+
+    if (!url || typeof url !== "string") {
+      return res.status(400).json({ error: "URL is required" });
+    }
+
+    let parsedInput: URL;
+    try { parsedInput = new URL(url); } catch {
+      return res.status(400).json({ error: "Invalid URL format" });
+    }
+    if (parsedInput.protocol !== "http:" && parsedInput.protocol !== "https:") {
+      return res.status(400).json({ error: "Only http/https URLs are supported" });
+    }
+    const origin = parsedInput.origin;
+
+    const failed: Array<{ url: string; error: string }> = [];
+    const discoveredUrls = new Set<string>();
+    let discoveryChecked = false;
+    let discoveryFound = 0;
+
+    try {
+      const discoveryResp = await axios.get(`${origin}/.well-known/x402`, {
+        timeout: 5000,
+        validateStatus: (status: number) => status === 200 || status === 404,
+      });
+      if (discoveryResp.status === 200) {
+        discoveryChecked = true;
+        const resources = Array.isArray(discoveryResp.data?.resources) ? discoveryResp.data.resources : [];
+        for (const entry of resources) {
+          if (typeof entry !== "string") continue;
+          try {
+            const normalized = new URL(entry.replace(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+/i, "").trim(), origin);
+            if (normalized.protocol === "http:" || normalized.protocol === "https:") discoveredUrls.add(normalized.toString());
+          } catch { /* skip */ }
+        }
+        discoveryFound = discoveredUrls.size;
+      }
+    } catch { /* continue */ }
+
+    if (discoveredUrls.size === 0 || parsedInput.pathname !== "/" || parsedInput.search) {
+      discoveredUrls.add(parsedInput.toString());
+    }
+
+    const registered = [];
+    for (const resourceUrl of discoveredUrls) {
+      try {
+        const response = await axios.get(resourceUrl, {
+          timeout: 7000,
+          validateStatus: (status: number) => status === 402 || status === 200,
+        });
+        if (response.status !== 402) throw new Error(`Returned ${response.status}, not 402`);
+        const headerVal = response.headers["payment-required"];
+        if (!headerVal) throw new Error("Missing PAYMENT-REQUIRED header");
+        const decoded = JSON.parse(Buffer.from(headerVal, "base64").toString("utf-8"));
+        const reqs = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.accepts) ? decoded.accepts : [];
+        const xrplReq = reqs.find((r: any) => {
+          const n = String(r?.network || "").toLowerCase();
+          return n === "xrpl" || n === "testnet";
+        });
+        if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
+
+        await prisma.merchant.upsert({
+          where: { address: xrplReq.payTo },
+          update: { website: origin },
+          create: { address: xrplReq.payTo, website: origin },
+        });
+        const resource = await prisma.resource.upsert({
+          where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
+          update: { priceAmount: String(xrplReq.amount ?? "0"), priceAsset: xrplReq.asset || "XRP", isActive: true },
+          create: {
+            merchantAddr: xrplReq.payTo, url: resourceUrl,
+            priceAmount: String(xrplReq.amount ?? "0"), priceAsset: xrplReq.asset || "XRP",
+            schema: "x402", network: xrplReq.network || "xrpl", name: "Registered Resource",
+          },
+        });
+        registered.push(resource);
+      } catch (error: unknown) {
+        failed.push({ url: resourceUrl, error: error instanceof Error ? error.message : "Unknown error" });
+      }
+    }
+
+    if (registered.length === 0) {
+      return res.status(400).json({ error: "Could not verify any x402 resources", discoveryChecked, failed });
+    }
+    res.json({ success: true, registeredCount: registered.length, discoveryChecked, discoveryFound, failed, resources: registered });
+  } catch {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`x402 API server listening on :${PORT}`);

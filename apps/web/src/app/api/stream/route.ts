@@ -1,44 +1,15 @@
-import { prisma } from "@x402-xrpl/database";
 import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+const API_URL = process.env.API_URL || "http://localhost:4001";
 
 export async function GET() {
-  const encoder = new TextEncoder();
-  let interval: NodeJS.Timeout | undefined;
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      let lastId = "";
-      
-      const checkNewTx = async () => {
-        try {
-          const latestTx = await prisma.transaction.findFirst({
-            orderBy: { createdAt: "desc" },
-            select: { hash: true }
-          });
-          
-          if (latestTx && latestTx.hash !== lastId) {
-            lastId = latestTx.hash;
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ hash: lastId })}\n\n`));
-          }
-        } catch {
-          // Ignore polling errors
-        }
-      };
-
-      // Initial check
-      await checkNewTx();
-      
-      // Poll every 3 seconds
-      interval = setInterval(checkNewTx, 3000);
-    },
-    cancel() {
-      if (interval) clearInterval(interval);
-    }
-  });
-
-  return new NextResponse(stream, {
+  const upstream = await fetch(`${API_URL}/stream`);
+  if (!upstream.body) {
+    return new NextResponse("Stream unavailable", { status: 502 });
+  }
+  return new NextResponse(upstream.body, {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
