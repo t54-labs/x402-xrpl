@@ -77,6 +77,41 @@ export default async function Home() {
       )}
 
       <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <h2 className="text-lg font-medium text-white">The Agora</h2>
+          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+            Browse All &rarr;
+          </Link>
+        </div>
+        
+        {registeredResources.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+            {registeredResources.map((res) => (
+              <Link href={`/address/${res.merchantAddr}`} key={res.id} className="block">
+                <div className="p-4 bg-[#181a1e] border border-white/5 rounded-lg hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all group h-full">
+                  <h3 className="font-medium text-gray-200 group-hover:text-white truncate">{res.name || "API Resource"}</h3>
+                  <p className="text-xs text-gray-500 mt-1 truncate font-mono">{res.url}</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-xs font-mono bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded-sm border border-cyan-400/20">
+                      {res.priceAmount} {formatCurrency(res.priceAsset)}
+                    </span>
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{res.network}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center text-center py-12 gap-3">
+            <p className="text-gray-500 text-sm">No resources registered yet.</p>
+            <Link href="/resources/register" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+              Register the first one &rarr;
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-white/5">
           <h2 className="text-lg font-medium text-white">Recent Transactions</h2>
           <Link href="/transactions" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
@@ -125,41 +160,6 @@ export default async function Home() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-white/5">
-          <h2 className="text-lg font-medium text-white">The Agora</h2>
-          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
-            Browse All &rarr;
-          </Link>
-        </div>
-        
-        {registeredResources.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-            {registeredResources.map((res) => (
-              <Link href={`/address/${res.merchantAddr}`} key={res.id} className="block">
-                <div className="p-4 bg-[#181a1e] border border-white/5 rounded-lg hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all group h-full">
-                  <h3 className="font-medium text-gray-200 group-hover:text-white truncate">{res.name || "API Resource"}</h3>
-                  <p className="text-xs text-gray-500 mt-1 truncate font-mono">{res.url}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs font-mono bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded-sm border border-cyan-400/20">
-                      {res.priceAmount} {formatCurrency(res.priceAsset)}
-                    </span>
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{res.network}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center text-center py-12 gap-3">
-            <p className="text-gray-500 text-sm">No resources registered yet.</p>
-            <Link href="/resources/register" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-              Register the first one &rarr;
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
