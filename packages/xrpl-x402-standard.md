@@ -1,48 +1,87 @@
-// xrpl-x402-standard.md
-# XRPL x402 Payment Standard Specification (Draft)
+# XRPL x402 Payment Detection Specification
 
 ## 1. Overview
-The x402 standard enables machine-to-machine HTTP payments. While EVM chains rely on ERC-3009 or smart contracts, the XRP Ledger (XRPL) is UTXO/Account based and does not support arbitrary smart contracts natively.
 
-To adapt x402 to the XRPL, we must define a standardized way to embed the HTTP 402 payment requirements (the "Receipt" or "Payload") into a standard XRPL `Payment` transaction.
+The x402 protocol enables machine-to-machine HTTP payments. On EVM chains, x402 payments are identified by `transferWithAuthorization` calls on ERC-3009 token contracts. On XRPL, there are no smart contracts — payments are native `Payment` transactions.
 
-## 2. Transaction Structure
+This document describes how x402scan detects x402 payments on the XRP Ledger, based on the [XRPL Exact Scheme](https://xrpl-x402.t54.ai/docs/xrpl-scheme) defined by the t54 XRPL Facilitator.
 
-When a Client receives an HTTP 402 Payment Required header, it constructs an XRPL transaction with the following properties:
+## 2. How x402 Payments Work on XRPL
 
-### 2.1 Core Fields
-- `TransactionType`: `"Payment"`
-- `Account`: The Buyer's XRPL address.
-- `Destination`: The Merchant/Server's XRPL address (as specified in the `payTo` field of the x402 payload).
-- `Amount`: The exact amount specified in the `amount` field, either in drops (for XRP) or as an Issued Currency object.
+The x402 flow on XRPL uses **presigned Payment transactions**:
 
-### 2.2 The Memos Field
-To prove what resource the payment is for, the client MUST include a `Memos` array with at least one Memo object structured as follows:
+1. Client requests a resource from a server.
+2. Server responds with HTTP 402 and a `PAYMENT-REQUIRED` header containing payment requirements (amount, asset, payTo address, invoiceId, sourceTag).
+3. Client signs an XRPL Payment transaction (without submitting it) and sends the signed blob back in the `PAYMENT-SIGNATURE` header.
+4. Server forwards the signed blob to a **facilitator** for verification and on-chain settlement.
+5. Facilitator submits the signed transaction to the XRP Ledger.
+6. Once confirmed, server delivers the resource.
 
-- `MemoType`: Hex encoded string of `"x402"` (i.e., `78343032`)
-- `MemoData`: Hex encoded JSON string containing the payment payload.
-  
-#### MemoData JSON Structure
-```json
-{
-  "res": "https://api.domain.com/v1/data", // The resource URL
-  "req": "b64_payment_requirement_string"  // Optional: A hash or signature to tie this to a specific request
-}
+## 3. On-Chain Transaction Structure
+
+When the facilitator submits the payment to XRPL, the on-chain transaction looks like:
+
+| Field | Value | Purpose |
+|---|---|---|
+| `TransactionType` | `"Payment"` | Standard XRPL payment |
+| `Account` | Buyer's address | Who is paying |
+| `Destination` | Merchant's address | Who receives payment |
+| `Amount` | Drops (XRP) or IOU object | How much is paid |
+| `SourceTag` | Facilitator tag (e.g. `804681468`) | **x402 identifier** |
+| `DestinationTag` | Optional | Merchant routing (if required) |
+| `InvoiceID` | SHA-256 of invoice ID | Replay protection |
+| `Memos[0].MemoData` | Hex-encoded invoice ID | Alternative invoice binding |
+
+## 4. Detection: The SourceTag Signal
+
+The **SourceTag** is the on-chain fingerprint for x402 payments on XRPL.
+
+Each x402 facilitator uses a fixed SourceTag value in every payment it settles. The t54 XRPL Facilitator uses `804681468`. Other facilitators would use different values.
+
+### Detection algorithm:
+
+```
+For every validated Payment transaction on XRPL:
+  1. Check: does it have a SourceTag?
+  2. Check: is that SourceTag in our FacilitatorTag registry?
+  3. If yes → this is an x402 payment. Record it.
+  4. If no  → skip. It's a regular payment.
 ```
 
-*Note: XRPL Memos are limited to 1KB. The `MemoData` must be kept extremely concise. If the `res` URL is too long, a hash of the URL or a short resource ID should be used instead.*
+### Known facilitator tags:
 
-## 3. Verification Flow (Facilitator / Merchant)
-When the Merchant or Facilitator verifies the payment:
-1. They monitor the XRPL for incoming `Payment` transactions to their `Destination` address.
-2. They decode the `Memos` array.
-3. If `MemoType === "x402"`, they parse `MemoData`.
-4. They match the `Amount`, `Asset`, and `res` (resource) against the pending HTTP request.
-5. If valid, they return the resource to the client.
+| SourceTag | Facilitator | URL |
+|---|---|---|
+| `804681468` | t54 XRPL Facilitator | https://xrpl-facilitator-mainnet.t54.ai |
 
-## 4. Indexer Flow (x402scan)
-The block explorer (x402scan) identifies ecosystem activity by:
-1. Connecting to the XRPL WebSocket.
-2. Filtering for all validated `Payment` transactions.
-3. Checking if `Memos` contains `MemoType: "x402"`.
-4. If yes, it decodes the `MemoData` to find the Resource URL and logs the transaction as an x402 event.
+## 5. Network Identifiers (CAIP-2)
+
+| Network | CAIP-2 ID |
+|---|---|
+| XRPL Mainnet | `xrpl:0` |
+| XRPL Testnet | `xrpl:1` |
+| XRPL Devnet | `xrpl:2` |
+
+## 6. Supported Assets
+
+| Asset | Amount Format | Example |
+|---|---|---|
+| XRP | Drops (string integer) | `"1000000"` = 1 XRP |
+| RLUSD / IOU | Decimal string + issuer | `"0.01"` with issuer address |
+
+## 7. Invoice Binding (Replay Protection)
+
+Every x402 payment must bind to an invoice to prevent replay attacks. Two methods:
+
+- **Method A (Memos):** `MemoData` = hex-encoded UTF-8 of the invoice ID
+- **Method B (InvoiceID):** `InvoiceID` = SHA-256 hash of the invoice ID
+
+The facilitator rejects transactions missing valid invoice binding.
+
+## 8. References
+
+- [XRPL x402 Facilitator](https://xrpl-x402.t54.ai/)
+- [XRPL Exact Scheme Spec](https://xrpl-x402.t54.ai/docs/xrpl-scheme)
+- [x402 Protocol (Coinbase)](https://github.com/coinbase/x402)
+- [XRPL Payment Transaction](https://xrpl.org/docs/references/protocol/transactions/types/payment)
+- [XRPL Source and Destination Tags](https://xrpl.org/docs/concepts/transactions/source-and-destination-tags)

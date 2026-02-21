@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,21 +11,31 @@ datasource db {
 // CORE XRPL TRACKING
 // -----------------------------------------------------------------------------
 
-// Track the highest ledger indexed to resume syncing after restarts
 model IndexerState {
   id              String   @id @default("default")
   lastLedgerIndex Int      @default(0)
   updatedAt       DateTime @updatedAt
 }
 
+// Known x402 facilitator source tags.
+// Any XRPL Payment with a SourceTag matching one of these is an x402 payment.
+model FacilitatorTag {
+  id        String   @id @default(uuid())
+  sourceTag Int      @unique
+  name      String
+  url       String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // -----------------------------------------------------------------------------
 // X402 ECOSYSTEM
 // -----------------------------------------------------------------------------
 
-// A Merchant (or API Provider) receiving x402 payments on XRPL
 model Merchant {
-  address      String     @id // The XRPL address (e.g. r...)
-  name         String?    // Optional human-readable name
+  address      String     @id // XRPL classic address (r...)
+  name         String?
   description  String?
   website      String?
   createdAt    DateTime   @default(now())
@@ -38,29 +45,22 @@ model Merchant {
   transactions Transaction[]
 }
 
-// A specific API endpoint or service listed on the x402scan bazaar
 model Resource {
   id           String     @id @default(uuid())
   merchantAddr String
   merchant     Merchant   @relation(fields: [merchantAddr], references: [address])
   
-  url          String     // e.g., https://api.example.com/v1/generate
+  url          String
   name         String?
   description  String?
   
-  // Pricing details parsed from the 402 Payment Required response
-  priceAmount  String     // String to handle large numbers/precision
-  priceAsset   String     // e.g., "XRP" or a specific Issued Token currency code
+  priceAmount  String
+  priceAsset   String
   
   schema       String?    // e.g., "x402"
   network      String?    @default("xrpl")
-
-  // Tag-based routing: maps an XRPL DestinationTag to this resource.
-  // Enables high-efficiency x402 payments without Memos.
-  tagId        Int?       // The DestinationTag value (uint32) that routes to this resource
   
-  // Registration and discovery
-  isDiscovered Boolean    @default(false) // True if found via .well-known/x402
+  isDiscovered Boolean    @default(false)
   isActive     Boolean    @default(true)
   
   createdAt    DateTime   @default(now())
@@ -69,16 +69,14 @@ model Resource {
   transactions Transaction[]
 
   @@unique([merchantAddr, url])
-  @@unique([merchantAddr, tagId])
 }
 
-// An actual x402 payment that occurred on the XRPL
 model Transaction {
-  hash         String     @id // The XRPL transaction hash
+  hash         String     @id // XRPL transaction hash
   ledgerIndex  Int
   timestamp    DateTime
   
-  buyerAddress String     // The sender of the payment
+  buyerAddress String
   
   merchantAddr String
   merchant     Merchant   @relation(fields: [merchantAddr], references: [address])
@@ -86,27 +84,22 @@ model Transaction {
   resourceId   String?
   resource     Resource?  @relation(fields: [resourceId], references: [id])
   
-  amount       String     // Amount paid
-  asset        String     // XRP or token code
-  assetIssuer  String?    // The issuer address of the token (null for XRP)
+  amount       String
+  asset        String     // "XRP" or currency code
+  assetIssuer  String?    // Issuer address for IOUs (null for XRP)
   
-  // Optional: If a specific facilitator verified this
-  facilitator  String?
+  facilitator  String?    // Name of the facilitator that settled this payment
 
-  // XRPL Specific Routing Tags
-  destinationTag Int?     // Destination tag used for sub-account or request routing
-  sourceTag      Int?     // Source tag used by sender
+  sourceTag      Int?     // x402 facilitator identifier (e.g. 804681468)
+  destinationTag Int?     // Optional routing tag
+  invoiceId      String?  // Invoice ID from the x402 payment (hex or plain)
   
-  // How this transaction was detected as x402
-  // "memo-type" = MemoType was "x402", "memo-data" = MemoData had {res}, "tag" = DestinationTag matched
-  detectedVia  String?
-
-  // We can store the raw memo data if needed for debugging
-  rawMemo      String?
+  rawMemo      String?    // Raw MemoData for debugging
   
   createdAt    DateTime   @default(now())
 
   @@index([buyerAddress])
   @@index([merchantAddr])
+  @@index([sourceTag])
   @@index([timestamp])
 }

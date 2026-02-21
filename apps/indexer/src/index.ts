@@ -4,7 +4,6 @@ import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
-import { identifyFacilitator } from "./facilitators";
 
 dotenv.config();
 
@@ -14,10 +13,33 @@ const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "4000", 10);
 let indexerHealthy = false;
 let lastLedger = 0;
 
+// In-memory cache of known x402 facilitator source tags.
+// Loaded from the database on startup and refreshed periodically.
+let knownSourceTags = new Map<number, string>(); // sourceTag → facilitator name
+
+async function loadFacilitatorTags() {
+  const tags = await prisma.facilitatorTag.findMany({ where: { isActive: true } });
+  const fresh = new Map<number, string>();
+  for (const t of tags) fresh.set(t.sourceTag, t.name);
+  knownSourceTags = fresh;
+  console.log(`Loaded ${fresh.size} facilitator tag(s): ${[...fresh.entries()].map(([k, v]) => `${k} (${v})`).join(", ") || "none"}`);
+}
+
 function getTxResult(txStream: any, tx: any): string | undefined {
   return txStream?.meta?.TransactionResult
     || tx?.meta?.TransactionResult
     || tx?.metaData?.TransactionResult;
+}
+
+function decodeMemoData(tx: any): string {
+  if (!tx.Memos || !Array.isArray(tx.Memos)) return "";
+  for (const m of tx.Memos) {
+    const hex = m?.Memo?.MemoData;
+    if (typeof hex === "string" && hex.length > 0) {
+      try { return Buffer.from(hex, "hex").toString("utf-8"); } catch { /* skip */ }
+    }
+  }
+  return "";
 }
 
 function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
@@ -31,12 +53,12 @@ function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
 // -------------------------------------------------------------
 // Core Transaction Processing Logic
 //
-// Detection: A Payment is x402 if the (Destination, DestinationTag)
-// pair maps to a registered Resource in our database.
+// Detection: A Payment is an x402 payment if its SourceTag
+// matches a known facilitator tag in our FacilitatorTag table.
 //
-// Merchants register their APIs with a tagId. When a payment
-// arrives to that merchant with a matching DestinationTag, we
-// know which resource is being paid for.
+// Per the XRPL x402 Exact Scheme, the facilitator embeds a
+// fixed SourceTag (e.g. 804681468) into every settlement tx.
+// This is the on-chain fingerprint for x402 payments on XRPL.
 // -------------------------------------------------------------
 async function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
@@ -44,25 +66,16 @@ async function processTransaction(txStream: any, tx: any) {
   const txResult = getTxResult(txStream, tx);
   if (txResult && txResult !== "tesSUCCESS") return;
 
+  const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
+  if (sourceTag === null) return;
+
+  const facilitatorName = knownSourceTags.get(sourceTag);
+  if (!facilitatorName) return;
+
   const receiver = tx.Destination;
   if (!receiver || typeof receiver !== "string") return;
 
-  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
-  if (destinationTag === null) return;
-
-  const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
-
-  const matchedResource = await prisma.resource.findFirst({
-    where: {
-      merchantAddr: receiver,
-      tagId: destinationTag,
-      isActive: true,
-    },
-  });
-
-  if (!matchedResource) return;
-
-  console.log(`🚨 x402 payment detected! Hash: ${tx.hash} → ${matchedResource.url}`);
+  console.log(`🚨 x402 payment detected (facilitator: ${facilitatorName})! Hash: ${tx.hash}`);
 
   let amountPaid: string;
   if (typeof tx.Amount === "string") {
@@ -76,12 +89,15 @@ async function processTransaction(txStream: any, tx: any) {
 
   const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
   const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
-  const facilitator = identifyFacilitator(tx, matchedResource.url);
+  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
+  const invoiceId = tx.InvoiceID || null;
+  const rawMemo = decodeMemoData(tx);
 
   try {
-    await prisma.resource.update({
-      where: { id: matchedResource.id },
-      data: { priceAmount: amountPaid, priceAsset: asset },
+    await prisma.merchant.upsert({
+      where: { address: receiver },
+      update: {},
+      create: { address: receiver },
     });
 
     await prisma.transaction.upsert({
@@ -93,15 +109,14 @@ async function processTransaction(txStream: any, tx: any) {
         timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
         buyerAddress: tx.Account,
         merchantAddr: receiver,
-        resourceId: matchedResource.id,
         amount: amountPaid,
         asset,
         assetIssuer,
-        facilitator,
-        destinationTag,
+        facilitator: facilitatorName,
         sourceTag,
-        detectedVia: "tag",
-        rawMemo: matchedResource.url,
+        destinationTag,
+        invoiceId,
+        rawMemo: rawMemo || null,
       },
     });
     console.log(`✅ Saved x402 transaction ${tx.hash}`);
@@ -199,6 +214,12 @@ async function backfillLedgers(
 async function startIndexer() {
   console.log(`Starting x402 XRPL Indexer on ${XRPL_WSS}...`);
 
+  await loadFacilitatorTags();
+  if (knownSourceTags.size === 0) {
+    console.warn("⚠️  No facilitator tags in database. The indexer won't detect any x402 payments.");
+    console.warn("   Insert a row into FacilitatorTag (e.g. sourceTag=804681468) to start indexing.");
+  }
+
   const client = new Client(XRPL_WSS);
   
   client.on("error", (errorCode, errorMessage) => {
@@ -243,7 +264,9 @@ async function startIndexer() {
 
   indexerHealthy = true;
 
+  // Refresh facilitator tags and run auto-discovery every hour
   cron.schedule("0 * * * *", () => {
+    loadFacilitatorTags().catch(console.error);
     runAutoDiscoverySync().catch(console.error);
   });
 }
