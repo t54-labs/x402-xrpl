@@ -89,8 +89,8 @@ export default async function Home() {
 
         <div className="bg-[#131518] rounded-xl border border-white/5 p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-white">The Bazaar</h2>
-            <Link href="/bazaar" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+            <h2 className="text-lg font-medium text-white">The Agora</h2>
+            <Link href="/agora" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
               Browse All &rarr;
             </Link>
           </div>

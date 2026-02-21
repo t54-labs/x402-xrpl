@@ -45,7 +45,7 @@ export default function RegisterResourcePage() {
         </div>
         <h1 className="text-3xl font-light tracking-tight text-white">Join the x402 Economy</h1>
         <p className="text-gray-400 mt-3 text-sm max-w-md mx-auto leading-relaxed">
-          Register your API resource to make it discoverable in the Bazaar. We will verify your HTTP 402 configuration and XRPL requirements instantly.
+          Register your API resource to make it discoverable in the Agora. We will verify your HTTP 402 configuration and XRPL requirements instantly.
         </p>
       </div>
 

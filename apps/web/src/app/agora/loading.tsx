@@ -1,4 +1,4 @@
-export default function BazaarLoading() {
+export default function AgoraLoading() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8 animate-pulse">
       <div>

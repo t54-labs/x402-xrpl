@@ -32,8 +32,8 @@ export function MobileNav() {
           <Link href="/transactions" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Transactions
           </Link>
-          <Link href="/bazaar" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
-            Bazaar
+          <Link href="/agora" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
+            Agora
           </Link>
           <Link href="/resources/register" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Register Resource
