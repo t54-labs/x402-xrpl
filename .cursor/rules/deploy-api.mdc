@@ -1,0 +1,44 @@
+---
+description: How to deploy the x402 API server to GKE
+alwaysApply: false
+---
+
+# Deploy API to GKE
+
+## GKE Cluster
+- Cluster: `autopilot-cluster-tradar` (us-west1)
+- Namespace: `x402-xrpl`
+- External IP: `35.247.41.7`
+- Image: `us-west1-docker.pkg.dev/tworld-473700/x402-xrpl/api:latest`
+
+## Deploy Steps
+
+1. Connect to cluster:
+```bash
+gcloud container clusters get-credentials autopilot-cluster-tradar --region us-west1
+```
+
+2. Build AMD64 image and push (from repo root):
+```bash
+docker buildx build --platform linux/amd64 -f apps/api/Dockerfile \
+  -t us-west1-docker.pkg.dev/tworld-473700/x402-xrpl/api:latest --push .
+```
+
+3. Restart pods to pull new image:
+```bash
+kubectl rollout restart deployment/x402-api -n x402-xrpl
+```
+
+4. Check status:
+```bash
+kubectl get pods -n x402-xrpl
+kubectl logs -n x402-xrpl -l app=x402-api --tail=20
+curl http://35.247.41.7/health
+```
+
+## Important Notes
+- MUST build with `--platform linux/amd64` (Mac is ARM, GKE is AMD64)
+- Uses `node:20-slim` (Debian), NOT Alpine (Prisma needs glibc + OpenSSL)
+- Database credentials stored in K8s secret `api-secrets` in `x402-xrpl` namespace
+- Database uses private IP `10.77.97.16` (same VPC as GKE)
+- K8s manifest: `k8s/api-deployment.yaml`
