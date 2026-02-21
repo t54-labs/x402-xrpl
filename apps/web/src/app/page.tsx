@@ -2,7 +2,7 @@ import { prisma } from "@x402-xrpl/database";
 import Link from "next/link";
 import { RelativeTime } from "./components/RelativeTime";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [totalTransactions, totalMerchants, totalResources, recentTransactions, registeredResources] = await Promise.all([
