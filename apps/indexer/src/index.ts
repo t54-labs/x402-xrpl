@@ -14,14 +14,6 @@ const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "4000", 10);
 let indexerHealthy = false;
 let lastLedger = 0;
 
-function decodeMemo(hex: string): string {
-  try {
-    return Buffer.from(hex, "hex").toString("utf-8");
-  } catch {
-    return "";
-  }
-}
-
 function getTxResult(txStream: any, tx: any): string | undefined {
   return txStream?.meta?.TransactionResult
     || tx?.meta?.TransactionResult
@@ -37,42 +29,14 @@ function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
 }
 
 // -------------------------------------------------------------
-// x402 Detection Result
-// -------------------------------------------------------------
-type DetectionResult = {
-  detectedVia: "memo-type" | "memo-data" | "tag";
-  resourceUrl: string;
-  resourceId?: string;
-};
-
-// Attempt to parse a memo data string as an x402 payload and extract the resource URL.
-function extractResourceUrl(memoData: string): string {
-  try {
-    const payload = JSON.parse(memoData);
-    if (typeof payload?.res === "string" && payload.res.length > 0) {
-      return payload.res;
-    }
-  } catch {
-    // not JSON
-  }
-  return "";
-}
-
-// -------------------------------------------------------------
 // Core Transaction Processing Logic
 //
-// Three-tier detection (a Payment is x402 if ANY tier matches):
+// Detection: A Payment is x402 if the (Destination, DestinationTag)
+// pair maps to a registered Resource in our database.
 //
-// Tier 1 – Strict Standard:
-//   A Memo has MemoType that hex-decodes to "x402".
-//
-// Tier 2 – Messy-Client Fallback:
-//   MemoType is wrong/absent, but MemoData is valid JSON with
-//   a "res" key holding a URL string (the x402 payload shape).
-//
-// Tier 3 – Tag-Based (no Memos):
-//   No qualifying Memos, but (Destination, DestinationTag) maps
-//   to a Resource with a matching tagId in our database.
+// Merchants register their APIs with a tagId. When a payment
+// arrives to that merchant with a matching DestinationTag, we
+// know which resource is being paid for.
 // -------------------------------------------------------------
 async function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
@@ -84,52 +48,21 @@ async function processTransaction(txStream: any, tx: any) {
   if (!receiver || typeof receiver !== "string") return;
 
   const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
+  if (destinationTag === null) return;
+
   const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
 
-  let detection: DetectionResult | null = null;
+  const matchedResource = await prisma.resource.findFirst({
+    where: {
+      merchantAddr: receiver,
+      tagId: destinationTag,
+      isActive: true,
+    },
+  });
 
-  // ── Tier 1 & 2: Memo-based detection ──────────────────────
-  if (tx.Memos && tx.Memos.length > 0) {
-    for (const m of tx.Memos) {
-      if (!m.Memo) continue;
-      const memoType = m.Memo.MemoType ? decodeMemo(m.Memo.MemoType) : "";
-      const memoData = m.Memo.MemoData ? decodeMemo(m.Memo.MemoData) : "";
+  if (!matchedResource) return;
 
-      if (memoType.toLowerCase() === "x402") {
-        detection = { detectedVia: "memo-type", resourceUrl: extractResourceUrl(memoData) || memoData };
-        break;
-      }
-
-      const resUrl = extractResourceUrl(memoData);
-      if (resUrl) {
-        detection = { detectedVia: "memo-data", resourceUrl: resUrl };
-        break;
-      }
-    }
-  }
-
-  // ── Tier 3: Tag-based detection (only if memos didn't match) ──
-  if (!detection && destinationTag !== null) {
-    const matchedResource = await prisma.resource.findFirst({
-      where: {
-        merchantAddr: receiver,
-        tagId: destinationTag,
-        isActive: true,
-      },
-    });
-
-    if (matchedResource) {
-      detection = {
-        detectedVia: "tag",
-        resourceUrl: matchedResource.url,
-        resourceId: matchedResource.id,
-      };
-    }
-  }
-
-  if (!detection) return;
-
-  console.log(`🚨 Detected x402 payment (${detection.detectedVia})! Hash: ${tx.hash}`);
+  console.log(`🚨 x402 payment detected! Hash: ${tx.hash} → ${matchedResource.url}`);
 
   let amountPaid: string;
   if (typeof tx.Amount === "string") {
@@ -143,42 +76,13 @@ async function processTransaction(txStream: any, tx: any) {
 
   const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
   const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
-  const facilitator = identifyFacilitator(tx, detection.resourceUrl);
+  const facilitator = identifyFacilitator(tx, matchedResource.url);
 
   try {
-    await prisma.merchant.upsert({
-      where: { address: receiver },
-      update: {},
-      create: { address: receiver },
+    await prisma.resource.update({
+      where: { id: matchedResource.id },
+      data: { priceAmount: amountPaid, priceAsset: asset },
     });
-
-    let resourceId = detection.resourceId;
-    if (!resourceId && detection.resourceUrl) {
-      const resource = await prisma.resource.upsert({
-        where: {
-          merchantAddr_url: {
-            merchantAddr: receiver,
-            url: detection.resourceUrl,
-          },
-        },
-        update: {
-          priceAmount: amountPaid,
-          priceAsset: asset,
-          isActive: true,
-        },
-        create: {
-          merchantAddr: receiver,
-          url: detection.resourceUrl,
-          priceAmount: amountPaid,
-          priceAsset: asset,
-          schema: "x402",
-          network: "xrpl",
-          name: "Discovered Resource",
-          isActive: true,
-        },
-      });
-      resourceId = resource.id;
-    }
 
     await prisma.transaction.upsert({
       where: { hash: tx.hash },
@@ -189,15 +93,15 @@ async function processTransaction(txStream: any, tx: any) {
         timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
         buyerAddress: tx.Account,
         merchantAddr: receiver,
-        resourceId,
+        resourceId: matchedResource.id,
         amount: amountPaid,
         asset,
         assetIssuer,
         facilitator,
         destinationTag,
         sourceTag,
-        detectedVia: detection.detectedVia,
-        rawMemo: detection.resourceUrl,
+        detectedVia: "tag",
+        rawMemo: matchedResource.url,
       },
     });
     console.log(`✅ Saved x402 transaction ${tx.hash}`);
