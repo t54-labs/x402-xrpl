@@ -54,6 +54,10 @@ model Resource {
   
   schema       String?    // e.g., "x402"
   network      String?    @default("xrpl")
+
+  // Tag-based routing: maps an XRPL DestinationTag to this resource.
+  // Enables high-efficiency x402 payments without Memos.
+  tagId        Int?       // The DestinationTag value (uint32) that routes to this resource
   
   // Registration and discovery
   isDiscovered Boolean    @default(false) // True if found via .well-known/x402
@@ -65,6 +69,7 @@ model Resource {
   transactions Transaction[]
 
   @@unique([merchantAddr, url])
+  @@unique([merchantAddr, tagId])
 }
 
 // An actual x402 payment that occurred on the XRPL
@@ -92,6 +97,10 @@ model Transaction {
   destinationTag Int?     // Destination tag used for sub-account or request routing
   sourceTag      Int?     // Source tag used by sender
   
+  // How this transaction was detected as x402
+  // "memo-type" = MemoType was "x402", "memo-data" = MemoData had {res}, "tag" = DestinationTag matched
+  detectedVia  String?
+
   // We can store the raw memo data if needed for debugging
   rawMemo      String?
   
