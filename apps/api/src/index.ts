@@ -449,7 +449,7 @@ app.post("/verify", async (req, res) => {
         const reqs = Array.isArray(decoded) ? decoded : Array.isArray(decoded?.accepts) ? decoded.accepts : [];
         const xrplReq = reqs.find((r: any) => {
           const n = String(r?.network || "").toLowerCase();
-          return n === "xrpl" || n === "testnet";
+          return n === "xrpl" || n.startsWith("xrpl:") || n === "testnet";
         });
         if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
 
