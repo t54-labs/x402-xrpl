@@ -22,6 +22,7 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/packages/database ./packages/database
+RUN sed -i 's/"main": "index.ts"/"main": "dist\/index.js"/' packages/database/package.json
 COPY --from=builder /app/apps/indexer/dist ./apps/indexer/dist
 COPY --from=builder /app/apps/indexer/node_modules ./apps/indexer/node_modules
 COPY --from=builder /app/node_modules ./node_modules

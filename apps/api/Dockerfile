@@ -1,5 +1,6 @@
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
+RUN apt-get update -qq && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
 FROM base AS deps
@@ -22,6 +23,7 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/packages/database ./packages/database
+RUN sed -i 's/"main": "index.ts"/"main": "dist\/index.js"/' packages/database/package.json
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/node_modules ./node_modules
