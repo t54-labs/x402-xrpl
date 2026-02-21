@@ -3,24 +3,25 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
+import { getExplorerUrl } from "../../utils/explorer";
 
 interface PageProps {
   params: Promise<{ address: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function AddressPage({ params }: PageProps) {
+export default async function AddressPage({ params, searchParams }: PageProps) {
   const { address } = await params;
+  const { page: pageStr } = await searchParams;
+  const page = parseInt(pageStr || "1", 10);
+  const pageSize = 20;
+  const skip = (page - 1) * pageSize;
 
   const [merchant, buyerTxCount] = await Promise.all([
     prisma.merchant.findUnique({
       where: { address },
       include: {
         resources: true,
-        transactions: {
-          take: 50,
-          orderBy: { timestamp: "desc" },
-          include: { resource: true },
-        },
       },
     }),
     prisma.transaction.count({ where: { buyerAddress: address } }),
@@ -34,26 +35,40 @@ export default async function AddressPage({ params }: PageProps) {
   }
 
   if (isMerchant) {
-    return <MerchantView address={address} merchant={merchant} />;
+    const [transactions, totalTxCount] = await Promise.all([
+      prisma.transaction.findMany({
+        where: { merchantAddr: address },
+        take: pageSize,
+        skip,
+        orderBy: { timestamp: "desc" },
+        include: { resource: true, merchant: true },
+      }),
+      prisma.transaction.count({ where: { merchantAddr: address } })
+    ]);
+    return <MerchantView address={address} merchant={merchant} transactions={transactions} totalTxCount={totalTxCount} page={page} pageSize={pageSize} />;
   }
 
-  return <BuyerView address={address} txCount={buyerTxCount} />;
+  return <BuyerView address={address} txCount={buyerTxCount} page={page} pageSize={pageSize} />;
 }
 
 async function MerchantView({
   address,
   merchant,
+  transactions,
+  totalTxCount,
+  page,
+  pageSize,
 }: {
   address: string;
   merchant: NonNullable<Awaited<ReturnType<typeof prisma.merchant.findUnique>> & {
     resources: Awaited<ReturnType<typeof prisma.resource.findMany>>;
-    transactions: (Awaited<ReturnType<typeof prisma.transaction.findMany>>[number] & {
-      resource: Awaited<ReturnType<typeof prisma.resource.findUnique>> | null;
-    })[];
   }>;
+  transactions: any[];
+  totalTxCount: number;
+  page: number;
+  pageSize: number;
 }) {
-  const [totalTxCount, volumeResult] = await Promise.all([
-    prisma.transaction.count({ where: { merchantAddr: address } }),
+  const [volumeResult] = await Promise.all([
     prisma.$queryRawUnsafe<[{ total: string }]>(
       `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "merchantAddr" = $1 AND asset = 'XRP'`,
       address
@@ -89,7 +104,7 @@ async function MerchantView({
               </span>
               <CopyButton text={address} />
               <a 
-                href={`https://testnet.xrpl.org/accounts/${address}`}
+                href={`${getExplorerUrl()}/accounts/${address}`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
@@ -153,18 +168,20 @@ async function MerchantView({
 
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-xl font-light text-white">Recent Payments</h2>
-          <TxTable transactions={merchant.transactions} perspective="merchant" />
+          <TxTable transactions={transactions} perspective="merchant" page={page} totalPages={Math.ceil(totalTxCount / pageSize)} basePath={`/address/${address}`} />
         </div>
       </div>
     </div>
   );
 }
 
-async function BuyerView({ address, txCount }: { address: string; txCount: number }) {
+async function BuyerView({ address, txCount, page, pageSize }: { address: string; txCount: number; page: number; pageSize: number }) {
+  const skip = (page - 1) * pageSize;
   const [transactions, volumeResult] = await Promise.all([
     prisma.transaction.findMany({
       where: { buyerAddress: address },
-      take: 50,
+      take: pageSize,
+      skip,
       orderBy: { timestamp: "desc" },
       include: { merchant: true, resource: true },
     }),
@@ -201,7 +218,7 @@ async function BuyerView({ address, txCount }: { address: string; txCount: numbe
               </span>
               <CopyButton text={address} />
               <a 
-                href={`https://testnet.xrpl.org/accounts/${address}`}
+                href={`${getExplorerUrl()}/accounts/${address}`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
@@ -230,7 +247,7 @@ async function BuyerView({ address, txCount }: { address: string; txCount: numbe
 
       <div className="space-y-6">
         <h2 className="text-xl font-light text-white">Payment History</h2>
-        <TxTable transactions={transactions} perspective="buyer" />
+        <TxTable transactions={transactions} perspective="buyer" page={page} totalPages={Math.ceil(txCount / pageSize)} basePath={`/address/${address}`} />
       </div>
     </div>
   );
@@ -239,6 +256,9 @@ async function BuyerView({ address, txCount }: { address: string; txCount: numbe
 function TxTable({
   transactions,
   perspective,
+  page,
+  totalPages,
+  basePath,
 }: {
   transactions: Array<{
     hash: string;
@@ -251,6 +271,9 @@ function TxTable({
     resource?: { url: string; name: string | null } | null;
   }>;
   perspective: "merchant" | "buyer";
+  page: number;
+  totalPages: number;
+  basePath: string;
 }) {
   const counterLabel = perspective === "merchant" ? "Buyer" : "Merchant";
 
@@ -312,6 +335,30 @@ function TxTable({
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 p-4 border-t border-white/5">
+          {page > 1 && (
+            <Link
+              href={`${basePath}?page=${page - 1}`}
+              className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
+            >
+              &larr; Previous
+            </Link>
+          )}
+          <span className="text-sm text-gray-500 px-4">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages && (
+            <Link
+              href={`${basePath}?page=${page + 1}`}
+              className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
+            >
+              Next &rarr;
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -100,6 +100,7 @@ async function runMock() {
       resourceId: (await prisma.resource.findFirst({ where: { url: mockResourceUrl } }))?.id,
       amount: "0.5",
       asset: "XRP",
+      assetIssuer: null,
       rawMemo: mockResourceUrl,
     }
   });

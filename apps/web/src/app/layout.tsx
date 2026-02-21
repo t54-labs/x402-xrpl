@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
+import { AutoRefresh } from "./components/AutoRefresh";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,6 +33,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0b0d10] text-gray-300 min-h-screen flex flex-col`}
       >
         <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0b0d10]/80 backdrop-blur-md">
+          <AutoRefresh />
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -56,8 +58,12 @@ export default function RootLayout({
                 <SearchBar />
               </div>
               <div className="hidden lg:flex items-center px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-gray-400 shrink-0">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 mr-2 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse"></span>
-                XRPL Testnet
+                <span className={`w-2 h-2 rounded-full mr-2 animate-pulse ${
+                  process.env.NEXT_PUBLIC_XRPL_NETWORK === "mainnet" 
+                    ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" 
+                    : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
+                }`}></span>
+                {process.env.NEXT_PUBLIC_XRPL_NETWORK === "mainnet" ? "XRPL Mainnet" : "XRPL Testnet"}
               </div>
               <MobileNav />
             </div>

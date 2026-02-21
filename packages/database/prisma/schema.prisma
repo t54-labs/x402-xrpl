@@ -83,6 +83,7 @@ model Transaction {
   
   amount       String     // Amount paid
   asset        String     // XRP or token code
+  assetIssuer  String?    // The issuer address of the token (null for XRP)
   
   // Optional: If a specific facilitator verified this
   facilitator  String?

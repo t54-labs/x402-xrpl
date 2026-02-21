@@ -169,6 +169,8 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     console.log(`[Auto-Discovery] Found ${resources.length} resources for ${merchantAddress}. Syncing...`);
 
     let syncedCount = 0;
+    const syncedUrls: string[] = [];
+    
     for (const res of resources) {
       const resourceUrl =
         typeof res === "string"
@@ -195,8 +197,20 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
         description: res?.description,
       });
 
-      if (synced) syncedCount++;
+      if (synced) {
+        syncedCount++;
+        syncedUrls.push(resourceUrl);
+      }
     }
+
+    // Deactivate any resources previously associated with this merchant that are no longer in the discovery file
+    await prisma.resource.updateMany({
+      where: {
+        merchantAddr: merchantAddress,
+        url: { notIn: syncedUrls }
+      },
+      data: { isActive: false }
+    });
 
     console.log(`[Auto-Discovery] Synced ${syncedCount}/${resources.length} resources for ${merchantAddress}.`);
 

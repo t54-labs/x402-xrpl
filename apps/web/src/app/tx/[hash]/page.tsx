@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
+import { getExplorerUrl } from "../../utils/explorer";
 
 interface PageProps {
   params: Promise<{ hash: string }>;
@@ -29,6 +30,10 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     { label: "Timestamp", value: new Date(tx.timestamp).toLocaleString(), relative: tx.timestamp.toISOString() },
     { label: "Amount", value: `${tx.amount} ${tx.asset}`, highlight: true },
   ];
+
+  if (tx.assetIssuer) {
+    fields.push({ label: "Asset Issuer", value: tx.assetIssuer, mono: true, copyable: true });
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
@@ -129,7 +134,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
 
       <div className="flex gap-3">
         <a
-          href={`https://testnet.xrpl.org/transactions/${hash}`}
+          href={`${getExplorerUrl()}/transactions/${hash}`}
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"

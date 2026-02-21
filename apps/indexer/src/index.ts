@@ -4,6 +4,7 @@ import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
+import { identifyFacilitator } from "./facilitators";
 
 dotenv.config();
 
@@ -64,6 +65,8 @@ async function processTransaction(txStream: any, tx: any) {
       : String(tx.Amount?.value ?? "");
 
   const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
+  const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
+  const facilitator = identifyFacilitator(tx, resourceUrl);
 
   if (!amountPaid) return;
 
@@ -114,6 +117,8 @@ async function processTransaction(txStream: any, tx: any) {
         resourceId,
         amount: amountPaid,
         asset: asset,
+        assetIssuer: assetIssuer,
+        facilitator: facilitator,
         rawMemo: resourceUrl,
       },
     });
