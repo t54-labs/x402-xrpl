@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const encoder = new TextEncoder();
-  let interval: NodeJS.Timeout;
+  let interval: NodeJS.Timeout | undefined;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -34,7 +34,7 @@ export async function GET() {
       interval = setInterval(checkNewTx, 3000);
     },
     cancel() {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     }
   });
 

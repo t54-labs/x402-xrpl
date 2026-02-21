@@ -24,7 +24,9 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const fields = [
+  type Field = { label: string; value: string; mono?: boolean; copyable?: boolean; relative?: string; highlight?: boolean };
+
+  const fields: Field[] = [
     { label: "Transaction Hash", value: tx.hash, mono: true, copyable: true },
     { label: "Ledger Index", value: tx.ledgerIndex.toLocaleString() },
     { label: "Timestamp", value: new Date(tx.timestamp).toLocaleString(), relative: tx.timestamp.toISOString() },

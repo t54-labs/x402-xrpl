@@ -203,7 +203,11 @@ async function BuyerView({ address, txCount, page, pageSize }: { address: string
   ]);
   const totalSpent = parseFloat(volumeResult[0]?.total || "0");
 
-  const uniqueMerchants = new Set(transactions.map((tx) => tx.merchantAddr)).size;
+  const uniqueMerchantResult = await prisma.transaction.groupBy({
+    by: ["merchantAddr"],
+    where: { buyerAddress: address },
+  });
+  const uniqueMerchants = uniqueMerchantResult.length;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">

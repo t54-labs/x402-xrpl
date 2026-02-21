@@ -222,8 +222,8 @@ async function startIndexer() {
 
   const client = new Client(XRPL_WSS);
   
-  client.on("error", (errorCode, errorMessage) => {
-    console.error("XRPL Client Error:", errorCode, errorMessage);
+  client.on("error", (error) => {
+    console.error("XRPL Client Error:", error);
   });
 
   await client.connect();
@@ -238,9 +238,12 @@ async function startIndexer() {
   }
 
   console.log("Subscribing to live ledger stream...");
-  client.request({
+  await client.request({
     command: "subscribe",
     streams: ["transactions"],
+  }).catch((err) => {
+    console.error("❌ Failed to subscribe to transaction stream:", err);
+    process.exit(1);
   });
 
   client.on("transaction", (txStream: any) => {

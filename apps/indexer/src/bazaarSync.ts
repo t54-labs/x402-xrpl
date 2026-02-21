@@ -124,8 +124,7 @@ async function verifyAndUpsertResource(
     });
 
     if (response.status === 402) {
-      const paymentHeaderBase64 =
-        response.headers["payment-required"] || response.headers["Payment-Required"];
+      const paymentHeaderBase64 = response.headers["payment-required"];
       const paymentRequired = parsePaymentRequired(paymentHeaderBase64);
       const xrplRequirement = extractXrplRequirement(paymentRequired);
 

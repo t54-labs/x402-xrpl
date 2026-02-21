@@ -17,8 +17,7 @@ async function verifyResource(resourceUrl: string) {
     throw new Error(`URL did not return HTTP 402. Returned ${response.status}`);
   }
 
-  const paymentHeaderBase64 =
-    response.headers["payment-required"] || response.headers["Payment-Required"];
+  const paymentHeaderBase64 = response.headers["payment-required"];
 
   if (!paymentHeaderBase64) {
     throw new Error("Missing PAYMENT-REQUIRED header in 402 response");

@@ -8,7 +8,7 @@ export default async function Home() {
   const [totalTransactions, totalMerchants, totalResources, recentTransactions, registeredResources] = await Promise.all([
     prisma.transaction.count(),
     prisma.merchant.count(),
-    prisma.resource.count(),
+    prisma.resource.count({ where: { isActive: true } }),
     prisma.transaction.findMany({
       take: 10,
       orderBy: { timestamp: "desc" },
