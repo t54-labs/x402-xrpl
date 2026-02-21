@@ -22,13 +22,24 @@ function decodeMemo(hex: string): string {
   }
 }
 
+function getTxResult(txStream: any, tx: any): string | undefined {
+  return txStream?.meta?.TransactionResult
+    || tx?.meta?.TransactionResult
+    || tx?.metaData?.TransactionResult;
+}
+
 // -------------------------------------------------------------
 // Core Transaction Processing Logic
+//
+// Detection: A Payment is an x402 payment if and only if one of
+// its Memos has MemoType that hex-decodes to "x402".
+// Per the XRPL x402 standard, MemoType 78343032 is canonical.
 // -------------------------------------------------------------
 async function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
-  if (txStream?.meta?.TransactionResult && txStream.meta.TransactionResult !== "tesSUCCESS") return;
-  if (tx?.meta?.TransactionResult && tx.meta.TransactionResult !== "tesSUCCESS") return;
+
+  const txResult = getTxResult(txStream, tx);
+  if (txResult && txResult !== "tesSUCCESS") return;
 
   let isX402 = false;
   let resourceUrl = "";
@@ -36,19 +47,19 @@ async function processTransaction(txStream: any, tx: any) {
   if (tx.Memos && tx.Memos.length > 0) {
     for (const m of tx.Memos) {
       if (!m.Memo) continue;
-      const memoData = m.Memo.MemoData ? decodeMemo(m.Memo.MemoData) : "";
       const memoType = m.Memo.MemoType ? decodeMemo(m.Memo.MemoType) : "";
 
-      if (memoType.toLowerCase() === "x402" || memoData.includes(`"res"`)) {
-        isX402 = true;
-        try {
-          const payload = JSON.parse(memoData);
-          resourceUrl = typeof payload?.res === "string" ? payload.res : memoData;
-        } catch {
-          resourceUrl = memoData;
-        }
-        break;
+      if (memoType.toLowerCase() !== "x402") continue;
+
+      isX402 = true;
+      const memoData = m.Memo.MemoData ? decodeMemo(m.Memo.MemoData) : "";
+      try {
+        const payload = JSON.parse(memoData);
+        resourceUrl = typeof payload?.res === "string" ? payload.res : "";
+      } catch {
+        resourceUrl = memoData;
       }
+      break;
     }
   }
 
@@ -59,16 +70,21 @@ async function processTransaction(txStream: any, tx: any) {
 
   console.log(`🚨 Detected x402 payment! Hash: ${tx.hash}`);
 
-  const amountPaid =
-    typeof tx.Amount === "string"
-      ? (Number(tx.Amount) / 1000000).toString()
-      : String(tx.Amount?.value ?? "");
+  let amountPaid: string;
+  if (typeof tx.Amount === "string") {
+    const drops = Number(tx.Amount);
+    if (!Number.isFinite(drops) || drops <= 0) return;
+    amountPaid = (drops / 1_000_000).toString();
+  } else {
+    amountPaid = String(tx.Amount?.value ?? "");
+  }
+  if (!amountPaid || amountPaid === "0") return;
 
   const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
   const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
   const facilitator = identifyFacilitator(tx, resourceUrl);
-
-  if (!amountPaid) return;
+  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
+  const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
 
   await prisma.merchant.upsert({
     where: { address: receiver },
@@ -116,9 +132,11 @@ async function processTransaction(txStream: any, tx: any) {
         merchantAddr: receiver,
         resourceId,
         amount: amountPaid,
-        asset: asset,
-        assetIssuer: assetIssuer,
-        facilitator: facilitator,
+        asset,
+        assetIssuer,
+        facilitator,
+        destinationTag,
+        sourceTag,
         rawMemo: resourceUrl,
       },
     });
