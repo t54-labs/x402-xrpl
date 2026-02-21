@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
+import { formatCurrency } from "../../utils/currency";
 import { apiFetch } from "../../lib/api";
 
 interface PageProps {
@@ -182,7 +183,7 @@ function TxTable({ transactions, perspective, page, totalPages, basePath }: {
                   </td>
                   <td className="px-6 py-4"><Link href={`/address/${counterAddr}`} className="font-mono text-sm text-gray-400 hover:text-cyan-400 transition-colors">{counterName || `${counterAddr.substring(0, 12)}...`}</Link></td>
                   <td className="px-6 py-4 max-w-[200px]">{tx.resource ? <div className="text-xs text-gray-300 font-mono truncate" title={tx.resource.url}>{tx.resource.url}</div> : <span className="text-xs text-gray-600 italic">Unknown</span>}</td>
-                  <td className="px-6 py-4 text-sm text-right"><span className="font-medium text-white">{tx.amount}</span><span className="text-gray-500 text-xs ml-1">{tx.asset}</span></td>
+                  <td className="px-6 py-4 text-sm text-right"><span className="font-medium text-white">{tx.amount}</span><span className="text-gray-500 text-xs ml-1">{formatCurrency(tx.asset)}</span></td>
                 </tr>
               );
             })}

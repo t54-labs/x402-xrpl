@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RelativeTime } from "./components/RelativeTime";
 import { apiFetch } from "./lib/api";
+import { formatCurrency } from "./utils/currency";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +47,11 @@ export default async function Home() {
 
       {topMerchants.length > 0 && (
         <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-white/5">
+          <div className="flex justify-between items-center p-6 border-b border-white/5">
             <h2 className="text-lg font-medium text-white">Top Merchants</h2>
+            <Link href="/merchants" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+              View All &rarr;
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
             {topMerchants.map((m, i) => (
@@ -72,87 +76,90 @@ export default async function Home() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-          <div className="flex justify-between items-center p-6 border-b border-white/5">
-            <h2 className="text-lg font-medium text-white">Recent Transactions</h2>
-            <Link href="/transactions" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
-              View All &rarr;
-            </Link>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead className="bg-[#181a1e]">
-                <tr>
-                  <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Tx Hash</th>
-                  <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Amount</th>
-                  <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {recentTransactions.map((tx) => (
-                  <tr key={tx.hash} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4">
-                      <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
-                        {tx.hash.substring(0, 16)}...
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-white">
-                      {tx.amount} <span className="text-gray-500 text-xs">{tx.asset}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      <RelativeTime date={tx.timestamp} />
-                    </td>
-                  </tr>
-                ))}
-                {recentTransactions.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-12 text-center text-gray-500 text-sm">
-                      No transactions indexed yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+        <div className="flex justify-between items-center p-6 border-b border-white/5">
+          <h2 className="text-lg font-medium text-white">Recent Transactions</h2>
+          <Link href="/transactions" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+            View All &rarr;
+          </Link>
         </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap">
+            <thead className="bg-[#181a1e]">
+              <tr>
+                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Tx Hash</th>
+                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Merchant</th>
+                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Amount</th>
+                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {recentTransactions.map((tx) => (
+                <tr key={tx.hash} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
+                      {tx.hash.substring(0, 16)}...
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Link href={`/address/${tx.merchant?.address || ""}`} className="text-sm text-gray-400 hover:text-cyan-400 transition-colors">
+                      {tx.merchant?.name || `${(tx.merchant?.address || "").substring(0, 10)}...`}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-white">
+                    {tx.amount} <span className="text-gray-500 text-xs">{formatCurrency(tx.asset)}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-400">
+                    <RelativeTime date={tx.timestamp} />
+                  </td>
+                </tr>
+              ))}
+              {recentTransactions.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 text-sm">
+                    No transactions indexed yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-        <div className="bg-[#131518] rounded-xl border border-white/5 p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-white">The Agora</h2>
-            <Link href="/agora" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
-              Browse All &rarr;
-            </Link>
-          </div>
-          <p className="text-xs text-gray-400 mb-6">Discover pay-per-use APIs on the XRPL.</p>
-          
-          <div className="space-y-4 flex-1">
+      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <h2 className="text-lg font-medium text-white">The Agora</h2>
+          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+            Browse All &rarr;
+          </Link>
+        </div>
+        
+        {registeredResources.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
             {registeredResources.map((res) => (
               <Link href={`/address/${res.merchantAddr}`} key={res.id} className="block">
-                <div className="p-4 bg-[#181a1e] border border-white/5 rounded-lg hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all group">
+                <div className="p-4 bg-[#181a1e] border border-white/5 rounded-lg hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all group h-full">
                   <h3 className="font-medium text-gray-200 group-hover:text-white truncate">{res.name || "API Resource"}</h3>
                   <p className="text-xs text-gray-500 mt-1 truncate font-mono">{res.url}</p>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-xs font-mono bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded-sm border border-cyan-400/20">
-                      {res.priceAmount} {res.priceAsset}
+                      {res.priceAmount} {formatCurrency(res.priceAsset)}
                     </span>
                     <span className="text-[10px] text-gray-500 uppercase tracking-wider">{res.network}</span>
                   </div>
                 </div>
               </Link>
             ))}
-            
-            {registeredResources.length === 0 && (
-              <div className="flex flex-col items-center text-center py-8 gap-3">
-                <p className="text-gray-500 text-sm">No resources registered yet.</p>
-                <Link href="/resources/register" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Register the first one &rarr;
-                </Link>
-              </div>
-            )}
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center text-center py-12 gap-3">
+            <p className="text-gray-500 text-sm">No resources registered yet.</p>
+            <Link href="/resources/register" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+              Register the first one &rarr;
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
