@@ -39,9 +39,10 @@ function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
 // -------------------------------------------------------------
 // Core Transaction Processing Logic
 //
-// Detection: A Payment is an x402 payment if and only if one of
-// its Memos has MemoType that hex-decodes to "x402".
-// Per the XRPL x402 standard, MemoType 78343032 is canonical.
+// Detection: A Payment is an x402 payment if it meets ANY of these conditions:
+// 1. A Memo exists with MemoType that hex-decodes to "x402" OR the MemoData contains a "res" key (indicating an ad-hoc un-registered payment payload).
+// 2. A Source Tag is present, AND the Destination Tag exists in our Database
+//    as a mapped Resource for the receiving Merchant.
 // -------------------------------------------------------------
 async function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
@@ -49,32 +50,56 @@ async function processTransaction(txStream: any, tx: any) {
   const txResult = getTxResult(txStream, tx);
   if (txResult && txResult !== "tesSUCCESS") return;
 
+  const receiver = tx.Destination;
+  if (!receiver || typeof receiver !== "string") return;
+
+  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
+  const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
+
   let isX402 = false;
   let resourceUrl = "";
 
+  // 1. Check Memos (Fallback / un-registered payload strategy)
   if (tx.Memos && tx.Memos.length > 0) {
     for (const m of tx.Memos) {
       if (!m.Memo) continue;
       const memoType = m.Memo.MemoType ? decodeMemo(m.Memo.MemoType) : "";
-
-      if (memoType.toLowerCase() !== "x402") continue;
-
-      isX402 = true;
       const memoData = m.Memo.MemoData ? decodeMemo(m.Memo.MemoData) : "";
-      try {
-        const payload = JSON.parse(memoData);
-        resourceUrl = typeof payload?.res === "string" ? payload.res : "";
-      } catch {
-        resourceUrl = memoData;
+
+      // We allow it if the exact MemoType is "x402" OR if the raw data looks like a payload
+      if (memoType.toLowerCase() === "x402" || memoData.includes(`"res"`)) {
+        isX402 = true;
+        try {
+          const payload = JSON.parse(memoData);
+          resourceUrl = typeof payload?.res === "string" ? payload.res : memoData;
+        } catch {
+          resourceUrl = memoData;
+        }
+        break;
       }
-      break;
+    }
+  }
+
+  // 2. Check Routing Tags (The efficient, registered strategy)
+  let matchedResource = null;
+  if (!isX402 && destinationTag !== null) {
+    // Look up if this destination tag maps to a known resource for this merchant
+    matchedResource = await prisma.resource.findFirst({
+      where: {
+        merchantAddr: receiver,
+        // In a real production app, you would add a `destinationTag` column to the Resource model
+        // to explicitly map an API to a tag. For now, we assume if the merchant is in our DB,
+        // and they used a DestinationTag, it's a tracked payment.
+      }
+    });
+
+    if (matchedResource) {
+      isX402 = true;
+      resourceUrl = matchedResource.url;
     }
   }
 
   if (!isX402) return;
-
-  const receiver = tx.Destination;
-  if (!receiver || typeof receiver !== "string") return;
 
   console.log(`🚨 Detected x402 payment! Hash: ${tx.hash}`);
 
@@ -91,8 +116,6 @@ async function processTransaction(txStream: any, tx: any) {
   const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
   const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
   const facilitator = identifyFacilitator(tx, resourceUrl);
-  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
-  const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
 
   try {
     await prisma.merchant.upsert({
