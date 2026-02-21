@@ -1,31 +1,29 @@
-import { prisma } from "@x402-xrpl/database";
 import Link from "next/link";
+import { apiFetch } from "../lib/api";
 
 interface SearchParams {
   page?: string;
 }
 
+type ResourceListResponse = {
+  items: Array<{
+    id: string; merchantAddr: string; url: string; name: string | null;
+    description: string | null; priceAmount: string; priceAsset: string;
+    network: string | null; isDiscovered: boolean; isActive: boolean;
+    merchant?: { address: string; name: string | null } | null;
+    _count?: { transactions: number };
+  }>;
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+};
+
 export default async function BazaarPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
-  const pageSize = 12;
-  const skip = (page - 1) * pageSize;
 
-  const [resources, totalCount] = await Promise.all([
-    prisma.resource.findMany({
-      where: { isActive: true },
-      include: {
-        merchant: true,
-        _count: { select: { transactions: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: pageSize,
-      skip,
-    }),
-    prisma.resource.count({ where: { isActive: true } }),
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const data = await apiFetch<ResourceListResponse>(`/resources?page=${page}&limit=12`);
+  const resources = data.items;
+  const totalCount = data.pagination.total;
+  const totalPages = data.pagination.totalPages;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
@@ -81,7 +79,7 @@ export default async function BazaarPage({ searchParams }: { searchParams: Promi
                     </span>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] text-gray-500">
-                        {res._count.transactions} txs
+                        {res._count?.transactions ?? 0} txs
                       </span>
                       <span className="text-[10px] text-gray-500 uppercase tracking-wider">{res.network}</span>
                     </div>

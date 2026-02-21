@@ -1,9 +1,18 @@
-import { prisma } from "@x402-xrpl/database";
 import Link from "next/link";
+import { apiFetch } from "../lib/api";
 
 interface SearchParams {
   q?: string;
 }
+
+type SearchResult = {
+  merchants: Array<{ address: string; name: string | null }>;
+  transactions: Array<{
+    hash: string; amount: string; asset: string; merchantAddr: string;
+    merchant?: { address: string; name: string | null } | null;
+  }>;
+  resources: Array<{ id: string; merchantAddr: string; url: string; name: string | null; priceAmount: string; priceAsset: string }>;
+};
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
@@ -18,37 +27,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     );
   }
 
-  const [merchants, transactions, resources] = await Promise.all([
-    prisma.merchant.findMany({
-      where: {
-        OR: [
-          { address: { contains: query, mode: "insensitive" } },
-          { name: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      take: 10,
-    }),
-    prisma.transaction.findMany({
-      where: {
-        OR: [
-          { hash: { contains: query, mode: "insensitive" } },
-          { buyerAddress: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      include: { merchant: true },
-      take: 10,
-      orderBy: { timestamp: "desc" },
-    }),
-    prisma.resource.findMany({
-      where: {
-        OR: [
-          { url: { contains: query, mode: "insensitive" } },
-          { name: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      take: 10,
-    }),
-  ]);
+  const { merchants, transactions, resources } = await apiFetch<SearchResult>(`/search?q=${encodeURIComponent(query)}`);
 
   const totalResults = merchants.length + transactions.length + resources.length;
 

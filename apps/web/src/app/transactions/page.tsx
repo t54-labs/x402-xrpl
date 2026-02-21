@@ -1,31 +1,29 @@
-import { prisma } from "@x402-xrpl/database";
 import Link from "next/link";
 import { RelativeTime } from "../components/RelativeTime";
+import { apiFetch } from "../lib/api";
 
 interface SearchParams {
   page?: string;
 }
 
+type TxListResponse = {
+  items: Array<{
+    hash: string; timestamp: string; amount: string; asset: string;
+    buyerAddress: string; merchantAddr: string;
+    merchant?: { address: string; name: string | null } | null;
+    resource?: { id: string; url: string; name: string | null } | null;
+  }>;
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+};
+
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
-  const pageSize = 25;
-  const skip = (page - 1) * pageSize;
 
-  const [transactions, totalCount] = await Promise.all([
-    prisma.transaction.findMany({
-      orderBy: { timestamp: "desc" },
-      take: pageSize,
-      skip,
-      include: {
-        merchant: true,
-        resource: true,
-      },
-    }),
-    prisma.transaction.count(),
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const data = await apiFetch<TxListResponse>(`/transactions?page=${page}&limit=25`);
+  const transactions = data.items;
+  const totalCount = data.pagination.total;
+  const totalPages = data.pagination.totalPages;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -58,7 +56,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                     </Link>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-400">
-                    <RelativeTime date={tx.timestamp.toISOString()} />
+                    <RelativeTime date={tx.timestamp} />
                   </td>
                   <td className="px-6 py-4 max-w-xs">
                     <div className="text-sm font-medium text-gray-200 truncate">

@@ -1,26 +1,30 @@
-import { prisma } from "@x402-xrpl/database";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
+import { apiFetch } from "../../lib/api";
 
 interface PageProps {
   params: Promise<{ hash: string }>;
 }
 
+type TxDetail = {
+  hash: string; ledgerIndex: number; timestamp: string; amount: string; asset: string;
+  assetIssuer: string | null; buyerAddress: string; merchantAddr: string;
+  sourceTag: number | null; destinationTag: number | null; invoiceId: string | null;
+  facilitator: string | null; rawMemo: string | null;
+  merchant?: { name: string | null } | null;
+  resource?: { url: string; name: string | null } | null;
+};
+
 export default async function TransactionDetailPage({ params }: PageProps) {
   const { hash } = await params;
 
-  const tx = await prisma.transaction.findUnique({
-    where: { hash },
-    include: {
-      merchant: true,
-      resource: true,
-    },
-  });
-
-  if (!tx) {
+  let tx: TxDetail;
+  try {
+    tx = await apiFetch<TxDetail>(`/transactions/${hash}`);
+  } catch {
     notFound();
   }
 
@@ -29,7 +33,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
   const fields: Field[] = [
     { label: "Transaction Hash", value: tx.hash, mono: true, copyable: true },
     { label: "Ledger Index", value: tx.ledgerIndex.toLocaleString() },
-    { label: "Timestamp", value: new Date(tx.timestamp).toLocaleString(), relative: tx.timestamp.toISOString() },
+    { label: "Timestamp", value: new Date(tx.timestamp).toLocaleString(), relative: tx.timestamp },
     { label: "Amount", value: `${tx.amount} ${tx.asset}`, highlight: true },
   ];
 

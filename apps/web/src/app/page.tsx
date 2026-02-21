@@ -1,30 +1,29 @@
-import { prisma } from "@x402-xrpl/database";
 import Link from "next/link";
 import { RelativeTime } from "./components/RelativeTime";
+import { apiFetch } from "./lib/api";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const [totalTransactions, totalMerchants, totalResources, recentTransactions, registeredResources] = await Promise.all([
-    prisma.transaction.count(),
-    prisma.merchant.count(),
-    prisma.resource.count({ where: { isActive: true } }),
-    prisma.transaction.findMany({
-      take: 10,
-      orderBy: { timestamp: "desc" },
-      include: { merchant: true },
-    }),
-    prisma.resource.findMany({
-      take: 5,
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+type DashboardData = {
+  totalTransactions: number;
+  totalMerchants: number;
+  totalResources: number;
+  totalVolumeXrp: number;
+  recentTransactions: Array<{
+    hash: string; amount: string; asset: string; timestamp: string;
+    merchant?: { address: string; name: string | null } | null;
+  }>;
+  recentResources: Array<{
+    id: string; merchantAddr: string; url: string; name: string | null;
+    priceAmount: string; priceAsset: string; network: string | null;
+  }>;
+};
 
-  const volumeResult = await prisma.$queryRawUnsafe<[{ total: string }]>(
-    `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
-  );
-  const totalVolumeXrp = parseFloat(volumeResult[0]?.total || "0");
+export default async function Home() {
+  const {
+    totalTransactions, totalMerchants, totalResources, totalVolumeXrp,
+    recentTransactions, recentResources: registeredResources,
+  } = await apiFetch<DashboardData>("/dashboard");
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
@@ -72,7 +71,7 @@ export default async function Home() {
                       {tx.amount} <span className="text-gray-500 text-xs">{tx.asset}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-400">
-                      <RelativeTime date={tx.timestamp.toISOString()} />
+                      <RelativeTime date={tx.timestamp} />
                     </td>
                   </tr>
                 ))}
