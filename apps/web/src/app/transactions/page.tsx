@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { RelativeTime } from "../components/RelativeTime";
 import { apiFetch } from "../lib/api";
+import { formatCurrency } from "../utils/currency";
 
 interface SearchParams {
   page?: string;
@@ -77,7 +78,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                   </td>
                   <td className="px-6 py-4 text-sm text-right">
                     <span className="font-medium text-white">{tx.amount}</span>
-                    <span className="text-gray-500 text-xs ml-1">{tx.asset}</span>
+                    <span className="text-gray-500 text-xs ml-1">{formatCurrency(tx.asset)}</span>
                   </td>
                 </tr>
               ))}

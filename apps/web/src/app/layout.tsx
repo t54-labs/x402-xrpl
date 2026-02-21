@@ -62,6 +62,7 @@ export default function RootLayout({
               <div className="hidden md:flex items-center gap-5 text-sm font-medium">
                 <Link href="/" className="text-gray-400 hover:text-white transition-colors">Dashboard</Link>
                 <Link href="/transactions" className="text-gray-400 hover:text-white transition-colors">Transactions</Link>
+                <Link href="/merchants" className="text-gray-400 hover:text-white transition-colors">Merchants</Link>
                 <Link href="/agora" className="text-gray-400 hover:text-white transition-colors">Agora</Link>
                 <Link href="/resources/register" className="text-gray-400 hover:text-white transition-colors">Register</Link>
               </div>

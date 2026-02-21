@@ -32,6 +32,9 @@ export function MobileNav() {
           <Link href="/transactions" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Transactions
           </Link>
+          <Link href="/merchants" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
+            Merchants
+          </Link>
           <Link href="/agora" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Agora
           </Link>
