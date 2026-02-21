@@ -1,0 +1,55 @@
+---
+description: How to deploy the x402 XRPL indexer to GCE VM
+alwaysApply: false
+---
+
+# Deploy Indexer to GCE
+
+## Target VM
+- Host: `35.188.116.99`
+- SSH: `ssh -i ~/.ssh/gcp-gce-01 gcp-vm-monopoly@35.188.116.99`
+- Deploy path: `/opt/x402-xrpl`
+- Service: `x402-indexer` (systemd)
+
+## Database
+- Private IP: `10.77.97.16:5432`
+- Database: `x402_xrpl`
+- User: `postgres`
+- Password: `>GX-Z8}rsarm0$jx`
+
+## Deploy Steps
+
+1. SSH into VM and pull latest code:
+```bash
+ssh -i ~/.ssh/gcp-gce-01 gcp-vm-monopoly@35.188.116.99
+cd /opt/x402-xrpl && git pull origin main
+```
+
+2. Install deps, generate Prisma, build:
+```bash
+pnpm install --frozen-lockfile
+pnpm db:generate
+pnpm --filter @x402-xrpl/indexer build
+```
+
+3. Restart service:
+```bash
+sudo systemctl restart x402-indexer
+```
+
+4. Check logs:
+```bash
+sudo journalctl -u x402-indexer -f --no-pager
+```
+
+## Key Files on VM
+- Env: `/opt/x402-xrpl/apps/indexer/.env`
+- JS entry: `packages/database/index.js` (compiled JS, not .ts)
+- Service: `/etc/systemd/system/x402-indexer.service`
+- DB `main` field in `packages/database/package.json` is `index.js` on VM
+
+## Important Notes
+- The database package uses `index.js` (not `index.ts`) on the VM because Node.js can't run TypeScript directly. Don't overwrite this with git pull.
+- After `git pull`, if `packages/database/package.json` reverts `main` to `index.ts`, change it back to `index.js`.
+- XRPL mainnet WebSocket: `wss://s1.ripple.com:51233`
+- Health check: `curl http://localhost:4000/health`
