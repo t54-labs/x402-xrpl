@@ -17,12 +17,15 @@ type DashboardData = {
     id: string; merchantAddr: string; url: string; name: string | null;
     priceAmount: string; priceAsset: string; network: string | null;
   }>;
+  topMerchants: Array<{
+    address: string; name: string | null; txCount: number; volume: number;
+  }>;
 };
 
 export default async function Home() {
   const {
     totalTransactions, totalMerchants, totalResources, totalVolumeXrp,
-    recentTransactions, recentResources: registeredResources,
+    recentTransactions, recentResources: registeredResources, topMerchants,
   } = await apiFetch<DashboardData>("/dashboard");
 
   return (
@@ -40,6 +43,34 @@ export default async function Home() {
         <StatCard title="Merchants" value={totalMerchants.toLocaleString()} />
         <StatCard title="Resources" value={totalResources.toLocaleString()} />
       </div>
+
+      {topMerchants.length > 0 && (
+        <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+          <div className="p-6 border-b border-white/5">
+            <h2 className="text-lg font-medium text-white">Top Merchants</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
+            {topMerchants.map((m, i) => (
+              <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">
+                      {m.name || `${m.address.substring(0, 8)}...${m.address.slice(-4)}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{m.txCount} txs</span>
+                  <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
