@@ -453,6 +453,18 @@ app.post("/verify", async (req, res) => {
         });
         if (!xrplReq?.payTo) throw new Error("No valid XRPL payTo address");
 
+        const rawAmount = String(xrplReq.amount ?? "0");
+        const asset = xrplReq.asset || "XRP";
+        let priceAmount = rawAmount;
+        if (asset === "XRP" && /^\d+$/.test(rawAmount)) {
+          priceAmount = (Number(rawAmount) / 1_000_000).toString();
+        }
+
+        const resDescription = decoded?.resource?.description;
+        const resourceName = typeof resDescription === "string" && resDescription
+          ? resDescription
+          : (typeof decoded?.description === "string" ? decoded.description : null);
+
         const merchantUpdate: Record<string, string> = { website: origin };
         if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
         if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
@@ -464,11 +476,12 @@ app.post("/verify", async (req, res) => {
         });
         const resource = await prisma.resource.upsert({
           where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
-          update: { priceAmount: String(xrplReq.amount ?? "0"), priceAsset: xrplReq.asset || "XRP", isActive: true },
+          update: { priceAmount, priceAsset: asset, isActive: true, ...(resourceName ? { name: resourceName } : {}) },
           create: {
             merchantAddr: xrplReq.payTo, url: resourceUrl,
-            priceAmount: String(xrplReq.amount ?? "0"), priceAsset: xrplReq.asset || "XRP",
-            schema: "x402", network: xrplReq.network || "xrpl", name: "Registered Resource",
+            priceAmount, priceAsset: asset,
+            schema: "x402", network: xrplReq.network || "xrpl",
+            name: resourceName || "Registered Resource",
           },
         });
         registered.push(resource);
