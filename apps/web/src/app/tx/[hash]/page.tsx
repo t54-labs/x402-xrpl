@@ -110,6 +110,24 @@ export default async function TransactionDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {tx.destinationTag !== null && (
+            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
+              <div className="sm:w-48 shrink-0">
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destination Tag</span>
+              </div>
+              <span className="text-sm text-gray-300 font-mono">{tx.destinationTag}</span>
+            </div>
+          )}
+
+          {tx.sourceTag !== null && (
+            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
+              <div className="sm:w-48 shrink-0">
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Source Tag</span>
+              </div>
+              <span className="text-sm text-gray-300 font-mono">{tx.sourceTag}</span>
+            </div>
+          )}
+
           {tx.rawMemo && (
             <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
               <div className="sm:w-48 shrink-0">

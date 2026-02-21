@@ -87,6 +87,10 @@ model Transaction {
   
   // Optional: If a specific facilitator verified this
   facilitator  String?
+
+  // XRPL Specific Routing Tags
+  destinationTag Int?     // Destination tag used for sub-account or request routing
+  sourceTag      Int?     // Source tag used by sender
   
   // We can store the raw memo data if needed for debugging
   rawMemo      String?

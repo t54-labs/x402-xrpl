@@ -68,6 +68,8 @@ async function runMock() {
     Account: buyerWallet.classicAddress,
     Amount: xrpToDrops("0.5"), // Paying 0.5 XRP for the API call
     Destination: merchantWallet.classicAddress,
+    DestinationTag: 402, // An example destination tag for routing
+    SourceTag: 999, // An example source tag 
     Memos: [
       {
         Memo: {
@@ -101,6 +103,8 @@ async function runMock() {
       amount: "0.5",
       asset: "XRP",
       assetIssuer: null,
+      destinationTag: 402,
+      sourceTag: 999,
       rawMemo: mockResourceUrl,
     }
   });
