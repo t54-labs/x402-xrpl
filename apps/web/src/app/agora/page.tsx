@@ -16,7 +16,7 @@ type ResourceListResponse = {
   pagination: { page: number; limit: number; total: number; totalPages: number };
 };
 
-export default async function BazaarPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+export default async function AgoraPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
 
@@ -28,7 +28,7 @@ export default async function BazaarPage({ searchParams }: { searchParams: Promi
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
       <header>
-        <h1 className="text-3xl font-light tracking-tight text-white">The Bazaar</h1>
+        <h1 className="text-3xl font-light tracking-tight text-white">The Agora</h1>
         <p className="text-sm text-gray-400 mt-2">
           Discover pay-per-use APIs and services on the XRPL x402 network.
           {totalCount > 0 && <span className="ml-2 text-gray-500">({totalCount} resources)</span>}
@@ -102,7 +102,7 @@ export default async function BazaarPage({ searchParams }: { searchParams: Promi
             <div className="flex items-center justify-center gap-2 pt-4">
               {page > 1 && (
                 <Link
-                  href={`/bazaar?page=${page - 1}`}
+                  href={`/agora?page=${page - 1}`}
                   className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
                 >
                   Previous
@@ -113,7 +113,7 @@ export default async function BazaarPage({ searchParams }: { searchParams: Promi
               </span>
               {page < totalPages && (
                 <Link
-                  href={`/bazaar?page=${page + 1}`}
+                  href={`/agora?page=${page + 1}`}
                   className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
                 >
                   Next
