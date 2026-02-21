@@ -128,6 +128,18 @@ export default async function TransactionDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          {tx.invoiceId && (
+            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
+              <div className="sm:w-48 shrink-0">
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Invoice ID</span>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm text-gray-300 font-mono break-all">{tx.invoiceId}</span>
+                <CopyButton text={tx.invoiceId} />
+              </div>
+            </div>
+          )}
+
           {tx.rawMemo && (
             <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
               <div className="sm:w-48 shrink-0">

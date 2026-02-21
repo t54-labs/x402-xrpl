@@ -91,12 +91,10 @@ async function runMock() {
     Account: buyerWallet.classicAddress,
     Amount: xrpToDrops("0.5"), // Paying 0.5 XRP for the API call
     Destination: merchantWallet.classicAddress,
-    DestinationTag: 402, // An example destination tag for routing
-    SourceTag: 999, // An example source tag 
+    SourceTag: 804681468,
     Memos: [
       {
         Memo: {
-          MemoType: stringToHex("x402"),
           MemoData: stringToHex(memoDataJson)
         }
       }
