@@ -38,11 +38,11 @@ export default function RootLayout({
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2.5 shrink-0">
                 <div className="w-9 h-9 rounded-full bg-[#4b9cf5] flex items-center justify-center shrink-0 shadow-lg shadow-[#4b9cf5]/25">
-                  <svg width="20" height="20" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13 7C11.5 7 10.5 8 10.5 9.5V14C10.5 15 9.5 16 8 17L7.5 17.5C7.3 17.7 7.3 18.3 7.5 18.5L8 19C9.5 20 10.5 21 10.5 22V26.5C10.5 28 11.5 29 13 29" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                    <path d="M23 7C24.5 7 25.5 8 25.5 9.5V14C25.5 15 26.5 16 28 17L28.5 17.5C28.7 17.7 28.7 18.3 28.5 18.5L28 19C26.5 20 25.5 21 25.5 22V26.5C25.5 28 24.5 29 23 29" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
-                    <path d="M13.5 12L18 18L22.5 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M13.5 24L18 18L22.5 24" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.5 10C13 10 11.5 10.5 11.5 12.5V15C11.5 16 11 17 9.5 18C11 19 11.5 20 11.5 21V23.5C11.5 25.5 13 26 14.5 26" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <path d="M21.5 10C23 10 24.5 10.5 24.5 12.5V15C24.5 16 25 17 26.5 18C25 19 24.5 20 24.5 21V23.5C24.5 25.5 23 26 21.5 26" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <line x1="15" y1="13" x2="21" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="21" y1="13" x2="15" y2="23" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <span className="text-xl font-semibold tracking-tight text-white">
