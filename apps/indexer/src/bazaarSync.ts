@@ -8,6 +8,26 @@ type XrplRequirement = {
   network?: string;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeDiscoveryResourceUrl(resourceEntry: string, origin: string): string | null {
+  const value = resourceEntry.trim();
+  if (!value) return null;
+
+  const methodAndPath = value.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+)$/i);
+  const maybeUrl = methodAndPath ? methodAndPath[2].trim() : value;
+
+  try {
+    const parsed = new URL(maybeUrl, origin);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 function parsePaymentRequired(headerValue: unknown): unknown {
   if (typeof headerValue !== "string") return null;
   try {
@@ -21,16 +41,24 @@ function parsePaymentRequired(headerValue: unknown): unknown {
 function extractXrplRequirement(paymentRequired: unknown): XrplRequirement | null {
   const requirements = Array.isArray(paymentRequired)
     ? paymentRequired
-    : Array.isArray((paymentRequired as any)?.accepts)
-      ? (paymentRequired as any).accepts
+    : isRecord(paymentRequired) && Array.isArray(paymentRequired.accepts)
+      ? paymentRequired.accepts
       : [];
 
-  const match = requirements.find((req: any) => {
-    const network = String(req?.network || "").toLowerCase();
-    return network === "xrpl" || network === "testnet";
-  });
+  for (const req of requirements) {
+    if (!isRecord(req)) continue;
+    const network = String(req.network || "").toLowerCase();
+    if (network !== "xrpl" && network !== "testnet") continue;
 
-  return match || null;
+    return {
+      payTo: typeof req.payTo === "string" ? req.payTo : undefined,
+      amount: typeof req.amount === "number" || typeof req.amount === "string" ? req.amount : undefined,
+      asset: typeof req.asset === "string" ? req.asset : undefined,
+      network: typeof req.network === "string" ? req.network : undefined,
+    };
+  }
+
+  return null;
 }
 
 async function upsertDiscoveredResource(input: {
@@ -84,11 +112,7 @@ async function upsertDiscoveredResource(input: {
 async function verifyAndUpsertResource(
   resourceUrl: string,
   origin: string,
-  fallback: {
-    merchantAddress?: string;
-    amount?: string;
-    asset?: string;
-    network?: string;
+  metadata: {
     name?: string;
     description?: string;
   } = {}
@@ -113,28 +137,14 @@ async function verifyAndUpsertResource(
           asset: xrplRequirement.asset || "XRP",
           network: xrplRequirement.network || "xrpl",
           origin,
-          name: fallback.name,
-          description: fallback.description,
+          name: metadata.name,
+          description: metadata.description,
         });
         return true;
       }
     }
-  } catch (error) {
-    // Fall through to fallback registration path.
-  }
-
-  if (fallback.merchantAddress) {
-    await upsertDiscoveredResource({
-      resourceUrl,
-      merchantAddress: fallback.merchantAddress,
-      amount: fallback.amount || "0",
-      asset: fallback.asset || "XRP",
-      network: fallback.network || "xrpl",
-      origin,
-      name: fallback.name,
-      description: fallback.description,
-    });
-    return true;
+  } catch {
+    // Ignore resource-level fetch errors and continue processing others.
   }
 
   return false;
@@ -172,27 +182,16 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     const syncedUrls: string[] = [];
     
     for (const res of resources) {
-      const resourceUrl =
+      const resourceCandidate =
         typeof res === "string"
           ? res
           : res?.url || res?.id || res?.resource;
-      if (!resourceUrl || typeof resourceUrl !== "string") continue;
+      if (!resourceCandidate || typeof resourceCandidate !== "string") continue;
 
-      const accepts = Array.isArray(res?.accepts)
-        ? res.accepts
-        : Array.isArray(res?.accept)
-          ? res.accept
-          : [];
-      const xrplAccept = accepts.find((a: any) => {
-        const network = String(a?.network || "").toLowerCase();
-        return network === "xrpl" || network === "testnet";
-      });
+      const resourceUrl = normalizeDiscoveryResourceUrl(resourceCandidate, url.origin);
+      if (!resourceUrl) continue;
 
       const synced = await verifyAndUpsertResource(resourceUrl, url.origin, {
-        merchantAddress: xrplAccept?.payTo || merchantAddress,
-        amount: xrplAccept?.amount ? String(xrplAccept.amount) : undefined,
-        asset: xrplAccept?.asset || "XRP",
-        network: xrplAccept?.network || "xrpl",
         name: res?.name || res?.title,
         description: res?.description,
       });
@@ -207,6 +206,7 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     await prisma.resource.updateMany({
       where: {
         merchantAddr: merchantAddress,
+        isDiscovered: true,
         url: { notIn: syncedUrls }
       },
       data: { isActive: false }
@@ -214,8 +214,9 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
 
     console.log(`[Auto-Discovery] Synced ${syncedCount}/${resources.length} resources for ${merchantAddress}.`);
 
-  } catch (error: any) {
-    console.error(`[Auto-Discovery] Failed to sync ${website}: ${error.message}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[Auto-Discovery] Failed to sync ${website}: ${message}`);
   }
 }
 

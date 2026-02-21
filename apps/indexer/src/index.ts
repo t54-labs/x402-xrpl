@@ -28,6 +28,14 @@ function getTxResult(txStream: any, tx: any): string | undefined {
     || tx?.metaData?.TransactionResult;
 }
 
+function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
+  if (!completeLedgers) return null;
+  const firstRange = completeLedgers.split(",")[0]?.trim();
+  if (!firstRange) return null;
+  const start = parseInt(firstRange.split("-")[0] || "", 10);
+  return Number.isFinite(start) && start > 0 ? start : null;
+}
+
 // -------------------------------------------------------------
 // Core Transaction Processing Logic
 //
@@ -86,41 +94,41 @@ async function processTransaction(txStream: any, tx: any) {
   const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
   const sourceTag = typeof tx.SourceTag === "number" ? tx.SourceTag : null;
 
-  await prisma.merchant.upsert({
-    where: { address: receiver },
-    update: {},
-    create: { address: receiver },
-  });
+  try {
+    await prisma.merchant.upsert({
+      where: { address: receiver },
+      update: {},
+      create: { address: receiver },
+    });
 
-  let resourceId: string | undefined;
-  if (resourceUrl) {
-    const resource = await prisma.resource.upsert({
-      where: {
-        merchantAddr_url: {
+    let resourceId: string | undefined;
+    if (resourceUrl) {
+      const resource = await prisma.resource.upsert({
+        where: {
+          merchantAddr_url: {
+            merchantAddr: receiver,
+            url: resourceUrl,
+          },
+        },
+        update: {
+          priceAmount: amountPaid,
+          priceAsset: asset,
+          isActive: true,
+        },
+        create: {
           merchantAddr: receiver,
           url: resourceUrl,
+          priceAmount: amountPaid,
+          priceAsset: asset,
+          schema: "x402",
+          network: "xrpl",
+          name: "Discovered Resource",
+          isActive: true,
         },
-      },
-      update: {
-        priceAmount: amountPaid,
-        priceAsset: asset,
-        isActive: true,
-      },
-      create: {
-        merchantAddr: receiver,
-        url: resourceUrl,
-        priceAmount: amountPaid,
-        priceAsset: asset,
-        schema: "x402",
-        network: "xrpl",
-        name: "Discovered Resource",
-        isActive: true,
-      },
-    });
-    resourceId = resource.id;
-  }
+      });
+      resourceId = resource.id;
+    }
 
-  try {
     await prisma.transaction.upsert({
       where: { hash: tx.hash },
       update: {},
@@ -142,26 +150,45 @@ async function processTransaction(txStream: any, tx: any) {
     });
     console.log(`✅ Saved x402 transaction ${tx.hash}`);
   } catch (err) {
-    console.error(`❌ Failed to save transaction ${tx.hash}:`, err);
+    console.error(`❌ Failed to persist transaction ${tx.hash}:`, err);
   }
 }
 
 // -------------------------------------------------------------
 // Backfill Logic
 // -------------------------------------------------------------
-async function backfillLedgers(client: Client, currentLiveIndex: number) {
+async function backfillLedgers(
+  client: Client,
+  currentLiveIndex: number,
+  earliestAvailableLedger: number | null
+) {
   // Try to find the existing state
   let state = await prisma.indexerState.findUnique({
     where: { id: "default" }
   });
 
-  // If none exists, this is a fresh db, start from now
+  // If none exists, this is a fresh db. Choose a sensible starting point.
   if (!state) {
+    const configuredStartRaw = process.env.BACKFILL_START_LEDGER;
+    const configuredStart = configuredStartRaw ? parseInt(configuredStartRaw, 10) : NaN;
+    const firstRunStart = Number.isFinite(configuredStart) && configuredStart >= 0
+      ? configuredStart
+      : (earliestAvailableLedger ?? currentLiveIndex);
+    const initialLedger = Math.min(firstRunStart, currentLiveIndex);
+
     state = await prisma.indexerState.create({
-      data: { id: "default", lastLedgerIndex: currentLiveIndex }
+      data: { id: "default", lastLedgerIndex: initialLedger }
     });
-    console.log(`[Backfill] First run detected. Starting tracking at ledger ${currentLiveIndex}`);
-    return;
+
+    if (initialLedger >= currentLiveIndex) {
+      console.log(`[Backfill] First run detected. Starting tracking at ledger ${currentLiveIndex}`);
+      return;
+    }
+
+    console.log(
+      `[Backfill] First run detected. Backfilling from ledger ${initialLedger} to ${currentLiveIndex}. ` +
+      `Set BACKFILL_START_LEDGER to override.`
+    );
   }
 
   const startLedger = state.lastLedgerIndex;
@@ -227,9 +254,10 @@ async function startIndexer() {
 
   const serverInfo = await client.request({ command: "server_info" });
   const currentLedger = serverInfo.result.info.validated_ledger?.seq || 0;
+  const earliestAvailableLedger = parseEarliestAvailableLedger(serverInfo.result.info.complete_ledgers);
 
   if (currentLedger > 0) {
-    await backfillLedgers(client, currentLedger);
+    await backfillLedgers(client, currentLedger, earliestAvailableLedger);
   }
 
   console.log("Subscribing to live ledger stream...");
@@ -238,17 +266,23 @@ async function startIndexer() {
     streams: ["transactions"],
   });
 
-  client.on("transaction", async (txStream: any) => {
+  client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
-    
-    await processTransaction(txStream, txStream.transaction);
 
-    lastLedger = txStream.ledger_index;
-    await prisma.indexerState.upsert({
-      where: { id: "default" },
-      update: { lastLedgerIndex: txStream.ledger_index },
-      create: { id: "default", lastLedgerIndex: txStream.ledger_index }
-    });
+    void (async () => {
+      try {
+        await processTransaction(txStream, txStream.transaction);
+
+        lastLedger = txStream.ledger_index;
+        await prisma.indexerState.upsert({
+          where: { id: "default" },
+          update: { lastLedgerIndex: txStream.ledger_index },
+          create: { id: "default", lastLedgerIndex: txStream.ledger_index }
+        });
+      } catch (err) {
+        console.error("❌ Failed processing live transaction:", err);
+      }
+    })();
   });
 
   indexerHealthy = true;

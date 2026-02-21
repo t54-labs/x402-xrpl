@@ -1,10 +1,33 @@
-import { Client, Wallet, xrpToDrops } from "xrpl";
+import { Client, xrpToDrops } from "xrpl";
 import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 const XRPL_WSS = process.env.XRPL_WSS || "wss://s.altnet.rippletest.net:51233";
+
+async function waitForIndexerRecord(
+  txHash: string,
+  timeoutMs = 60_000,
+  pollMs = 2_000
+): Promise<boolean> {
+  const started = Date.now();
+
+  while (Date.now() - started < timeoutMs) {
+    const existing = await prisma.transaction.findUnique({
+      where: { hash: txHash },
+      select: { hash: true },
+    });
+
+    if (existing) {
+      return true;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+  }
+
+  return false;
+}
 
 // Helper to hex encode strings for XRPL Memos
 function stringToHex(str: string): string {
@@ -24,8 +47,8 @@ async function runMock() {
   const buyerWallet = (await client.fundWallet()).wallet;
   console.log(`Buyer Address: ${buyerWallet.classicAddress}`);
 
-  // Register the mock merchant in our local DB so the indexer tracks it
-  console.log("Registering merchant in local PostgreSQL DB...");
+  // Optional metadata seeding for local dashboard readability.
+  console.log("Seeding merchant/resource metadata in local PostgreSQL...");
   const mockResourceUrl = "https://mock-api.x402scan.com/v1/generate";
   
   await prisma.merchant.upsert({
@@ -89,28 +112,17 @@ async function runMock() {
   console.log("Transaction validated!");
   console.log(`Hash: ${txResult.result.hash}`);
   
-  // Also log it directly to DB to ensure the dashboard has data immediately
-  // (In a real scenario, the running indexer app would catch this via WebSocket)
-  console.log("Inserting into database directly for immediate dashboard viewing...");
-  await prisma.transaction.create({
-    data: {
-      hash: txResult.result.hash,
-      ledgerIndex: txResult.result.ledger_index as number,
-      timestamp: new Date(),
-      buyerAddress: buyerWallet.classicAddress,
-      merchantAddr: merchantWallet.classicAddress,
-      resourceId: (await prisma.resource.findFirst({ where: { url: mockResourceUrl } }))?.id,
-      amount: "0.5",
-      asset: "XRP",
-      assetIssuer: null,
-      destinationTag: 402,
-      sourceTag: 999,
-      rawMemo: mockResourceUrl,
-    }
-  });
+  console.log("Waiting for running indexer to ingest this transaction...");
+  const indexed = await waitForIndexerRecord(txResult.result.hash);
+  if (indexed) {
+    console.log("✅ Indexer detected and saved the transaction.");
+  } else {
+    console.warn("⚠️ Timed out waiting for indexer ingestion. Keep indexer running and re-check /api/transactions.");
+  }
 
-  console.log("Done! You can now view the dashboard to see the transaction.");
+  console.log("Done.");
   await client.disconnect();
+  await prisma.$disconnect();
 }
 
 runMock().catch(console.error);
