@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
-import { AutoRefresh } from "./components/AutoRefresh";
 import { NavLinks } from "./components/NavLinks";
 import "./globals.css";
 
@@ -33,7 +32,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0b0d10] text-gray-300 min-h-screen flex flex-col`}
       >
         <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0b0d10]/80 backdrop-blur-md">
-          <AutoRefresh />
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="flex items-center gap-2.5 shrink-0">

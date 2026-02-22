@@ -117,9 +117,6 @@ async function flushQueue() {
       ),
     ]);
 
-    // Notify any listeners that new data is available
-    await prisma.$executeRawUnsafe(`NOTIFY x402_new_tx`).catch(() => {});
-
     lastLedger = batchLedger;
     console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
   } catch (err) {
