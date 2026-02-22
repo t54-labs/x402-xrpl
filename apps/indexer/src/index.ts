@@ -7,13 +7,16 @@ import { runAutoDiscoverySync } from "./bazaarSync";
 
 dotenv.config();
 
-const XRPL_WSS = process.env.XRPL_WSS || "wss://s.altnet.rippletest.net:51233";
+const XRPL_NODES = (process.env.XRPL_WSS || "wss://xrplcluster.com,wss://s1.ripple.com:51233").split(",").map(s => s.trim());
 const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "4000", 10);
 const FLUSH_INTERVAL_MS = 500;
 const QUEUE_WARN_SIZE = 10_000;
+const CONNECT_TIMEOUT_MS = 15_000;
+const MAX_BACKFILL_GAP = 500;
 
 let indexerHealthy = false;
 let lastLedger = 0;
+let currentNodeIndex = 0;
 
 // ── Facilitator tag cache ───────────────────────────────────
 let knownSourceTags = new Map<number, string>();
@@ -44,15 +47,9 @@ function decodeMemoData(tx: any): string {
   return "";
 }
 
-function parseEarliestAvailableLedger(completeLedgers?: string): number | null {
-  if (!completeLedgers) return null;
-  const firstRange = completeLedgers.split(",")[0]?.trim();
-  if (!firstRange) return null;
-  const start = parseInt(firstRange.split("-")[0] || "", 10);
-  return Number.isFinite(start) && start > 0 ? start : null;
-}
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── Write queue types ───────────────────────────────────────
+// ── Write queue ─────────────────────────────────────────────
 type QueuedTx = {
   hash: string;
   ledgerIndex: number;
@@ -69,7 +66,6 @@ type QueuedTx = {
   rawMemo: string | null;
 };
 
-// ── Write queue ─────────────────────────────────────────────
 const writeQueue: QueuedTx[] = [];
 let highestQueuedLedger = 0;
 let flushing = false;
@@ -80,9 +76,7 @@ async function flushQueue() {
 
   const batch = writeQueue.splice(0);
   const batchLedger = highestQueuedLedger;
-
   const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
-
   const batchVolumeXrp = batch
     .filter((tx) => tx.asset === "XRP")
     .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
@@ -95,18 +89,11 @@ async function flushQueue() {
       }),
       prisma.transaction.createMany({
         data: batch.map((tx) => ({
-          hash: tx.hash,
-          ledgerIndex: tx.ledgerIndex,
-          timestamp: tx.timestamp,
-          buyerAddress: tx.buyerAddress,
-          merchantAddr: tx.merchantAddr,
-          amount: tx.amount,
-          asset: tx.asset,
-          assetIssuer: tx.assetIssuer,
-          facilitator: tx.facilitator,
-          sourceTag: tx.sourceTag,
-          destinationTag: tx.destinationTag,
-          invoiceId: tx.invoiceId,
+          hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
+          buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
+          amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
+          facilitator: tx.facilitator, sourceTag: tx.sourceTag,
+          destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
           rawMemo: tx.rawMemo,
         })),
         skipDuplicates: true,
@@ -118,7 +105,9 @@ async function flushQueue() {
     ]);
 
     lastLedger = batchLedger;
-    console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+    if (batch.length > 0) {
+      console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+    }
   } catch (err) {
     console.error(`❌ Flush failed (${batch.length} txs):`, err);
     writeQueue.unshift(...batch);
@@ -127,7 +116,7 @@ async function flushQueue() {
   }
 }
 
-// ── Transaction detection (no DB calls, pushes to queue) ────
+// ── Transaction detection ───────────────────────────────────
 function processTransaction(txStream: any, tx: any) {
   if (!tx || tx.TransactionType !== "Payment") return;
 
@@ -153,105 +142,112 @@ function processTransaction(txStream: any, tx: any) {
   }
   if (!amountPaid || amountPaid === "0") return;
 
-  const asset = typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN";
-  const assetIssuer = typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null;
-  const destinationTag = typeof tx.DestinationTag === "number" ? tx.DestinationTag : null;
-  const invoiceId = tx.InvoiceID || null;
-  const rawMemo = decodeMemoData(tx);
-  const ledgerIndex = txStream.ledger_index ?? 0;
-
   writeQueue.push({
     hash: tx.hash,
-    ledgerIndex,
+    ledgerIndex: txStream.ledger_index ?? 0,
     timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
     buyerAddress: tx.Account,
     merchantAddr: receiver,
     amount: amountPaid,
-    asset,
-    assetIssuer,
+    asset: typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN",
+    assetIssuer: typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null,
     facilitator: facilitatorName,
     sourceTag,
-    destinationTag,
-    invoiceId,
-    rawMemo: rawMemo || null,
+    destinationTag: typeof tx.DestinationTag === "number" ? tx.DestinationTag : null,
+    invoiceId: tx.InvoiceID || null,
+    rawMemo: decodeMemoData(tx) || null,
   });
 
-  if (ledgerIndex > highestQueuedLedger) {
-    highestQueuedLedger = ledgerIndex;
-  }
-
-  if (writeQueue.length >= QUEUE_WARN_SIZE) {
-    console.warn(`⚠️  Write queue size: ${writeQueue.length} — DB may be slow`);
-  }
+  const ledgerIndex = txStream.ledger_index ?? 0;
+  if (ledgerIndex > highestQueuedLedger) highestQueuedLedger = ledgerIndex;
+  if (writeQueue.length >= QUEUE_WARN_SIZE) console.warn(`⚠️  Write queue: ${writeQueue.length}`);
 }
 
-// ── Backfill ────────────────────────────────────────────────
-async function backfillLedgers(
-  client: Client,
-  currentLiveIndex: number,
-  earliestAvailableLedger: number | null
-) {
-  let state = await prisma.indexerState.findUnique({
-    where: { id: "default" }
-  });
+// ── Connect with failover ───────────────────────────────────
+async function connectToXrpl(): Promise<Client> {
+  for (let attempt = 0; attempt < XRPL_NODES.length * 2; attempt++) {
+    const nodeUrl = XRPL_NODES[currentNodeIndex % XRPL_NODES.length];
+    console.log(`Connecting to ${nodeUrl} (attempt ${attempt + 1})...`);
+
+    const client = new Client(nodeUrl, { connectionTimeout: CONNECT_TIMEOUT_MS });
+    try {
+      await client.connect();
+      console.log(`Connected to ${nodeUrl}`);
+      return client;
+    } catch (err) {
+      console.error(`Failed to connect to ${nodeUrl}:`, (err as Error).message);
+      currentNodeIndex++;
+      await sleep(2000);
+    }
+  }
+  throw new Error("Could not connect to any XRPL node");
+}
+
+// ── Backfill (capped, with rate-limit handling) ─────────────
+async function backfillLedgers(client: Client, currentLiveIndex: number) {
+  let state = await prisma.indexerState.findUnique({ where: { id: "default" } });
 
   if (!state) {
-    const configuredStartRaw = process.env.BACKFILL_START_LEDGER;
-    const configuredStart = configuredStartRaw ? parseInt(configuredStartRaw, 10) : NaN;
-    const firstRunStart = Number.isFinite(configuredStart) && configuredStart >= 0
-      ? configuredStart
-      : (earliestAvailableLedger ?? currentLiveIndex);
-    const initialLedger = Math.min(firstRunStart, currentLiveIndex);
-
     state = await prisma.indexerState.create({
-      data: { id: "default", lastLedgerIndex: initialLedger }
+      data: { id: "default", lastLedgerIndex: currentLiveIndex }
     });
-
-    if (initialLedger >= currentLiveIndex) {
-      console.log(`[Backfill] First run detected. Starting tracking at ledger ${currentLiveIndex}`);
-      return;
-    }
-
-    console.log(
-      `[Backfill] First run detected. Backfilling from ledger ${initialLedger} to ${currentLiveIndex}. ` +
-      `Set BACKFILL_START_LEDGER to override.`
-    );
-  }
-
-  const startLedger = state.lastLedgerIndex;
-
-  if (startLedger >= currentLiveIndex) {
-    console.log(`✅ Indexer is up to date at ledger ${currentLiveIndex}. No backfill needed.`);
+    console.log(`[Backfill] First run. Starting at ledger ${currentLiveIndex}`);
     return;
   }
 
-  console.log(`⏳ Backfilling ledgers from ${startLedger} to ${currentLiveIndex}...`);
+  const gap = currentLiveIndex - state.lastLedgerIndex;
 
+  if (gap <= 0) {
+    console.log(`✅ Indexer up to date at ledger ${currentLiveIndex}`);
+    return;
+  }
+
+  if (gap > MAX_BACKFILL_GAP) {
+    console.log(`[Backfill] Gap is ${gap} ledgers. Skipping to ${currentLiveIndex - MAX_BACKFILL_GAP} (max backfill: ${MAX_BACKFILL_GAP})`);
+    await prisma.indexerState.update({
+      where: { id: "default" },
+      data: { lastLedgerIndex: currentLiveIndex - MAX_BACKFILL_GAP }
+    });
+    state = await prisma.indexerState.findUnique({ where: { id: "default" } });
+    if (!state) return;
+  }
+
+  const startLedger = state.lastLedgerIndex;
+  console.log(`⏳ Backfilling ${currentLiveIndex - startLedger} ledgers (${startLedger} → ${currentLiveIndex})...`);
+
+  let retryDelay = 1000;
   for (let i = startLedger + 1; i <= currentLiveIndex; i++) {
     try {
       const response = await client.request({
         command: "ledger",
         ledger_index: i,
         transactions: true,
-        expand: true
+        expand: true,
       });
 
       const ledger = response.result.ledger;
       if (ledger.transactions) {
         for (const tx of ledger.transactions as any[]) {
-          const txStreamWrapper = { ledger_index: i, date: ledger.close_time };
-          processTransaction(txStreamWrapper, tx);
+          processTransaction({ ledger_index: i, date: ledger.close_time }, tx);
         }
       }
 
       if (i % 10 === 0 || i === currentLiveIndex) {
         highestQueuedLedger = Math.max(highestQueuedLedger, i);
         await flushQueue();
-        console.log(`[Backfill] Processed up to ledger ${i}`);
       }
 
-    } catch (err) {
-      console.error(`❌ Failed to fetch ledger ${i}:`, err);
+      retryDelay = 1000;
+    } catch (err: any) {
+      const isRateLimit = err?.data?.error === "slowDown" || err?.message?.includes("slowDown");
+      if (isRateLimit) {
+        console.warn(`[Backfill] Rate limited at ledger ${i}. Waiting ${retryDelay / 1000}s...`);
+        await sleep(retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 30_000);
+        i--;
+        continue;
+      }
+      console.error(`❌ Backfill error at ledger ${i}:`, err?.message || err);
       break;
     }
   }
@@ -262,49 +258,65 @@ async function backfillLedgers(
 
 // ── Main ────────────────────────────────────────────────────
 async function startIndexer() {
-  console.log(`Starting x402 XRPL Indexer on ${XRPL_WSS}...`);
+  console.log(`Starting x402 XRPL Indexer...`);
+  console.log(`Nodes: ${XRPL_NODES.join(", ")}`);
 
   await loadFacilitatorTags();
   if (knownSourceTags.size === 0) {
-    console.warn("⚠️  No facilitator tags in database. The indexer won't detect any x402 payments.");
-    console.warn("   Insert a row into FacilitatorTag (e.g. sourceTag=804681468) to start indexing.");
+    console.warn("⚠️  No facilitator tags. Insert a FacilitatorTag row to start indexing.");
   }
 
-  const client = new Client(XRPL_WSS);
+  const client = await connectToXrpl();
 
   client.on("error", (error) => {
     console.error("XRPL Client Error:", error);
   });
 
-  await client.connect();
-  console.log("Connected to XRPL Node.");
+  client.on("disconnected", async (code) => {
+    console.warn(`XRPL disconnected (code ${code}). Reconnecting in 5s...`);
+    indexerHealthy = false;
+    await sleep(5000);
+    try {
+      await client.connect();
+      await client.request({ command: "subscribe", streams: ["transactions"] });
+      indexerHealthy = true;
+      console.log("Reconnected and resubscribed.");
+    } catch (err) {
+      console.error("Reconnection failed. Process will restart via systemd.", err);
+      process.exit(1);
+    }
+  });
 
   const serverInfo = await client.request({ command: "server_info" });
   const currentLedger = serverInfo.result.info.validated_ledger?.seq || 0;
-  const earliestAvailableLedger = parseEarliestAvailableLedger(serverInfo.result.info.complete_ledgers);
 
   if (currentLedger > 0) {
-    await backfillLedgers(client, currentLedger, earliestAvailableLedger);
+    await backfillLedgers(client, currentLedger);
   }
 
-  console.log("Subscribing to live ledger stream...");
+  console.log("Subscribing to live transaction stream...");
   await client.request({
     command: "subscribe",
     streams: ["transactions"],
   }).catch((err) => {
-    console.error("❌ Failed to subscribe to transaction stream:", err);
+    console.error("❌ Failed to subscribe:", err);
     process.exit(1);
   });
 
   client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
     processTransaction(txStream, txStream.transaction);
+
+    if (txStream.ledger_index > lastLedger) {
+      lastLedger = txStream.ledger_index;
+      highestQueuedLedger = Math.max(highestQueuedLedger, lastLedger);
+    }
   });
 
-  // Flush the write queue every 500ms
   setInterval(() => { flushQueue().catch(console.error); }, FLUSH_INTERVAL_MS);
 
   indexerHealthy = true;
+  console.log("🟢 Indexer is live and tracking transactions.");
 
   cron.schedule("0 * * * *", () => {
     loadFacilitatorTags().catch(console.error);
@@ -323,7 +335,7 @@ function startHealthServer() {
         lastLedgerIndex: state?.lastLedgerIndex ?? lastLedger,
         queueSize: writeQueue.length,
         updatedAt: state?.updatedAt ?? null,
-        xrplNode: XRPL_WSS,
+        xrplNode: XRPL_NODES[currentNodeIndex % XRPL_NODES.length],
       }));
     } else {
       res.writeHead(404);
@@ -332,9 +344,12 @@ function startHealthServer() {
   });
 
   server.listen(HEALTH_PORT, () => {
-    console.log(`Health check server listening on :${HEALTH_PORT}/health`);
+    console.log(`Health check on :${HEALTH_PORT}/health`);
   });
 }
 
 startHealthServer();
-startIndexer().catch(console.error);
+startIndexer().catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});
