@@ -1,33 +1,34 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const partners = [
   {
-    name: "t54 AI",
+    name: "t54 ai",
     description: "Trusted Agentic Finance — the XRPL x402 facilitator powering presigned payment verification and settlement.",
     website: "https://t54.ai",
     role: "Facilitator",
-    color: "cyan",
+    logo: "/partners/t54.ico",
   },
   {
-    name: "AskSurf AI",
+    name: "AskSurf",
     description: "AI-powered chat and search assistant. Pay-per-query conversational AI accessible via x402 micropayments.",
     website: "https://asksurf.ai",
     role: "API Provider",
-    color: "blue",
+    logo: "/partners/asksurf.ico",
   },
   {
-    name: "LucyOS AI",
+    name: "LucyOS",
     description: "Intelligent token analysis service for the XRPL ecosystem. Real-time insights on any token via x402.",
     website: "https://lucyos.ai",
     role: "API Provider",
-    color: "purple",
+    logo: "/partners/lucyos.ico",
   },
   {
-    name: "Heurist AI",
+    name: "Heurist",
     description: "Composable crypto intelligence agents. Trending token detection, whale tracking, and market analysis skills for AI agents.",
     website: "https://heurist.xyz",
     role: "API Provider",
-    color: "green",
+    logo: "/partners/heurist.ico",
   },
 ];
 
@@ -64,8 +65,8 @@ export default function PartnersPage() {
           >
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                  <span className="text-lg font-bold text-white">{p.name.charAt(0)}</span>
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  <Image src={p.logo} alt={p.name} width={32} height={32} className="object-contain" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-white group-hover:text-cyan-400 transition-colors">{p.name}</h3>

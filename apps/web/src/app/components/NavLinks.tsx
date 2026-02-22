@@ -8,8 +8,8 @@ const links = [
   { href: "/transactions", label: "Transactions" },
   { href: "/merchants", label: "Merchants" },
   { href: "/agora", label: "Agora" },
-  { href: "/partners", label: "Partners" },
   { href: "/resources/register", label: "Register" },
+  { href: "/partners", label: "Partners" },
 ];
 
 export function NavLinks() {
