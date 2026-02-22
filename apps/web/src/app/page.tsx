@@ -114,6 +114,30 @@ export default async function Home() {
         </div>
       )}
 
+      <div className="bg-gradient-to-r from-[#131518] to-[#0f1923] rounded-xl border border-cyan-500/10 p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-medium text-white">XRPL x402 Facilitator</h2>
+              <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Live</span>
+            </div>
+            <p className="text-sm text-gray-400 max-w-lg">No API keys, no custody — just plug and play. Supports XRP &amp; IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.</p>
+            <div className="flex items-center gap-2 mt-2">
+              <code className="text-xs font-mono text-cyan-400 bg-cyan-400/5 px-3 py-1.5 rounded border border-cyan-400/10">https://xrpl-facilitator-mainnet.t54.ai</code>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <a href="https://xrpl-x402.t54.ai/" target="_blank" rel="noreferrer" className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-lg transition-all text-sm">
+              Get Started
+            </a>
+            <a href="https://xrpl-x402.t54.ai/docs/overview" target="_blank" rel="noreferrer" className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white hover:border-white/20 transition-all">
+              Docs
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-white/5">
           <h2 className="text-lg font-medium text-white">Recent Transactions</h2>
