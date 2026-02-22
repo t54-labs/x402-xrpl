@@ -8,21 +8,20 @@ export function AutoRefresh() {
 
   useEffect(() => {
     let es: EventSource | null = null;
-    
-    // Minimal retry logic for EventSource
+    let lastRefresh = 0;
+
     function connect() {
       es = new EventSource("/api/stream");
       
       es.onmessage = (event) => {
-        if (event.data) {
-          // Tell Next.js to re-fetch the current server component tree
+        if (event.data && Date.now() - lastRefresh > 5000) {
+          lastRefresh = Date.now();
           router.refresh();
         }
       };
 
       es.onerror = () => {
         es?.close();
-        // Try to reconnect after 5 seconds if connection dies
         setTimeout(connect, 5000);
       };
     }
