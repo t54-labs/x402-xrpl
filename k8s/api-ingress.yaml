@@ -1,0 +1,37 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: x402-api-cert
+  namespace: x402-xrpl
+spec:
+  domains:
+    - api.xrpl-ai.org
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: x402-api-ingress
+  namespace: x402-xrpl
+  annotations:
+    networking.gke.io/managed-certificates: x402-api-cert
+    kubernetes.io/ingress.global-static-ip-name: x402-api-ip
+spec:
+  defaultBackend:
+    service:
+      name: x402-api-nodeport
+      port:
+        number: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: x402-api-nodeport
+  namespace: x402-xrpl
+spec:
+  type: NodePort
+  selector:
+    app: x402-api
+  ports:
+    - port: 80
+      targetPort: 4001
+      protocol: TCP
