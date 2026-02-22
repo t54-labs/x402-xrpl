@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "x402scan | XRPL x402 Explorer",
-  description: "The machine-native payment block explorer and bazaar for the XRP Ledger.",
+  description: "The machine-native payment block explorer and agora for the XRP Ledger.",
 };
 
 export default function RootLayout({
