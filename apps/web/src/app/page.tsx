@@ -45,41 +45,13 @@ export default async function Home() {
         <StatCard title="Resources" value={totalResources.toLocaleString()} />
       </div>
 
-      {topMerchants.length > 0 && (
-        <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-          <div className="flex justify-between items-center p-6 border-b border-white/5">
-            <h2 className="text-lg font-medium text-white">Top Merchants</h2>
-            <Link href="/merchants" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
-              View All &rarr;
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
-            {topMerchants.map((m, i) => (
-              <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">
-                      {m.name || `${m.address.substring(0, 8)}...${m.address.slice(-4)}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">{m.txCount} txs</span>
-                  <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-white/5">
-          <h2 className="text-lg font-medium text-white">The Agora</h2>
-          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+          <div>
+            <h2 className="text-lg font-medium text-white">The Agora</h2>
+            <p className="text-xs text-gray-500 mt-1">Pay-per-use API services powered by x402 on the XRPL</p>
+          </div>
+          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors shrink-0">
             Browse All &rarr;
           </Link>
         </div>
@@ -110,6 +82,37 @@ export default async function Home() {
           </div>
         )}
       </div>
+
+      {topMerchants.length > 0 && (
+        <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b border-white/5">
+            <h2 className="text-lg font-medium text-white">Top Merchants</h2>
+            <Link href="/merchants" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+              View All &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
+            {topMerchants.map((m, i) => (
+              <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">
+                      {m.name || `${m.address.substring(0, 8)}...${m.address.slice(-4)}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{m.txCount} txs</span>
+                  <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-white/5">
