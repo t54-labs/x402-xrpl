@@ -38,11 +38,11 @@ export function MobileNav() {
           <Link href="/agora" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Agora
           </Link>
-          <Link href="/partners" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
-            Partners
-          </Link>
           <Link href="/resources/register" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
             Register Resource
+          </Link>
+          <Link href="/partners" onClick={() => setOpen(false)} className="block text-gray-400 hover:text-white transition-colors text-sm font-medium py-2">
+            Partners
           </Link>
         </div>
       )}
