@@ -11,7 +11,10 @@ export function AutoRefresh() {
     let lastRefresh = 0;
 
     function connect() {
-      es = new EventSource("/api/stream");
+      const streamUrl = process.env.NEXT_PUBLIC_API_URL
+        ? `${process.env.NEXT_PUBLIC_API_URL}/stream`
+        : "/api/stream";
+      es = new EventSource(streamUrl);
       
       es.onmessage = (event) => {
         if (event.data && Date.now() - lastRefresh > 5000) {
