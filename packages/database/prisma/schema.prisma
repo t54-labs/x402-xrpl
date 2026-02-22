@@ -71,6 +71,7 @@ model Resource {
   transactions Transaction[]
 
   @@unique([merchantAddr, url])
+  @@index([isActive, createdAt])
 }
 
 model Transaction {
@@ -100,8 +101,8 @@ model Transaction {
   
   createdAt    DateTime   @default(now())
 
-  @@index([buyerAddress])
-  @@index([merchantAddr])
+  @@index([merchantAddr, timestamp])
+  @@index([buyerAddress, timestamp])
   @@index([sourceTag])
   @@index([timestamp])
 }
