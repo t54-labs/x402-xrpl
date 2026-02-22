@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RelativeTime } from "./components/RelativeTime";
+import { CopyButton } from "./components/CopyButton";
 import { apiFetch } from "./lib/api";
 import { formatCurrency } from "./utils/currency";
 
@@ -124,7 +125,8 @@ export default async function Home() {
             </div>
             <p className="text-sm text-gray-400 max-w-lg">No API keys, no custody — just plug and play. Supports XRP &amp; IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.</p>
             <div className="flex items-center gap-2 mt-2">
-              <a href="https://xrpl-facilitator-mainnet.t54.ai" target="_blank" rel="noreferrer" className="text-xs font-mono text-cyan-400 bg-cyan-400/5 px-3 py-1.5 rounded border border-cyan-400/10 hover:bg-cyan-400/10 transition-colors">https://xrpl-facilitator-mainnet.t54.ai</a>
+              <code className="text-xs font-mono text-cyan-400 bg-cyan-400/5 px-3 py-1.5 rounded border border-cyan-400/10">https://xrpl-facilitator-mainnet.t54.ai</code>
+              <CopyButton text="https://xrpl-facilitator-mainnet.t54.ai" />
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
