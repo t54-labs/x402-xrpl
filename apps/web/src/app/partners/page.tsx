@@ -1,0 +1,98 @@
+import Link from "next/link";
+
+const partners = [
+  {
+    name: "t54 AI",
+    description: "Trusted Agentic Finance — the XRPL x402 facilitator powering presigned payment verification and settlement.",
+    website: "https://t54.ai",
+    role: "Facilitator",
+    color: "cyan",
+  },
+  {
+    name: "AskSurf AI",
+    description: "AI-powered chat and search assistant. Pay-per-query conversational AI accessible via x402 micropayments.",
+    website: "https://asksurf.ai",
+    role: "API Provider",
+    color: "blue",
+  },
+  {
+    name: "LucyOS AI",
+    description: "Intelligent token analysis service for the XRPL ecosystem. Real-time insights on any token via x402.",
+    website: "https://lucyos.ai",
+    role: "API Provider",
+    color: "purple",
+  },
+  {
+    name: "Heurist AI",
+    description: "Composable crypto intelligence agents. Trending token detection, whale tracking, and market analysis skills for AI agents.",
+    website: "https://heurist.xyz",
+    role: "API Provider",
+    color: "green",
+  },
+];
+
+const roleColors: Record<string, string> = {
+  Facilitator: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "API Provider": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+};
+
+export default function PartnersPage() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+      <header className="text-center max-w-2xl mx-auto">
+        <h1 className="text-3xl font-light tracking-tight text-white">Ecosystem Partners</h1>
+        <p className="text-sm text-gray-400 mt-3 leading-relaxed">
+          Projects, tools, and services building the x402 payment economy on the XRP Ledger.
+        </p>
+      </header>
+
+      <div className="flex items-center justify-center gap-3">
+        <span className="text-xs text-gray-500 uppercase tracking-widest">Filter</span>
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/10">All</span>
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Facilitators</span>
+        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">API Providers</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {partners.map((p) => (
+          <a
+            key={p.name}
+            href={p.website}
+            target="_blank"
+            rel="noreferrer"
+            className="group block bg-[#131518] rounded-xl border border-white/5 p-6 hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.05)] transition-all"
+          >
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <span className="text-lg font-bold text-white">{p.name.charAt(0)}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-white group-hover:text-cyan-400 transition-colors">{p.name}</h3>
+                  <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold border ${roleColors[p.role] || "bg-white/5 text-gray-400 border-white/10"}`}>
+                    {p.role}
+                  </span>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition-colors shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-400 leading-relaxed">{p.description}</p>
+            <p className="text-xs text-gray-600 font-mono mt-3">{p.website.replace("https://", "")}</p>
+          </a>
+        ))}
+      </div>
+
+      <div className="text-center pt-4">
+        <p className="text-sm text-gray-500 mb-4">Building with x402 on XRPL?</p>
+        <Link
+          href="/resources/register"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-lg transition-all text-sm"
+        >
+          Join the Ecosystem
+        </Link>
+      </div>
+    </div>
+  );
+}
