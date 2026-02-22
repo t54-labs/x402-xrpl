@@ -7,7 +7,7 @@ const partners = [
     description: "Trusted Agentic Finance — the XRPL x402 facilitator powering presigned payment verification and settlement.",
     website: "https://t54.ai",
     role: "Facilitator",
-    logo: "/partners/t54.ico",
+    logo: "/partners/t54.png",
   },
   {
     name: "AskSurf",
