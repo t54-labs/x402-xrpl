@@ -6,35 +6,37 @@ const partners = [
     name: "t54 ai",
     description: "Trusted Agentic Finance — the XRPL x402 facilitator powering presigned payment verification and settlement.",
     website: "https://t54.ai",
-    role: "Facilitator",
+    category: "Infrastructure",
     logo: "/partners/t54.png",
   },
   {
     name: "AskSurf",
     description: "AI-powered chat and search assistant. Pay-per-query conversational AI accessible via x402 micropayments.",
     website: "https://asksurf.ai",
-    role: "API Provider",
+    category: "AI Chat",
     logo: "/partners/asksurf.ico",
   },
   {
     name: "LucyOS",
     description: "Intelligent token analysis service for the XRPL ecosystem. Real-time insights on any token via x402.",
     website: "https://lucyos.ai",
-    role: "API Provider",
+    category: "Token Analytics",
     logo: "/partners/lucyos.ico",
   },
   {
     name: "Heurist",
     description: "Composable crypto intelligence agents. Trending token detection, whale tracking, and market analysis skills for AI agents.",
     website: "https://heurist.xyz",
-    role: "API Provider",
+    category: "Market Intelligence",
     logo: "/partners/heurist.ico",
   },
 ];
 
-const roleColors: Record<string, string> = {
-  Facilitator: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "API Provider": "bg-blue-500/10 text-blue-400 border-blue-500/20",
+const categoryColors: Record<string, string> = {
+  Infrastructure: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "AI Chat": "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Token Analytics": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  "Market Intelligence": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
 };
 
 export default function PartnersPage() {
@@ -47,11 +49,10 @@ export default function PartnersPage() {
         </p>
       </header>
 
-      <div className="flex items-center justify-center gap-3">
-        <span className="text-xs text-gray-500 uppercase tracking-widest">Filter</span>
-        <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white border border-white/10">All</span>
-        <span className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Facilitators</span>
-        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">API Providers</span>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {Object.entries(categoryColors).map(([cat, cls]) => (
+          <span key={cat} className={`px-3 py-1 rounded-full text-xs font-medium border ${cls}`}>{cat}</span>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -70,8 +71,8 @@ export default function PartnersPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-white group-hover:text-cyan-400 transition-colors">{p.name}</h3>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold border ${roleColors[p.role] || "bg-white/5 text-gray-400 border-white/10"}`}>
-                    {p.role}
+                  <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold border ${categoryColors[p.category] || "bg-white/5 text-gray-400 border-white/10"}`}>
+                    {p.category}
                   </span>
                 </div>
               </div>
