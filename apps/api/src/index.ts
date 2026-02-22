@@ -366,48 +366,6 @@ app.get("/search", async (req, res) => {
   }
 });
 
-// ── SSE Stream (LISTEN/NOTIFY, zero polling) ────────────────
-import pg from "pg";
-
-const sseClients = new Set<import("express").Response>();
-
-async function startPgListener() {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return;
-
-  const client = new pg.Client({ connectionString: dbUrl });
-  await client.connect();
-  await client.query("LISTEN x402_new_tx");
-
-  client.on("notification", () => {
-    const message = `data: ${JSON.stringify({ ts: Date.now() })}\n\n`;
-    for (const sseRes of sseClients) {
-      try { sseRes.write(message); } catch { sseClients.delete(sseRes); }
-    }
-  });
-
-  client.on("error", (err: Error) => {
-    console.error("PG LISTEN error:", err);
-    setTimeout(startPgListener, 5000);
-  });
-
-  console.log("Listening for x402_new_tx notifications");
-}
-
-startPgListener().catch(console.error);
-
-app.get("/stream", (_req, res) => {
-  res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
-  });
-
-  res.write(`data: ${JSON.stringify({ ts: Date.now() })}\n\n`);
-  sseClients.add(res);
-  _req.on("close", () => { sseClients.delete(res); });
-});
-
 // ── Verify / Register ───────────────────────────────────────
 app.post("/verify", async (req, res) => {
   try {
