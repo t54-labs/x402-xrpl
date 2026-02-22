@@ -166,11 +166,15 @@ app.get("/transactions/:hash", async (req, res) => {
   }
 });
 
-// ── Address (merchant or buyer) ─────────────────────────────
+// ── Address (cached 10s per address+page) ───────────────────
 app.get("/address/:address", async (req, res) => {
   try {
     const { address } = req.params;
     const page = parseInt((req.query.page as string) || "1", 10);
+    const cacheKey = `address:${address}:${page}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
 
@@ -200,14 +204,16 @@ app.get("/address/:address", async (req, res) => {
         ),
       ]);
 
-      return res.json({
+      const data = {
         type: "merchant",
         merchant,
         totalTxCount,
         totalVolume: parseFloat(volumeResult[0]?.total || "0"),
         transactions,
         pagination: { page, pageSize, totalPages: Math.ceil(totalTxCount / pageSize) },
-      });
+      };
+      setCache(cacheKey, data, 10_000);
+      return res.json(data);
     }
 
     const [transactions, volumeResult, uniqueMerchantResult] = await Promise.all([
@@ -225,7 +231,7 @@ app.get("/address/:address", async (req, res) => {
       prisma.transaction.groupBy({ by: ["merchantAddr"], where: { buyerAddress: address } }),
     ]);
 
-    res.json({
+    const data = {
       type: "buyer",
       address,
       txCount: buyerTxCount,
@@ -233,7 +239,9 @@ app.get("/address/:address", async (req, res) => {
       uniqueMerchants: uniqueMerchantResult.length,
       transactions,
       pagination: { page, pageSize, totalPages: Math.ceil(buyerTxCount / pageSize) },
-    });
+    };
+    setCache(cacheKey, data, 10_000);
+    res.json(data);
   } catch (err) {
     console.error("GET /address/:address error:", err);
     res.status(500).json({ error: "Failed to fetch address" });
