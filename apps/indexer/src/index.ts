@@ -83,6 +83,10 @@ async function flushQueue() {
 
   const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
 
+  const batchVolumeXrp = batch
+    .filter((tx) => tx.asset === "XRP")
+    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+
   try {
     await prisma.$transaction([
       prisma.merchant.createMany({
@@ -107,12 +111,14 @@ async function flushQueue() {
         })),
         skipDuplicates: true,
       }),
-      prisma.indexerState.upsert({
-        where: { id: "default" },
-        update: { lastLedgerIndex: batchLedger },
-        create: { id: "default", lastLedgerIndex: batchLedger },
-      }),
+      prisma.$executeRawUnsafe(
+        `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "totalTxCount" = "totalTxCount" + $2, "totalVolumeXrp" = "totalVolumeXrp" + $3, "updatedAt" = NOW() WHERE id = 'default'`,
+        batchLedger, batch.length, batchVolumeXrp
+      ),
     ]);
+
+    // Notify any listeners that new data is available
+    await prisma.$executeRawUnsafe(`NOTIFY x402_new_tx`).catch(() => {});
 
     lastLedger = batchLedger;
     console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);

@@ -38,22 +38,17 @@ app.get("/stats", async (_req, res) => {
     const cached = getCached("stats");
     if (cached) return res.json(cached);
 
-    const [totalTransactions, totalMerchants, totalResources, indexerState] = await Promise.all([
-      prisma.transaction.count(),
+    const [totalMerchants, totalResources, indexerState] = await Promise.all([
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
       prisma.indexerState.findUnique({ where: { id: "default" } }),
     ]);
 
-    const volumeResult = await prisma.$queryRawUnsafe<[{ total: string }]>(
-      `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
-    );
-
     const data = {
-      totalTransactions,
+      totalTransactions: indexerState?.totalTxCount ?? 0,
       totalMerchants,
       totalResources,
-      totalVolumeXrp: parseFloat(volumeResult[0]?.total || "0"),
+      totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
       lastLedgerIndex: indexerState?.lastLedgerIndex ?? 0,
       updatedAt: indexerState?.updatedAt ?? null,
     };
@@ -71,8 +66,8 @@ app.get("/dashboard", async (_req, res) => {
     const cached = getCached("dashboard");
     if (cached) return res.json(cached);
 
-    const [totalTransactions, totalMerchants, totalResources, recentTransactions, recentResources] = await Promise.all([
-      prisma.transaction.count(),
+    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw] = await Promise.all([
+      prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
       prisma.transaction.findMany({
@@ -85,12 +80,6 @@ app.get("/dashboard", async (_req, res) => {
         where: { isActive: true },
         orderBy: { createdAt: "desc" },
       }),
-    ]);
-
-    const [volumeResult, topMerchantsRaw] = await Promise.all([
-      prisma.$queryRawUnsafe<[{ total: string }]>(
-        `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE asset = 'XRP'`
-      ),
       prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: bigint; volume: string }>>(
         `SELECT "merchantAddr", COUNT(*) as tx_count,
          COALESCE(SUM(CASE WHEN asset = 'XRP' THEN CAST(amount AS DOUBLE PRECISION) ELSE 0 END), 0) as volume
@@ -112,10 +101,10 @@ app.get("/dashboard", async (_req, res) => {
     }));
 
     const data = {
-      totalTransactions,
+      totalTransactions: indexerState?.totalTxCount ?? 0,
       totalMerchants,
       totalResources,
-      totalVolumeXrp: parseFloat(volumeResult[0]?.total || "0"),
+      totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
       recentTransactions,
       recentResources,
       topMerchants,
@@ -369,33 +358,46 @@ app.get("/search", async (req, res) => {
   }
 });
 
-// ── SSE Stream (live transaction updates) ───────────────────
-app.get("/stream", (req, res) => {
+// ── SSE Stream (LISTEN/NOTIFY, zero polling) ────────────────
+import pg from "pg";
+
+const sseClients = new Set<import("express").Response>();
+
+async function startPgListener() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+
+  const client = new pg.Client({ connectionString: dbUrl });
+  await client.connect();
+  await client.query("LISTEN x402_new_tx");
+
+  client.on("notification", () => {
+    const message = `data: ${JSON.stringify({ ts: Date.now() })}\n\n`;
+    for (const sseRes of sseClients) {
+      try { sseRes.write(message); } catch { sseClients.delete(sseRes); }
+    }
+  });
+
+  client.on("error", (err: Error) => {
+    console.error("PG LISTEN error:", err);
+    setTimeout(startPgListener, 5000);
+  });
+
+  console.log("Listening for x402_new_tx notifications");
+}
+
+startPgListener().catch(console.error);
+
+app.get("/stream", (_req, res) => {
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
   });
 
-  let lastId = "";
-  const checkNewTx = async () => {
-    try {
-      const latestTx = await prisma.transaction.findFirst({
-        orderBy: { createdAt: "desc" },
-        select: { hash: true },
-      });
-      if (latestTx && latestTx.hash !== lastId) {
-        lastId = latestTx.hash;
-        res.write(`data: ${JSON.stringify({ hash: lastId })}\n\n`);
-      }
-    } catch {
-      /* ignore polling errors */
-    }
-  };
-
-  checkNewTx();
-  const interval = setInterval(checkNewTx, 3000);
-  req.on("close", () => clearInterval(interval));
+  res.write(`data: ${JSON.stringify({ ts: Date.now() })}\n\n`);
+  sseClients.add(res);
+  _req.on("close", () => { sseClients.delete(res); });
 });
 
 // ── Verify / Register ───────────────────────────────────────
