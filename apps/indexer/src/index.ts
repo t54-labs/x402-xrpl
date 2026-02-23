@@ -329,15 +329,14 @@ async function startIndexer() {
   client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
 
-    const tx = txStream.transaction;
     debugTxCount++;
-    if (debugTxCount <= 5 || (tx && tx.TransactionType === "Payment" && typeof tx.SourceTag === "number")) {
-      console.log(`[DEBUG] tx#${debugTxCount} type=${tx?.TransactionType} sourceTag=${tx?.SourceTag} hash=${tx?.hash?.slice(0,12)}... keys=${tx ? Object.keys(tx).join(",") : "null"}`);
-    }
-    if (debugTxCount === 100) {
-      console.log(`[DEBUG] Received 100 live txs so far. writeQueue=${writeQueue.length}`);
+    if (debugTxCount <= 3) {
+      console.log(`[DEBUG] txStream keys: ${Object.keys(txStream).join(",")}`);
+      console.log(`[DEBUG] txStream.TransactionType=${txStream.TransactionType} txStream.SourceTag=${txStream.SourceTag} txStream.hash=${txStream.hash?.slice(0,12)}`);
+      console.log(`[DEBUG] txStream.transaction=${typeof txStream.transaction}`);
     }
 
+    const tx = txStream.transaction ?? txStream;
     processTransaction(txStream, tx);
 
     const li = txStream.ledger_index ?? 0;
