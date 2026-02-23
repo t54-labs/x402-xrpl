@@ -90,17 +90,20 @@ app.get("/dashboard", async (_req, res) => {
     ]);
 
     const merchantAddrs = topMerchantsRaw.map((m) => m.merchantAddr);
-    const [merchantDetails, merchantVolumes] = merchantAddrs.length > 0
-      ? await Promise.all([
-          prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } }),
-          prisma.$queryRawUnsafe<Array<{ merchantAddr: string; asset: string; total: string }>>(
-            `SELECT "merchantAddr", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
-             FROM "Transaction" WHERE "merchantAddr" = ANY($1::text[])
-             GROUP BY "merchantAddr", asset ORDER BY total DESC`,
-            merchantAddrs
-          ),
-        ])
-      : [[], []];
+    let merchantDetails: Array<{ address: string; name: string | null }> = [];
+    let merchantVolumes: Array<{ merchantAddr: string; asset: string; total: string }> = [];
+    if (merchantAddrs.length > 0) {
+      const placeholders = merchantAddrs.map((_, i) => `$${i + 1}`).join(",");
+      [merchantDetails, merchantVolumes] = await Promise.all([
+        prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } }),
+        prisma.$queryRawUnsafe<Array<{ merchantAddr: string; asset: string; total: string }>>(
+          `SELECT "merchantAddr", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
+           FROM "Transaction" WHERE "merchantAddr" IN (${placeholders})
+           GROUP BY "merchantAddr", asset ORDER BY total DESC`,
+          ...merchantAddrs
+        ),
+      ]);
+    }
     const nameMap = new Map(merchantDetails.map((m) => [m.address, m.name]));
     const volumeMap = new Map<string, Array<{ asset: string; total: number }>>();
     for (const v of merchantVolumes) {
