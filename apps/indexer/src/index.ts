@@ -325,9 +325,20 @@ async function startIndexer() {
     process.exit(1);
   });
 
+  let debugTxCount = 0;
   client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
-    processTransaction(txStream, txStream.transaction);
+
+    const tx = txStream.transaction;
+    debugTxCount++;
+    if (debugTxCount <= 5 || (tx && tx.TransactionType === "Payment" && typeof tx.SourceTag === "number")) {
+      console.log(`[DEBUG] tx#${debugTxCount} type=${tx?.TransactionType} sourceTag=${tx?.SourceTag} hash=${tx?.hash?.slice(0,12)}... keys=${tx ? Object.keys(tx).join(",") : "null"}`);
+    }
+    if (debugTxCount === 100) {
+      console.log(`[DEBUG] Received 100 live txs so far. writeQueue=${writeQueue.length}`);
+    }
+
+    processTransaction(txStream, tx);
 
     const li = txStream.ledger_index ?? 0;
     if (li > highestProcessedLedger) highestProcessedLedger = li;
