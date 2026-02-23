@@ -115,7 +115,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
                 <h3 className="font-medium text-gray-200 truncate">{res.name || "Unnamed Resource"}</h3>
                 <p className="text-xs text-gray-500 mt-1 font-mono truncate" title={res.url}>{res.url}</p>
                 <div className="mt-4 flex items-center justify-between">
-                  <div className="flex flex-col"><span className="text-[10px] text-gray-500 uppercase tracking-wider">Price</span><span className="text-sm text-cyan-400 font-medium">{res.priceAmount} {res.priceAsset}</span></div>
+                  <div className="flex flex-col"><span className="text-[10px] text-gray-500 uppercase tracking-wider">Price</span><span className="text-sm text-cyan-400 font-medium">{res.priceAmount} {formatCurrency(res.priceAsset)}</span></div>
                   <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider font-semibold ${res.isActive ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>{res.isActive ? "Active" : "Inactive"}</span>
                 </div>
               </div>

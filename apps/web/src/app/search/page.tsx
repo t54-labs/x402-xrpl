@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
+import { formatCurrency } from "../utils/currency";
 
 interface SearchParams {
   q?: string;
@@ -97,7 +98,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <p className="text-xs text-gray-500 font-mono truncate mt-1">{res.url}</p>
                 </div>
                 <span className="text-sm font-mono text-cyan-400 shrink-0 ml-4">
-                  {res.priceAmount} {res.priceAsset}
+                  {res.priceAmount} {formatCurrency(res.priceAsset)}
                 </span>
               </Link>
             ))}
