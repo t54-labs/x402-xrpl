@@ -80,9 +80,8 @@ app.get("/dashboard", async (_req, res) => {
         where: { isActive: true },
         orderBy: { createdAt: "desc" },
       }),
-      prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: bigint; volume: string }>>(
-        `SELECT "merchantAddr", COUNT(*) as tx_count,
-         COALESCE(SUM(CASE WHEN asset = 'XRP' THEN CAST(amount AS DOUBLE PRECISION) ELSE 0 END), 0) as volume
+      prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: bigint }>>(
+        `SELECT "merchantAddr", COUNT(*) as tx_count
          FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`
       ),
       prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
@@ -91,16 +90,31 @@ app.get("/dashboard", async (_req, res) => {
     ]);
 
     const merchantAddrs = topMerchantsRaw.map((m) => m.merchantAddr);
-    const merchantDetails = merchantAddrs.length > 0
-      ? await prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } })
-      : [];
+    const [merchantDetails, merchantVolumes] = merchantAddrs.length > 0
+      ? await Promise.all([
+          prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } }),
+          prisma.$queryRawUnsafe<Array<{ merchantAddr: string; asset: string; total: string }>>(
+            `SELECT "merchantAddr", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
+             FROM "Transaction" WHERE "merchantAddr" = ANY($1::text[])
+             GROUP BY "merchantAddr", asset ORDER BY total DESC`,
+            merchantAddrs
+          ),
+        ])
+      : [[], []];
     const nameMap = new Map(merchantDetails.map((m) => [m.address, m.name]));
+    const volumeMap = new Map<string, Array<{ asset: string; total: number }>>();
+    for (const v of merchantVolumes) {
+      const list = volumeMap.get(v.merchantAddr) || [];
+      list.push({ asset: v.asset, total: parseFloat(v.total || "0") });
+      volumeMap.set(v.merchantAddr, list);
+    }
 
     const topMerchants = topMerchantsRaw.map((m) => ({
       address: m.merchantAddr,
       name: nameMap.get(m.merchantAddr) || null,
       txCount: Number(m.tx_count),
-      volume: parseFloat(String(m.volume)),
+      volume: volumeMap.get(m.merchantAddr)?.find((v) => v.asset === "XRP")?.total ?? 0,
+      volumeByAsset: volumeMap.get(m.merchantAddr) || [],
     }));
 
     const volumeByAsset = volumeByAssetRaw.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
