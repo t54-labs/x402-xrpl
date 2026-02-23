@@ -66,7 +66,7 @@ app.get("/dashboard", async (_req, res) => {
     const cached = getCached("dashboard");
     if (cached) return res.json(cached);
 
-    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw] = await Promise.all([
+    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw] = await Promise.all([
       prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
@@ -85,6 +85,9 @@ app.get("/dashboard", async (_req, res) => {
          COALESCE(SUM(CASE WHEN asset = 'XRP' THEN CAST(amount AS DOUBLE PRECISION) ELSE 0 END), 0) as volume
          FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`
       ),
+      prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
+        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" GROUP BY asset ORDER BY total DESC`
+      ),
     ]);
 
     const merchantAddrs = topMerchantsRaw.map((m) => m.merchantAddr);
@@ -100,11 +103,14 @@ app.get("/dashboard", async (_req, res) => {
       volume: parseFloat(String(m.volume)),
     }));
 
+    const volumeByAsset = volumeByAssetRaw.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
+
     const data = {
       totalTransactions: indexerState?.totalTxCount ?? 0,
       totalMerchants,
       totalResources,
       totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
+      volumeByAsset,
       recentTransactions,
       recentResources,
       topMerchants,
@@ -198,17 +204,20 @@ app.get("/address/:address", async (req, res) => {
           include: { resource: true, merchant: { select: { address: true, name: true } } },
         }),
         prisma.transaction.count({ where: { merchantAddr: address } }),
-        prisma.$queryRawUnsafe<[{ total: string }]>(
-          `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "merchantAddr" = $1 AND asset = 'XRP'`,
+        prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
+          `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "merchantAddr" = $1 GROUP BY asset ORDER BY total DESC`,
           address
         ),
       ]);
+
+      const volumeByAsset = volumeResult.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
 
       const data = {
         type: "merchant",
         merchant,
         totalTxCount,
-        totalVolume: parseFloat(volumeResult[0]?.total || "0"),
+        totalVolume: volumeByAsset.find((v) => v.asset === "XRP")?.total ?? 0,
+        volumeByAsset,
         transactions,
         pagination: { page, pageSize, totalPages: Math.ceil(totalTxCount / pageSize) },
       };
@@ -224,18 +233,21 @@ app.get("/address/:address", async (req, res) => {
         orderBy: { timestamp: "desc" },
         include: { merchant: { select: { address: true, name: true } }, resource: true },
       }),
-      prisma.$queryRawUnsafe<[{ total: string }]>(
-        `SELECT COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "buyerAddress" = $1 AND asset = 'XRP'`,
+      prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
+        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "buyerAddress" = $1 GROUP BY asset ORDER BY total DESC`,
         address
       ),
       prisma.transaction.groupBy({ by: ["merchantAddr"], where: { buyerAddress: address } }),
     ]);
 
+    const spentByAsset = volumeResult.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
+
     const data = {
       type: "buyer",
       address,
       txCount: buyerTxCount,
-      totalSpent: parseFloat(volumeResult[0]?.total || "0"),
+      totalSpent: spentByAsset.find((v) => v.asset === "XRP")?.total ?? 0,
+      spentByAsset,
       uniqueMerchants: uniqueMerchantResult.length,
       transactions,
       pagination: { page, pageSize, totalPages: Math.ceil(buyerTxCount / pageSize) },

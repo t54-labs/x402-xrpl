@@ -18,6 +18,8 @@ type TxRow = {
   resource?: { url: string; name: string | null } | null;
 };
 
+type AssetVolume = { asset: string; total: number };
+
 type AddressResponse = {
   type: "merchant" | "buyer";
   merchant?: {
@@ -32,7 +34,9 @@ type AddressResponse = {
   totalTxCount?: number;
   txCount?: number;
   totalVolume?: number;
+  volumeByAsset?: AssetVolume[];
   totalSpent?: number;
+  spentByAsset?: AssetVolume[];
   uniqueMerchants?: number;
   transactions: TxRow[];
   pagination: { page: number; pageSize: number; totalPages: number };
@@ -56,9 +60,21 @@ export default async function AddressPage({ params, searchParams }: PageProps) {
   return <BuyerView address={address} data={data} />;
 }
 
+function VolumeDisplay({ volumes, fallback }: { volumes?: AssetVolume[]; fallback?: number }) {
+  if (volumes && volumes.length > 0) {
+    return (
+      <div className="flex flex-col gap-0.5">
+        {volumes.map((v) => (
+          <p key={v.asset} className="text-2xl font-light text-white">{v.total.toFixed(v.total < 1 ? 4 : 2)} <span className="text-sm text-gray-500">{formatCurrency(v.asset)}</span></p>
+        ))}
+      </div>
+    );
+  }
+  return <p className="text-2xl font-light text-white">{(fallback ?? 0).toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p>;
+}
+
 function MerchantView({ address, data }: { address: string; data: AddressResponse }) {
   const merchant = data.merchant!;
-  const totalVolume = data.totalVolume ?? 0;
   const totalTxCount = data.totalTxCount ?? 0;
 
   return (
@@ -84,7 +100,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10 pt-8 border-t border-white/5">
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Volume</p><p className="text-2xl font-light text-white mt-1">{totalVolume.toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p></div>
+          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Volume</p><div className="mt-1"><VolumeDisplay volumes={data.volumeByAsset} fallback={data.totalVolume} /></div></div>
           <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Payments Received</p><p className="text-2xl font-light text-white mt-1">{totalTxCount}</p></div>
           <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Active APIs</p><p className="text-2xl font-light text-white mt-1">{merchant.resources.length}</p></div>
           <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Joined</p><p className="text-sm font-medium text-gray-300 mt-2">{new Date(merchant.createdAt).toLocaleDateString()}</p></div>
@@ -142,7 +158,7 @@ function BuyerView({ address, data }: { address: string; data: AddressResponse }
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-white/5">
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Spent</p><p className="text-2xl font-light text-white mt-1">{totalSpent.toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p></div>
+          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Spent</p><div className="mt-1"><VolumeDisplay volumes={data.spentByAsset} fallback={totalSpent} /></div></div>
           <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Payments Made</p><p className="text-2xl font-light text-white mt-1">{txCount}</p></div>
           <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Merchants Used</p><p className="text-2xl font-light text-white mt-1">{uniqueMerchants}</p></div>
         </div>

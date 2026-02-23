@@ -6,11 +6,14 @@ import { formatCurrency } from "./utils/currency";
 
 export const dynamic = "force-dynamic";
 
+type AssetVolume = { asset: string; total: number };
+
 type DashboardData = {
   totalTransactions: number;
   totalMerchants: number;
   totalResources: number;
   totalVolumeXrp: number;
+  volumeByAsset?: AssetVolume[];
   recentTransactions: Array<{
     hash: string; amount: string; asset: string; timestamp: string;
     merchant?: { address: string; name: string | null } | null;
@@ -26,7 +29,7 @@ type DashboardData = {
 
 export default async function Home() {
   const {
-    totalTransactions, totalMerchants, totalResources, totalVolumeXrp,
+    totalTransactions, totalMerchants, totalResources, totalVolumeXrp, volumeByAsset,
     recentTransactions, recentResources: registeredResources, topMerchants,
   } = await apiFetch<DashboardData>("/dashboard");
 
@@ -40,7 +43,7 @@ export default async function Home() {
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        <StatCard title="Total Volume" value={`${totalVolumeXrp.toFixed(2)} XRP`} />
+        <VolumeCard volumes={volumeByAsset} fallbackXrp={totalVolumeXrp} />
         <StatCard title="Transactions" value={totalTransactions.toLocaleString()} />
         <StatCard title="Merchants" value={totalMerchants.toLocaleString()} />
         <StatCard title="Resources" value={totalResources.toLocaleString()} />
@@ -202,6 +205,26 @@ function StatCard({ title, value }: { title: string; value: string | number }) {
       </div>
       <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-widest">{title}</h3>
       <p className="text-2xl md:text-3xl font-light text-white mt-2 md:mt-3 tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function VolumeCard({ volumes, fallbackXrp }: { volumes?: AssetVolume[]; fallbackXrp: number }) {
+  return (
+    <div className="bg-[#131518] p-5 md:p-6 rounded-xl border border-white/5 relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-4 opacity-5">
+        <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Volume</h3>
+      <div className="mt-2 md:mt-3 space-y-1">
+        {volumes && volumes.length > 0 ? volumes.map((v) => (
+          <p key={v.asset} className="text-2xl md:text-3xl font-light text-white tracking-tight">
+            {v.total.toFixed(v.total < 1 ? 4 : 2)} <span className="text-sm text-gray-500">{formatCurrency(v.asset)}</span>
+          </p>
+        )) : (
+          <p className="text-2xl md:text-3xl font-light text-white tracking-tight">{fallbackXrp.toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p>
+        )}
+      </div>
     </div>
   );
 }
