@@ -459,11 +459,17 @@ app.post("/verify", async (req, res) => {
     }
 
     async function verifyAndRegister(resourceUrl: string) {
-      const response = await axios.get(resourceUrl, {
+      let response = await axios.get(resourceUrl, {
         timeout: 7000,
-        validateStatus: (status: number) => status === 402 || status === 200,
+        validateStatus: () => true,
       });
-      if (response.status !== 402) throw new Error(`Returned ${response.status}, not 402`);
+      if (response.status !== 402) {
+        response = await axios.post(resourceUrl, {}, {
+          timeout: 7000,
+          validateStatus: () => true,
+        });
+      }
+      if (response.status !== 402) throw new Error(`Request failed with status code ${response.status}`);
       const headerVal = response.headers["payment-required"];
       if (!headerVal) throw new Error("Missing PAYMENT-REQUIRED header");
       const decoded = JSON.parse(Buffer.from(headerVal, "base64").toString("utf-8"));
