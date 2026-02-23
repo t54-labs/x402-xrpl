@@ -24,6 +24,7 @@ type DashboardData = {
   }>;
   topMerchants: Array<{
     address: string; name: string | null; txCount: number; volume: number;
+    volumeByAsset?: AssetVolume[];
   }>;
 };
 
@@ -110,7 +111,13 @@ export default async function Home() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">{m.txCount} txs</span>
-                  <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
+                  <div className="text-right">
+                    {m.volumeByAsset && m.volumeByAsset.length > 0 ? m.volumeByAsset.map((v) => (
+                      <span key={v.asset} className="block text-xs font-mono text-cyan-400">{v.total.toFixed(v.total < 1 ? 3 : 2)} {formatCurrency(v.asset)}</span>
+                    )) : (
+                      <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
