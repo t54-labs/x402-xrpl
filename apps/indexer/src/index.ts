@@ -164,10 +164,17 @@ function processTransaction(txStream: any, tx: any) {
   }
   if (!amountPaid || amountPaid === "0") return;
 
+  const txHash = tx.hash || txStream.hash;
+  const timestamp = txStream.close_time_iso
+    ? new Date(txStream.close_time_iso)
+    : txStream.date
+      ? new Date((txStream.date + 946684800) * 1000)
+      : new Date();
+
   writeQueue.push({
-    hash: tx.hash,
+    hash: txHash,
     ledgerIndex: txStream.ledger_index ?? 0,
-    timestamp: new Date(txStream.date ? (txStream.date + 946684800) * 1000 : Date.now()),
+    timestamp,
     buyerAddress: tx.Account,
     merchantAddr: receiver,
     amount: amountPaid,
@@ -325,18 +332,10 @@ async function startIndexer() {
     process.exit(1);
   });
 
-  let debugTxCount = 0;
   client.on("transaction", (txStream: any) => {
     if (!txStream.validated) return;
 
-    debugTxCount++;
-    if (debugTxCount <= 3) {
-      console.log(`[DEBUG] txStream keys: ${Object.keys(txStream).join(",")}`);
-      console.log(`[DEBUG] txStream.TransactionType=${txStream.TransactionType} txStream.SourceTag=${txStream.SourceTag} txStream.hash=${txStream.hash?.slice(0,12)}`);
-      console.log(`[DEBUG] txStream.transaction=${typeof txStream.transaction}`);
-    }
-
-    const tx = txStream.transaction ?? txStream;
+    const tx = txStream.tx_json ?? txStream.transaction ?? txStream;
     processTransaction(txStream, tx);
 
     const li = txStream.ledger_index ?? 0;
