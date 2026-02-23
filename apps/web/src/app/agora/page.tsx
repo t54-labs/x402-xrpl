@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
+import { formatCurrency } from "../utils/currency";
 
 interface SearchParams {
   page?: string;
@@ -75,7 +76,7 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
 
                   <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
                     <span className="text-sm font-mono bg-cyan-400/10 text-cyan-400 px-2.5 py-1 rounded border border-cyan-400/20">
-                      {res.priceAmount} {res.priceAsset}
+                      {res.priceAmount} {formatCurrency(res.priceAsset)}
                     </span>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] text-gray-500">
