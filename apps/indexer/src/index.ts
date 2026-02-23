@@ -69,7 +69,7 @@ type QueuedTx = {
 const writeQueue: QueuedTx[] = [];
 let highestProcessedLedger = 0;
 let flushing = false;
-const LEDGER_CHECKPOINT_INTERVAL_MS = 10_000;
+const LEDGER_CHECKPOINT_INTERVAL_MS = 5 * 60_000;
 let lastCheckpointTime = Date.now();
 
 async function flushQueue() {
@@ -256,8 +256,16 @@ async function backfillLedgers(client: Client, currentLiveIndex: number) {
 
       const ledger = response.result.ledger;
       if (ledger.transactions) {
-        for (const tx of ledger.transactions as any[]) {
-          processTransaction({ ledger_index: i, date: ledger.close_time }, tx);
+        for (const rawTx of ledger.transactions as any[]) {
+          const tx = rawTx.tx_json ?? rawTx;
+          const envelope = {
+            ledger_index: i,
+            date: ledger.close_time,
+            close_time_iso: rawTx.close_time_iso,
+            meta: rawTx.meta ?? rawTx.metaData,
+            hash: rawTx.hash,
+          };
+          processTransaction(envelope, tx);
         }
       }
 
