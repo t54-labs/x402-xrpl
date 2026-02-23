@@ -67,50 +67,72 @@ type QueuedTx = {
 };
 
 const writeQueue: QueuedTx[] = [];
-let highestQueuedLedger = 0;
+let highestProcessedLedger = 0;
 let flushing = false;
+const LEDGER_CHECKPOINT_INTERVAL_MS = 10_000;
+let lastCheckpointTime = Date.now();
 
 async function flushQueue() {
-  if (flushing || writeQueue.length === 0) return;
+  if (flushing) return;
+
+  const now = Date.now();
+  const hasData = writeQueue.length > 0;
+  const needsCheckpoint = !hasData
+    && highestProcessedLedger > lastLedger
+    && (now - lastCheckpointTime) >= LEDGER_CHECKPOINT_INTERVAL_MS;
+
+  if (!hasData && !needsCheckpoint) return;
+
   flushing = true;
 
-  const batch = writeQueue.splice(0);
-  const batchLedger = highestQueuedLedger;
-  const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
-  const batchVolumeXrp = batch
-    .filter((tx) => tx.asset === "XRP")
-    .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-
   try {
-    await prisma.$transaction([
-      prisma.merchant.createMany({
-        data: uniqueMerchants.map((addr) => ({ address: addr })),
-        skipDuplicates: true,
-      }),
-      prisma.transaction.createMany({
-        data: batch.map((tx) => ({
-          hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
-          buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
-          amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
-          facilitator: tx.facilitator, sourceTag: tx.sourceTag,
-          destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
-          rawMemo: tx.rawMemo,
-        })),
-        skipDuplicates: true,
-      }),
-      prisma.$executeRawUnsafe(
-        `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "totalTxCount" = "totalTxCount" + $2, "totalVolumeXrp" = "totalVolumeXrp" + $3, "updatedAt" = NOW() WHERE id = 'default'`,
-        batchLedger, batch.length, batchVolumeXrp
-      ),
-    ]);
+    if (hasData) {
+      const batch = writeQueue.splice(0);
+      const batchLedger = Math.max(highestProcessedLedger, ...batch.map(tx => tx.ledgerIndex));
+      const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
+      const batchVolumeXrp = batch
+        .filter((tx) => tx.asset === "XRP")
+        .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
 
-    lastLedger = batchLedger;
-    if (batch.length > 0) {
-      console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+      try {
+        await prisma.$transaction([
+          prisma.merchant.createMany({
+            data: uniqueMerchants.map((addr) => ({ address: addr })),
+            skipDuplicates: true,
+          }),
+          prisma.transaction.createMany({
+            data: batch.map((tx) => ({
+              hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
+              buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
+              amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
+              facilitator: tx.facilitator, sourceTag: tx.sourceTag,
+              destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
+              rawMemo: tx.rawMemo,
+            })),
+            skipDuplicates: true,
+          }),
+          prisma.$executeRawUnsafe(
+            `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "totalTxCount" = "totalTxCount" + $2, "totalVolumeXrp" = "totalVolumeXrp" + $3, "updatedAt" = NOW() WHERE id = 'default'`,
+            batchLedger, batch.length, batchVolumeXrp
+          ),
+        ]);
+
+        lastLedger = batchLedger;
+        lastCheckpointTime = now;
+        console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+      } catch (err) {
+        console.error(`❌ Flush failed (${batch.length} txs):`, err);
+        writeQueue.unshift(...batch);
+      }
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "updatedAt" = NOW() WHERE id = 'default'`,
+        highestProcessedLedger
+      );
+      lastLedger = highestProcessedLedger;
+      lastCheckpointTime = now;
+      console.log(`📍 Checkpoint — ledger ${highestProcessedLedger} (no x402 txs)`);
     }
-  } catch (err) {
-    console.error(`❌ Flush failed (${batch.length} txs):`, err);
-    writeQueue.unshift(...batch);
   } finally {
     flushing = false;
   }
@@ -159,7 +181,7 @@ function processTransaction(txStream: any, tx: any) {
   });
 
   const ledgerIndex = txStream.ledger_index ?? 0;
-  if (ledgerIndex > highestQueuedLedger) highestQueuedLedger = ledgerIndex;
+  if (ledgerIndex > highestProcessedLedger) highestProcessedLedger = ledgerIndex;
   if (writeQueue.length >= QUEUE_WARN_SIZE) console.warn(`⚠️  Write queue: ${writeQueue.length}`);
 }
 
@@ -233,7 +255,7 @@ async function backfillLedgers(client: Client, currentLiveIndex: number) {
       }
 
       if (i % 10 === 0 || i === currentLiveIndex) {
-        highestQueuedLedger = Math.max(highestQueuedLedger, i);
+        highestProcessedLedger = Math.max(highestProcessedLedger, i);
         await flushQueue();
       }
 
@@ -307,10 +329,8 @@ async function startIndexer() {
     if (!txStream.validated) return;
     processTransaction(txStream, txStream.transaction);
 
-    if (txStream.ledger_index > lastLedger) {
-      lastLedger = txStream.ledger_index;
-      highestQueuedLedger = Math.max(highestQueuedLedger, lastLedger);
-    }
+    const li = txStream.ledger_index ?? 0;
+    if (li > highestProcessedLedger) highestProcessedLedger = li;
   });
 
   setInterval(() => { flushQueue().catch(console.error); }, FLUSH_INTERVAL_MS);
