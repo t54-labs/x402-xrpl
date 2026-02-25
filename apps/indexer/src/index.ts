@@ -154,13 +154,14 @@ function processTransaction(txStream: any, tx: any) {
   const receiver = tx.Destination;
   if (!receiver || typeof receiver !== "string") return;
 
+  const rawAmount = tx.Amount ?? tx.DeliverMax;
   let amountPaid: string;
-  if (typeof tx.Amount === "string") {
-    const drops = Number(tx.Amount);
+  if (typeof rawAmount === "string") {
+    const drops = Number(rawAmount);
     if (!Number.isFinite(drops) || drops <= 0) return;
     amountPaid = (drops / 1_000_000).toString();
   } else {
-    amountPaid = String(tx.Amount?.value ?? "");
+    amountPaid = String(rawAmount?.value ?? "");
   }
   if (!amountPaid || amountPaid === "0") return;
 
@@ -178,8 +179,8 @@ function processTransaction(txStream: any, tx: any) {
     buyerAddress: tx.Account,
     merchantAddr: receiver,
     amount: amountPaid,
-    asset: typeof tx.Amount === "string" ? "XRP" : tx.Amount?.currency || "UNKNOWN",
-    assetIssuer: typeof tx.Amount === "string" ? null : tx.Amount?.issuer || null,
+    asset: typeof rawAmount === "string" ? "XRP" : rawAmount?.currency || "UNKNOWN",
+    assetIssuer: typeof rawAmount === "string" ? null : rawAmount?.issuer || null,
     facilitator: facilitatorName,
     sourceTag,
     destinationTag: typeof tx.DestinationTag === "number" ? tx.DestinationTag : null,
