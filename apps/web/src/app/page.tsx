@@ -101,12 +101,15 @@ export default async function Home() {
             {topMerchants.map((m, i) => (
               <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0 overflow-hidden">
-                    {m.logoUrl ? (
-                      <Image src={m.logoUrl} alt={m.name || ""} width={32} height={32} className="object-cover w-full h-full" />
-                    ) : (
-                      <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
-                    )}
+                  <div className="relative shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
+                      {m.logoUrl ? (
+                        <Image src={m.logoUrl} alt={m.name || ""} width={32} height={32} className="object-cover w-full h-full" />
+                      ) : (
+                        <span className="text-sm font-light text-cyan-400">{m.name ? m.name.charAt(0) : "M"}</span>
+                      )}
+                    </div>
+                    <span className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-cyan-500 text-[8px] font-bold text-black flex items-center justify-center">{i + 1}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">
