@@ -73,7 +73,7 @@ app.get("/dashboard", async (_req, res) => {
       prisma.transaction.findMany({
         take: 10,
         orderBy: { timestamp: "desc" },
-        include: { merchant: { select: { address: true, name: true } } },
+        include: { merchant: { select: { address: true, name: true, logoUrl: true } } },
       }),
       prisma.resource.findMany({
         take: 5,
@@ -90,7 +90,7 @@ app.get("/dashboard", async (_req, res) => {
     ]);
 
     const merchantAddrs = topMerchantsRaw.map((m) => m.merchantAddr);
-    let merchantDetails: Array<{ address: string; name: string | null }> = [];
+    let merchantDetails: Array<{ address: string; name: string | null; logoUrl?: string | null }> = [];
     let merchantVolumes: Array<{ merchantAddr: string; asset: string; total: string }> = [];
     if (merchantAddrs.length > 0) {
       const placeholders = merchantAddrs.map((_, i) => `$${i + 1}`).join(",");
@@ -105,6 +105,7 @@ app.get("/dashboard", async (_req, res) => {
       ]);
     }
     const nameMap = new Map(merchantDetails.map((m) => [m.address, m.name]));
+    const logoMap = new Map(merchantDetails.map((m) => [m.address, m.logoUrl]));
     const volumeMap = new Map<string, Array<{ asset: string; total: number }>>();
     for (const v of merchantVolumes) {
       const list = volumeMap.get(v.merchantAddr) || [];
@@ -115,6 +116,7 @@ app.get("/dashboard", async (_req, res) => {
     const topMerchants = topMerchantsRaw.map((m) => ({
       address: m.merchantAddr,
       name: nameMap.get(m.merchantAddr) || null,
+      logoUrl: logoMap.get(m.merchantAddr) || null,
       txCount: Number(m.tx_count),
       volume: volumeMap.get(m.merchantAddr)?.find((v) => v.asset === "XRP")?.total ?? 0,
       volumeByAsset: volumeMap.get(m.merchantAddr) || [],
@@ -160,7 +162,7 @@ app.get("/transactions", async (req, res) => {
         take: limit,
         skip,
         include: {
-          merchant: { select: { address: true, name: true } },
+          merchant: { select: { address: true, name: true, logoUrl: true } },
           resource: { select: { id: true, url: true, name: true } },
         },
       }),
@@ -218,7 +220,7 @@ app.get("/address/:address", async (req, res) => {
           take: pageSize,
           skip,
           orderBy: { timestamp: "desc" },
-          include: { resource: true, merchant: { select: { address: true, name: true } } },
+          include: { resource: true, merchant: { select: { address: true, name: true, logoUrl: true } } },
         }),
         prisma.transaction.count({ where: { merchantAddr: address } }),
         prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
@@ -248,7 +250,7 @@ app.get("/address/:address", async (req, res) => {
         take: pageSize,
         skip,
         orderBy: { timestamp: "desc" },
-        include: { merchant: { select: { address: true, name: true } }, resource: true },
+        include: { merchant: { select: { address: true, name: true, logoUrl: true } }, resource: true },
       }),
       prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
         `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "buyerAddress" = $1 GROUP BY asset ORDER BY total DESC`,
@@ -338,7 +340,7 @@ app.get("/discovery/resources", async (req, res) => {
         orderBy: { updatedAt: "desc" },
         take: limit,
         skip: offset,
-        include: { merchant: { select: { address: true, name: true } } },
+        include: { merchant: { select: { address: true, name: true, logoUrl: true } } },
       }),
       prisma.resource.count({ where: { isActive: true } }),
     ]);
@@ -378,7 +380,7 @@ app.get("/search", async (req, res) => {
       }),
       prisma.transaction.findMany({
         where: { OR: [{ hash: { contains: q, mode: "insensitive" } }, { buyerAddress: { contains: q, mode: "insensitive" } }] },
-        include: { merchant: { select: { address: true, name: true } } },
+        include: { merchant: { select: { address: true, name: true, logoUrl: true } } },
         take: 10,
         orderBy: { timestamp: "desc" },
       }),

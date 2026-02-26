@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
@@ -24,7 +25,7 @@ type AddressResponse = {
   type: "merchant" | "buyer";
   merchant?: {
     address: string; name: string | null; description: string | null;
-    website: string | null; createdAt: string;
+    website: string | null; logoUrl: string | null; createdAt: string;
     resources: Array<{
       id: string; url: string; name: string | null; priceAmount: string;
       priceAsset: string; isActive: boolean;
@@ -84,8 +85,12 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
           <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center">
-            <span className="text-3xl font-light text-cyan-400">{merchant.name ? merchant.name.charAt(0).toUpperCase() : "M"}</span>
+          <div className="w-20 h-20 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
+            {merchant.logoUrl ? (
+              <Image src={merchant.logoUrl} alt={merchant.name || "Merchant"} width={80} height={80} className="object-cover w-full h-full" />
+            ) : (
+              <span className="text-3xl font-light text-cyan-400">{merchant.name ? merchant.name.charAt(0).toUpperCase() : "M"}</span>
+            )}
           </div>
           <div>
             <div className="flex items-center gap-3 mb-1">
