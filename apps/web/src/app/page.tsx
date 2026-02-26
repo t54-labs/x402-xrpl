@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { RelativeTime } from "./components/RelativeTime";
 import { CopyButton } from "./components/CopyButton";
 import { apiFetch } from "./lib/api";
@@ -23,8 +24,8 @@ type DashboardData = {
     priceAmount: string; priceAsset: string; network: string | null;
   }>;
   topMerchants: Array<{
-    address: string; name: string | null; txCount: number; volume: number;
-    volumeByAsset?: AssetVolume[];
+    address: string; name: string | null; logoUrl?: string | null;
+    txCount: number; volume: number; volumeByAsset?: AssetVolume[];
   }>;
 };
 
@@ -100,8 +101,12 @@ export default async function Home() {
             {topMerchants.map((m, i) => (
               <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
+                  <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0 overflow-hidden">
+                    {m.logoUrl ? (
+                      <Image src={m.logoUrl} alt={m.name || ""} width={32} height={32} className="object-cover w-full h-full" />
+                    ) : (
+                      <span className="text-xs font-bold text-cyan-400">#{i + 1}</span>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">

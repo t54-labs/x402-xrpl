@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { apiFetch } from "../lib/api";
 import { CopyButton } from "../components/CopyButton";
 
@@ -10,6 +11,7 @@ type MerchantListResponse = {
   items: Array<{
     address: string;
     name: string | null;
+    logoUrl: string | null;
     website: string | null;
     createdAt: string;
     _count: { resources: number; transactions: number };
@@ -59,7 +61,14 @@ export default async function MerchantsPage({ searchParams }: { searchParams: Pr
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-300">
-                    {m.name || <span className="text-gray-600 italic">Unknown</span>}
+                    <div className="flex items-center gap-2">
+                      {m.logoUrl && (
+                        <div className="w-6 h-6 rounded-md overflow-hidden shrink-0 bg-cyan-400/10 border border-cyan-400/20">
+                          <Image src={m.logoUrl} alt={m.name || ""} width={24} height={24} className="object-cover w-full h-full" />
+                        </div>
+                      )}
+                      {m.name || <span className="text-gray-600 italic">Unknown</span>}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-white text-center font-medium">
                     {m._count.transactions}
