@@ -95,7 +95,7 @@ app.get("/dashboard", async (_req, res) => {
     if (merchantAddrs.length > 0) {
       const placeholders = merchantAddrs.map((_, i) => `$${i + 1}`).join(",");
       [merchantDetails, merchantVolumes] = await Promise.all([
-        prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true } }),
+        prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true, logoUrl: true } }),
         prisma.$queryRawUnsafe<Array<{ merchantAddr: string; asset: string; total: string }>>(
           `SELECT "merchantAddr", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
            FROM "Transaction" WHERE "merchantAddr" IN (${placeholders})
