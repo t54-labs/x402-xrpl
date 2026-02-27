@@ -68,7 +68,7 @@ export default function RootLayout({
         
         <footer className="border-t border-white/5 bg-[#0b0d10] py-8">
           <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-gray-600">&copy; {new Date().getFullYear()} x402scan | XRPL Explorer</p>
+            <p className="text-xs text-gray-600">&copy; 2026 t54 labs. All rights reserved.</p>
             <div className="flex items-center gap-4 text-xs text-gray-600">
               <a href="https://github.com/coinbase/x402" target="_blank" rel="noreferrer" className="hover:text-gray-400 transition-colors">x402 Protocol</a>
               <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-gray-400 transition-colors">XRPL</a>
