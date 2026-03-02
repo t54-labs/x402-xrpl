@@ -33,11 +33,6 @@ export function RecentTransactionsLive({
   const knownHashesRef = useRef<Set<string>>(new Set(initialTransactions.map((tx) => tx.hash)));
 
   useEffect(() => {
-    setTransactions(initialTransactions);
-    knownHashesRef.current = new Set(initialTransactions.map((tx) => tx.hash));
-  }, [initialTransactions]);
-
-  useEffect(() => {
     if (freshHashes.size === 0) return;
     const timer = window.setTimeout(() => {
       setFreshHashes(new Set());
