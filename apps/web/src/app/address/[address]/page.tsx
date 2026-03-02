@@ -79,11 +79,9 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
   const totalTxCount = data.totalTxCount ?? 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-      <div className="bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
+        <img src="/icon.png" alt="" aria-hidden="true" className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
           <div className="w-20 h-20 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
             {merchant.logoUrl ? (
@@ -116,7 +114,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
           <h2 className="text-xl font-light text-white">Offered APIs</h2>
           <div className="space-y-4">
             {merchant.resources.map((res) => (
-              <div key={res.id} className="bg-[#131518] rounded-xl border border-white/5 p-5 hover:border-cyan-500/30 transition-colors">
+              <div key={res.id} className="ui-card bg-[#131518] rounded-xl border border-white/5 p-5 hover:border-cyan-500/30 transition-colors">
                 <h3 className="font-medium text-gray-200 truncate">{res.name || "Unnamed Resource"}</h3>
                 <p className="text-xs text-gray-500 mt-1 font-mono truncate" title={res.url}>{res.url}</p>
                 <div className="mt-4 flex items-center justify-between">
@@ -125,7 +123,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
                 </div>
               </div>
             ))}
-            {merchant.resources.length === 0 && <div className="bg-[#131518] rounded-xl border border-white/5 p-8 text-center text-gray-500 text-sm">No resources registered for this merchant.</div>}
+            {merchant.resources.length === 0 && <div className="ui-card bg-[#131518] rounded-xl border border-white/5 p-8 text-center text-gray-500 text-sm">No resources registered for this merchant.</div>}
           </div>
         </div>
         <div className="lg:col-span-2 space-y-6">
@@ -143,11 +141,9 @@ function BuyerView({ address, data }: { address: string; data: AddressResponse }
   const uniqueMerchants = data.uniqueMerchants ?? 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-      <div className="bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
+        <img src="/icon.png" alt="" aria-hidden="true" className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
           <div className="w-20 h-20 rounded-2xl bg-purple-400/10 border border-purple-400/20 flex items-center justify-center"><span className="text-3xl font-light text-purple-400">B</span></div>
           <div>
@@ -181,15 +177,15 @@ function TxTable({ transactions, perspective, page, totalPages, basePath }: {
 }) {
   const counterLabel = perspective === "merchant" ? "Buyer" : "Merchant";
   return (
-    <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+    <div className="table-shell bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left whitespace-nowrap">
-          <thead className="bg-[#181a1e] border-b border-white/5">
-            <tr>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Hash</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{counterLabel}</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resource</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest text-right">Value</th>
+          <thead className="bg-[#181a1e] border-b border-white/5 !rounded-none">
+            <tr className="!rounded-none">
+              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">Hash</th>
+              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">{counterLabel}</th>
+              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">Resource</th>
+              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest text-right !rounded-none">Value</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -214,9 +210,9 @@ function TxTable({ transactions, perspective, page, totalPages, basePath }: {
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 p-4 border-t border-white/5">
-          {page > 1 && <Link href={`${basePath}?page=${page - 1}`} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">&larr; Previous</Link>}
+          {page > 1 && <Link href={`${basePath}?page=${page - 1}`} className="ui-control px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">&larr; Previous</Link>}
           <span className="text-sm text-gray-500 px-4">Page {page} of {totalPages}</span>
-          {page < totalPages && <Link href={`${basePath}?page=${page + 1}`} className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">Next &rarr;</Link>}
+          {page < totalPages && <Link href={`${basePath}?page=${page + 1}`} className="ui-control px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">Next &rarr;</Link>}
         </div>
       )}
     </div>
