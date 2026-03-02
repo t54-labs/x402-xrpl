@@ -28,8 +28,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-      <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen flex flex-col`}
       >
