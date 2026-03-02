@@ -42,24 +42,27 @@ export default async function TransactionDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <div className="flex items-center gap-3 mb-2">
         <Link href="/transactions" className="text-gray-500 hover:text-gray-300 transition-colors text-sm">&larr; All Transactions</Link>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
-          <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <div className="ui-card w-12 h-12 rounded-xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
+          <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="7" cy="7" r="1.1" fill="currentColor" stroke="none" />
+            <circle cx="7" cy="12" r="1.1" fill="currentColor" stroke="none" />
+            <circle cx="7" cy="17" r="1.1" fill="currentColor" stroke="none" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10 7h7M10 12h7M10 17h7" />
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-light text-white tracking-tight">Transaction Details</h1>
+          <h1 className="text-3xl font-light text-white tracking-tight">Transaction Details</h1>
           <p className="text-sm text-gray-500 font-mono mt-1">{hash.substring(0, 20)}...</p>
         </div>
       </div>
 
-      <div className="bg-[#131518] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
         <div className="divide-y divide-white/5">
           {fields.map((f) => (
             <div key={f.label} className="flex flex-col sm:flex-row px-6 py-4 gap-2">
@@ -152,7 +155,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
                 <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Raw Memo</span>
               </div>
               <div className="min-w-0">
-                <pre className="text-xs text-gray-400 font-mono bg-[#0b0d10] rounded-lg p-3 overflow-x-auto break-all whitespace-pre-wrap">{tx.rawMemo}</pre>
+                <pre className="ui-card text-xs text-gray-400 font-mono bg-[#0b0d10] rounded-lg p-3 overflow-x-auto break-all whitespace-pre-wrap">{tx.rawMemo}</pre>
               </div>
             </div>
           )}
@@ -168,12 +171,12 @@ export default async function TransactionDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <a
           href={`${getExplorerUrl()}/transactions/${hash}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
+          className="ui-control inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
         >
           View on XRPL Explorer
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
