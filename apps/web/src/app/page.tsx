@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { RelativeTime } from "./components/RelativeTime";
 import { CopyButton } from "./components/CopyButton";
+import { OverviewMetricsStrip } from "./components/DashboardStats";
+import { RecentTransactionsLive } from "./components/RecentTransactionsLive";
 import { apiFetch } from "./lib/api";
 import { formatCurrency } from "./utils/currency";
 
@@ -36,209 +37,173 @@ export default async function Home() {
   } = await apiFetch<DashboardData>("/dashboard");
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-light tracking-tight text-white">Network Overview</h1>
-          <p className="text-sm text-gray-400 mt-2">Global view of the x402 economy on the XRPL</p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      <header className="animate-fade-up space-y-1">
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
+          Network Overview
+        </h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          Key activity metrics and ecosystem sections for x402 on XRPL.
+        </p>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        <VolumeCard volumes={volumeByAsset} fallbackXrp={totalVolumeXrp} />
-        <StatCard title="Transactions" value={totalTransactions.toLocaleString()} />
-        <StatCard title="Merchants" value={totalMerchants.toLocaleString()} />
-        <StatCard title="Resources" value={totalResources.toLocaleString()} />
+      <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+        <OverviewMetricsStrip
+          volumes={volumeByAsset}
+          fallbackXrp={totalVolumeXrp}
+          totalTransactions={totalTransactions}
+          totalMerchants={totalMerchants}
+          totalResources={totalResources}
+        />
       </div>
 
-      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-white/5">
-          <div>
-            <h2 className="text-lg font-medium text-white">The Agora</h2>
-            <p className="text-xs text-gray-500 mt-1">Pay-per-use API services powered by x402 on the XRPL</p>
+      <div className="flex flex-col gap-6 stagger-children">
+
+        {/* Facilitator */}
+        <div className="dashboard-panel glow-border order-1 bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-3 min-w-0">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">XRPL x402 Facilitator</h2>
+                <span className="!rounded-md px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold bg-[rgba(0,140,255,0.08)] text-[var(--brand-blue)] border border-[rgba(0,140,255,0.15)]">Live</span>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] max-w-lg leading-relaxed">No API keys, no custody — just plug and play. Supports XRP and IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.</p>
+              <div className="flex items-center gap-2 mt-2">
+                <code className="!rounded-md text-xs font-mono text-[var(--text-secondary)] bg-[rgba(255,255,255,0.04)] px-3 py-1.5 border border-[var(--border)]">https://xrpl-facilitator-mainnet.t54.ai</code>
+                <CopyButton text="https://xrpl-facilitator-mainnet.t54.ai" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <a href="https://xrpl-x402.t54.ai/" target="_blank" rel="noreferrer" className="ui-control !rounded-md px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">
+                Get Started
+              </a>
+              <a href="https://xrpl-x402.t54.ai/docs/overview" target="_blank" rel="noreferrer" className="ui-control !rounded-md px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.07)]">
+                Docs
+              </a>
+            </div>
           </div>
-          <Link href="/agora" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors shrink-0">
-            Browse All &rarr;
-          </Link>
         </div>
-        
-        {registeredResources.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
-            {registeredResources.map((res) => (
-              <Link href={`/address/${res.merchantAddr}`} key={res.id} className="block">
-                <div className="p-4 bg-[#181a1e] border border-white/5 rounded-lg hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.05)] transition-all group h-full">
-                  <h3 className="font-medium text-gray-200 group-hover:text-white truncate">{res.name || "API Resource"}</h3>
-                  <p className="text-xs text-gray-500 mt-1 truncate font-mono">{res.url}</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-xs font-mono bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded-sm border border-cyan-400/20">
-                      {res.priceAmount} {formatCurrency(res.priceAsset)}
-                    </span>
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">{res.network}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center text-center py-12 gap-3">
-            <p className="text-gray-500 text-sm">No resources registered yet.</p>
-            <Link href="/resources/register" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-              Register the first one &rarr;
+
+        {/* The Agora */}
+        <div className="dashboard-panel order-2 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+            <div>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">Agora</h2>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Pay-per-use APIs and resources in the x402 ecosystem.</p>
+            </div>
+            <Link href="/agora" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors shrink-0">
+              Browse All &rarr;
             </Link>
           </div>
-        )}
-      </div>
 
-      {topMerchants.length > 0 && (
-        <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-          <div className="flex justify-between items-center p-6 border-b border-white/5">
-            <h2 className="text-lg font-medium text-white">Top Merchants</h2>
-            <Link href="/merchants" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
+          {registeredResources.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
+              {registeredResources.map((res) => (
+                <Link href={`/address/${res.merchantAddr}`} key={res.id} className="block">
+                  <div className="agora-resource-card p-4 bg-[rgba(255,255,255,0.02)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200 group h-full">
+                    <h3 className="text-sm font-medium text-[var(--text-primary)] truncate">{res.name || "API Resource"}</h3>
+                    <p className="text-xs text-[var(--text-muted)] mt-1 truncate font-mono">{res.url}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="!rounded-md text-[11px] font-mono bg-[rgba(0,140,255,0.06)] text-[var(--brand-blue)] px-2 py-0.5 border border-[rgba(0,140,255,0.12)]">
+                        {res.priceAmount} {formatCurrency(res.priceAsset)}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{res.network}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center text-center py-12 gap-3">
+              <p className="text-[var(--text-muted)] text-sm">No resources registered yet.</p>
+              <Link href="/resources/register" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors">
+                Register the first one &rarr;
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="dashboard-panel order-4 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+          <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">Recent Transactions</h2>
+              </div>
+              <p className="text-sm text-[var(--text-muted)] mt-1">Latest x402 payments observed on XRPL.</p>
+            </div>
+            <Link href="/transactions" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
               View All &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
-            {topMerchants.map((m, i) => (
-              <Link href={`/address/${m.address}`} key={m.address} className="block p-5 hover:bg-white/[0.02] transition-colors group">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="relative shrink-0">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
-                      {m.logoUrl ? (
-                        <Image src={m.logoUrl} alt={m.name || ""} width={32} height={32} className="object-cover w-full h-full" />
-                      ) : (
-                        <span className="text-sm font-light text-cyan-400">{m.name ? m.name.charAt(0) : "M"}</span>
+
+          <RecentTransactionsLive initialTransactions={recentTransactions} />
+        </div>
+
+        {/* Top Merchants */}
+        {topMerchants.length > 0 && (
+          <div className="dashboard-panel order-3 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+            <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+                  <h2 className="text-base font-semibold text-[var(--text-primary)]">Top Merchants</h2>
+                </div>
+                <p className="text-sm text-[var(--text-muted)] mt-1">Most active merchants by transactions and volume.</p>
+              </div>
+              <Link href="/merchants" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
+                View All &rarr;
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+              {topMerchants.map((m, i) => (
+                <Link href={`/address/${m.address}`} key={m.address} className="block p-4 sm:p-5 hover:bg-[rgba(255,255,255,0.02)] transition-colors group border-r border-[var(--border)] border-b sm:border-b-0">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative shrink-0">
+                      <div className="!rounded-md w-8 h-8 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] flex items-center justify-center overflow-hidden">
+                        {m.logoUrl ? (
+                          <Image src={m.logoUrl} alt={m.name || ""} width={32} height={32} className="object-cover w-full h-full" />
+                        ) : (
+                          <span className="text-sm font-light text-[var(--text-secondary)]">{m.name ? m.name.charAt(0) : "M"}</span>
+                        )}
+                      </div>
+                      <span
+                        className={`absolute -top-2 -left-2 min-w-[20px] h-5 px-1 rounded-full border text-[10px] font-bold flex items-center justify-center ${
+                          i === 0
+                            ? "bg-amber-400/20 text-amber-300 border-amber-300/50"
+                            : i === 1
+                              ? "bg-slate-300/20 text-slate-200 border-slate-200/50"
+                              : i === 2
+                                ? "bg-orange-400/20 text-orange-300 border-orange-300/50"
+                                : "bg-[var(--brand-blue)]/20 text-[var(--brand-blue)] border-[var(--brand-blue)]/40"
+                        }`}
+                      >
+                        #{i + 1}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--text-primary)]">
+                        {m.name || `${m.address.substring(0, 8)}...${m.address.slice(-4)}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[var(--text-muted)]">{m.txCount} txs</span>
+                    <div className="text-right">
+                      {m.volumeByAsset && m.volumeByAsset.length > 0 ? m.volumeByAsset.map((v) => (
+                        <span key={v.asset} className="block text-xs font-mono text-[var(--text-secondary)]">{v.total.toFixed(v.total < 1 ? 3 : 2)} {formatCurrency(v.asset)}</span>
+                      )) : (
+                        <span className="text-xs font-mono text-[var(--text-secondary)]">{m.volume.toFixed(3)} XRP</span>
                       )}
                     </div>
-                    <span className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-cyan-500 text-[8px] font-bold text-black flex items-center justify-center">{i + 1}</span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-200 group-hover:text-white truncate">
-                      {m.name || `${m.address.substring(0, 8)}...${m.address.slice(-4)}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">{m.txCount} txs</span>
-                  <div className="text-right">
-                    {m.volumeByAsset && m.volumeByAsset.length > 0 ? m.volumeByAsset.map((v) => (
-                      <span key={v.asset} className="block text-xs font-mono text-cyan-400">{v.total.toFixed(v.total < 1 ? 3 : 2)} {formatCurrency(v.asset)}</span>
-                    )) : (
-                      <span className="text-xs font-mono text-cyan-400">{m.volume.toFixed(3)} XRP</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="bg-gradient-to-r from-[#131518] to-[#0f1923] rounded-xl border border-cyan-500/10 p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-medium text-white">XRPL x402 Facilitator</h2>
-              <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Live</span>
-            </div>
-            <p className="text-sm text-gray-400 max-w-lg">No API keys, no custody — just plug and play. Supports XRP &amp; IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.</p>
-            <div className="flex items-center gap-2 mt-2">
-              <code className="text-xs font-mono text-cyan-400 bg-cyan-400/5 px-3 py-1.5 rounded border border-cyan-400/10">https://xrpl-facilitator-mainnet.t54.ai</code>
-              <CopyButton text="https://xrpl-facilitator-mainnet.t54.ai" />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <a href="https://xrpl-x402.t54.ai/" target="_blank" rel="noreferrer" className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-lg transition-all text-sm">
-              Get Started
-            </a>
-            <a href="https://xrpl-x402.t54.ai/docs/overview" target="_blank" rel="noreferrer" className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white hover:border-white/20 transition-all">
-              Docs
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b border-white/5">
-          <h2 className="text-lg font-medium text-white">Recent Transactions</h2>
-          <Link href="/transactions" className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">
-            View All &rarr;
-          </Link>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-left whitespace-nowrap">
-            <thead className="bg-[#181a1e]">
-              <tr>
-                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Tx Hash</th>
-                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Merchant</th>
-                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {recentTransactions.map((tx) => (
-                <tr key={tx.hash} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
-                      {tx.hash.substring(0, 16)}...
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link href={`/address/${tx.merchant?.address || ""}`} className="text-sm text-gray-400 hover:text-cyan-400 transition-colors">
-                      {tx.merchant?.name || `${(tx.merchant?.address || "").substring(0, 10)}...`}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-white">
-                    {tx.amount} <span className="text-gray-500 text-xs">{formatCurrency(tx.asset)}</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-400">
-                    <RelativeTime date={tx.timestamp} />
-                  </td>
-                </tr>
+                </Link>
               ))}
-              {recentTransactions.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 text-sm">
-                    No transactions indexed yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ title, value }: { title: string; value: string | number }) {
-  return (
-    <div className="bg-[#131518] p-5 md:p-6 rounded-xl border border-white/5 relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-5">
-        <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-widest">{title}</h3>
-      <p className="text-2xl md:text-3xl font-light text-white mt-2 md:mt-3 tracking-tight">{value}</p>
-    </div>
-  );
-}
-
-function VolumeCard({ volumes, fallbackXrp }: { volumes?: AssetVolume[]; fallbackXrp: number }) {
-  return (
-    <div className="bg-[#131518] p-5 md:p-6 rounded-xl border border-white/5 relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-5">
-        <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-widest">Total Volume</h3>
-      <div className="mt-2 md:mt-3 space-y-1">
-        {volumes && volumes.length > 0 ? volumes.map((v) => (
-          <p key={v.asset} className="text-2xl md:text-3xl font-light text-white tracking-tight">
-            {v.total.toFixed(v.total < 1 ? 4 : 2)} <span className="text-sm text-gray-500">{formatCurrency(v.asset)}</span>
-          </p>
-        )) : (
-          <p className="text-2xl md:text-3xl font-light text-white tracking-tight">{fallbackXrp.toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p>
+            </div>
+          </div>
         )}
+
       </div>
     </div>
   );
