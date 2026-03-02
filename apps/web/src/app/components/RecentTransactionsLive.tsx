@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RelativeTime } from "./RelativeTime";
+import { formatCurrency } from "../utils/currency";
 
 type TransactionRow = {
   hash: string;
@@ -16,12 +17,6 @@ type TransactionRow = {
 type DashboardResponse = {
   recentTransactions: TransactionRow[];
 };
-
-function formatCurrency(asset: string): string {
-  if (asset === "XRP") return "XRP";
-  if (asset.includes(".")) return asset.split(".")[0];
-  return asset;
-}
 
 export function RecentTransactionsLive({
   initialTransactions,
@@ -85,7 +80,7 @@ export function RecentTransactionsLive({
     };
   }, []);
 
-  const rows = useMemo(() => transactions.slice(0, 6), [transactions]);
+  const rows = useMemo(() => transactions.slice(0, 5), [transactions]);
 
   return (
     <div>
@@ -118,7 +113,8 @@ export function RecentTransactionsLive({
                   duration: isFresh ? 0.7 : 0.35,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="hover:bg-[var(--bg-elevated)] transition-colors px-5 sm:px-6 py-4 border-r border-[var(--border)] border-b sm:border-b-0 min-h-[136px]"
+                whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
+                className="px-5 sm:px-6 py-4 border-r border-[var(--border)] border-b sm:border-b-0 min-h-[136px]"
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2 min-w-0">

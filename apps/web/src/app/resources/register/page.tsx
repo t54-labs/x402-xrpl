@@ -40,7 +40,7 @@ export default function RegisterResourcePage() {
     <div className="min-h-[calc(100svh-80px)] flex items-center justify-center px-4 sm:px-6 py-8">
       <div className="w-full max-w-2xl">
       <div className="mb-10 text-center animate-fade-up">
-        <img src="/icon.png" alt="" aria-hidden className="mx-auto mb-6 h-14 w-14 object-contain opacity-[0.12]" />
+        <img src="/icon.png" alt="" aria-hidden className="mx-auto mb-6 h-14 w-14 object-contain opacity-[0.18]" />
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Join the x402 Economy</h1>
         <p className="text-[var(--text-muted)] mt-2 text-sm max-w-md mx-auto leading-relaxed">
           Register your API resource to make it discoverable in the Agora. We will verify your HTTP 402 configuration and XRPL requirements instantly.

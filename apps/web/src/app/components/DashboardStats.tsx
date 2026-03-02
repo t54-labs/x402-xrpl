@@ -1,21 +1,9 @@
 "use client";
 
 import { AnimatedNumber } from "./AnimatedNumber";
+import { formatCurrency } from "../utils/currency";
 
 type AssetVolume = { asset: string; total: number };
-
-const CURRENCY_LABELS: Record<string, string> = {
-  XRP: "XRP",
-};
-
-function formatCurrency(asset: string): string {
-  if (CURRENCY_LABELS[asset]) return CURRENCY_LABELS[asset];
-  if (asset.includes(".")) {
-    const [code] = asset.split(".");
-    return code;
-  }
-  return asset;
-}
 
 export function OverviewMetricsStrip({
   volumes,
