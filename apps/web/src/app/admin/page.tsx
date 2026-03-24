@@ -46,6 +46,27 @@ function formatCurrency(code: string): string {
 
 const CHART_COLORS = ["#008CFF", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
 
+function exportCSV(filename: string, headers: string[], rows: string[][]) {
+  const csv = [headers.join(","), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ExportButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border-hover)] rounded-[var(--radius-tag)] transition-all" title="Export CSV">
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+    </button>
+  );
+}
+
 function StatCard({ title, value, subtitle }: { title: string; value: string | number; subtitle?: string }) {
   return (
     <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-card)] p-5 hover:border-[var(--border-hover)] transition-colors">
@@ -56,10 +77,13 @@ function StatCard({ title, value, subtitle }: { title: string; value: string | n
   );
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({ title, children, onExport }: { title: string; children: React.ReactNode; onExport?: () => void }) {
   return (
     <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-shell)] p-6 hover:border-[var(--border-hover)] transition-colors">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-5">{title}</h3>
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+        {onExport && <ExportButton onClick={onExport} />}
+      </div>
       {children}
     </div>
   );
@@ -144,6 +168,31 @@ export default function AdminDashboard() {
     Transactions: m.txCount,
   }));
 
+  const exportDaily = () => exportCSV("daily_transactions",
+    ["Date", "Transactions", "Volume"],
+    dailyTxs.map((d) => [d.day, String(d.txCount), String(d.volume)])
+  );
+  const exportWeekly = () => exportCSV("weekly_transactions",
+    ["Week", "Transactions", "Volume"],
+    weeklyData.map((w) => [w.week, String(w.Transactions), String(w.Volume)])
+  );
+  const exportAssets = () => exportCSV("volume_by_asset",
+    ["Asset", "Transactions", "Volume"],
+    volumeByAsset.map((v) => [formatCurrency(v.asset), String(v.txCount), String(v.total)])
+  );
+  const exportMerchants = () => exportCSV("merchants",
+    ["Address", "Name", "Transactions", "Volume"],
+    merchantBreakdown.map((m) => [m.address, m.name || "", String(m.txCount), String(m.volume)])
+  );
+  const exportBuyers = () => exportCSV("top_buyers",
+    ["Address", "Transactions", "Volume"],
+    topBuyers.map((b) => [b.address, String(b.txCount), String(b.volume)])
+  );
+  const exportTxs = () => exportCSV("recent_transactions",
+    ["Hash", "Timestamp", "Buyer", "Merchant", "Amount", "Asset"],
+    recentTransactions.map((tx) => [tx.hash, tx.timestamp, tx.buyerAddress, tx.merchant?.name || tx.merchantAddr, tx.amount, formatCurrency(tx.asset)])
+  );
+
   const handleLogout = () => {
     sessionStorage.removeItem("admin_auth");
     router.push("/admin/login");
@@ -175,7 +224,7 @@ export default function AdminDashboard() {
 
       {/* Charts Row 1: Daily Transactions + Weekly Volume */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Daily Transactions">
+        <ChartCard title="Daily Transactions" onExport={exportDaily}>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData}>
               <defs>
@@ -193,7 +242,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Weekly Transaction Volume">
+        <ChartCard title="Weekly Transaction Volume" onExport={exportWeekly}>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={weeklyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -208,7 +257,7 @@ export default function AdminDashboard() {
 
       {/* Charts Row 2: Asset Distribution + Merchant Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Transactions by Asset">
+        <ChartCard title="Transactions by Asset" onExport={exportAssets}>
           <div className="flex items-center gap-8">
             <ResponsiveContainer width="50%" height={220}>
               <PieChart>
@@ -237,7 +286,7 @@ export default function AdminDashboard() {
           </div>
         </ChartCard>
 
-        <ChartCard title="Transactions by Merchant">
+        <ChartCard title="Transactions by Merchant" onExport={exportMerchants}>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={merchantBarData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
@@ -257,8 +306,9 @@ export default function AdminDashboard() {
       {/* Tables Row: Top Buyers + Merchant Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-shell)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[var(--border)]">
+          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Top Buyers</h3>
+            <ExportButton onClick={exportBuyers} />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -283,8 +333,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-shell)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[var(--border)]">
+          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Merchant Volume</h3>
+            <ExportButton onClick={exportMerchants} />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -320,8 +371,9 @@ export default function AdminDashboard() {
 
       {/* Recent Transactions */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-shell)] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[var(--border)]">
+        <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Recent Transactions</h3>
+          <ExportButton onClick={exportTxs} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left whitespace-nowrap">
