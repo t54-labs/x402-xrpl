@@ -539,6 +539,104 @@ app.post("/verify", async (req, res) => {
   }
 });
 
+// ── Admin Stats ─────────────────────────────────────────────
+app.get("/admin/stats", async (_req, res) => {
+  try {
+    const cached = getCached("admin_stats");
+    if (cached) return res.json(cached);
+
+    const [
+      indexerState,
+      totalMerchants,
+      totalResources,
+      totalBuyers,
+      dailyTxs,
+      volumeByAsset,
+      txsByMerchant,
+      topBuyers,
+      recentTxs,
+    ] = await Promise.all([
+      prisma.indexerState.findUnique({ where: { id: "default" } }),
+      prisma.merchant.count(),
+      prisma.resource.count({ where: { isActive: true } }),
+      prisma.$queryRawUnsafe<[{ count: string }]>(
+        `SELECT COUNT(DISTINCT "buyerAddress") as count FROM "Transaction"`
+      ),
+      prisma.$queryRawUnsafe<Array<{ day: string; tx_count: string; volume: string }>>(
+        `SELECT DATE("timestamp") as day, COUNT(*) as tx_count,
+         COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
+         FROM "Transaction"
+         GROUP BY DATE("timestamp")
+         ORDER BY day ASC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ asset: string; tx_count: string; total: string }>>(
+        `SELECT asset, COUNT(*) as tx_count, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
+         FROM "Transaction" GROUP BY asset ORDER BY tx_count DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: string; volume: string }>>(
+        `SELECT "merchantAddr", COUNT(*) as tx_count,
+         COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
+         FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ buyerAddress: string; tx_count: string; volume: string }>>(
+        `SELECT "buyerAddress", COUNT(*) as tx_count,
+         COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
+         FROM "Transaction" GROUP BY "buyerAddress" ORDER BY tx_count DESC LIMIT 10`
+      ),
+      prisma.transaction.findMany({
+        take: 20,
+        orderBy: { timestamp: "desc" },
+        include: { merchant: { select: { address: true, name: true, logoUrl: true } } },
+      }),
+    ]);
+
+    const merchantAddrs = txsByMerchant.map((m) => m.merchantAddr);
+    const merchantDetails = merchantAddrs.length > 0
+      ? await prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true, logoUrl: true } })
+      : [];
+    const merchantMap = new Map(merchantDetails.map((m) => [m.address, m]));
+
+    const data = {
+      overview: {
+        totalTransactions: indexerState?.totalTxCount ?? 0,
+        totalMerchants,
+        totalResources,
+        totalBuyers: parseInt(totalBuyers[0]?.count || "0"),
+        lastLedgerIndex: indexerState?.lastLedgerIndex ?? 0,
+        updatedAt: indexerState?.updatedAt ?? null,
+      },
+      dailyTxs: dailyTxs.map((d) => ({
+        day: d.day,
+        txCount: parseInt(d.tx_count),
+        volume: parseFloat(d.volume),
+      })),
+      volumeByAsset: volumeByAsset.map((v) => ({
+        asset: v.asset,
+        txCount: parseInt(v.tx_count),
+        total: parseFloat(v.total),
+      })),
+      merchantBreakdown: txsByMerchant.map((m) => ({
+        address: m.merchantAddr,
+        name: merchantMap.get(m.merchantAddr)?.name || null,
+        logoUrl: merchantMap.get(m.merchantAddr)?.logoUrl || null,
+        txCount: parseInt(m.tx_count),
+        volume: parseFloat(m.volume),
+      })),
+      topBuyers: topBuyers.map((b) => ({
+        address: b.buyerAddress,
+        txCount: parseInt(b.tx_count),
+        volume: parseFloat(b.volume),
+      })),
+      recentTransactions: recentTxs,
+    };
+    setCache("admin_stats", data, 30_000);
+    res.json(data);
+  } catch (err) {
+    console.error("GET /admin/stats error:", err);
+    res.status(500).json({ error: "Failed to fetch admin stats" });
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`x402 API server listening on :${PORT}`);
