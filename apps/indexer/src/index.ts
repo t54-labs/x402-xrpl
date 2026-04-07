@@ -36,12 +36,16 @@ function getTxResult(txStream: any, tx: any): string | undefined {
     || tx?.metaData?.TransactionResult;
 }
 
+function sanitizeForPg(str: string): string {
+  return str.replace(/\x00/g, "");
+}
+
 function decodeMemoData(tx: any): string {
   if (!tx.Memos || !Array.isArray(tx.Memos)) return "";
   for (const m of tx.Memos) {
     const hex = m?.Memo?.MemoData;
     if (typeof hex === "string" && hex.length > 0) {
-      try { return Buffer.from(hex, "hex").toString("utf-8"); } catch { /* skip */ }
+      try { return sanitizeForPg(Buffer.from(hex, "hex").toString("utf-8")); } catch { /* skip */ }
     }
   }
   return "";
@@ -184,7 +188,7 @@ function processTransaction(txStream: any, tx: any) {
     facilitator: facilitatorName,
     sourceTag,
     destinationTag: typeof tx.DestinationTag === "number" ? tx.DestinationTag : null,
-    invoiceId: tx.InvoiceID || null,
+    invoiceId: tx.InvoiceID ? sanitizeForPg(tx.InvoiceID) : null,
     rawMemo: decodeMemoData(tx) || null,
   });
 
