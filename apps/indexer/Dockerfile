@@ -16,6 +16,7 @@ COPY --from=deps /app/apps/indexer/node_modules ./apps/indexer/node_modules
 COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
 COPY . .
 RUN pnpm --filter @x402-xrpl/database generate
+RUN pnpm --filter @x402-xrpl/database build
 RUN pnpm --filter @x402-xrpl/indexer build
 
 FROM base AS runner
