@@ -29,7 +29,7 @@ export function RelativeTime({ date }: { date: string }) {
   const text = getRelativeTime(new Date(date));
 
   return (
-    <time dateTime={date} title={new Date(date).toLocaleString()}>
+    <time dateTime={date} title={new Date(date).toLocaleString()} suppressHydrationWarning>
       {text}
     </time>
   );

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatedNumber } from "./AnimatedNumber";
 import { RelativeTime } from "./RelativeTime";
 import { formatCurrency } from "../utils/currency";
 
@@ -14,18 +15,13 @@ type TransactionRow = {
   merchant?: { address: string; name: string | null } | null;
 };
 
-type DashboardResponse = {
-  recentTransactions: TransactionRow[];
-};
-
 export function RecentTransactionsLive({
-  initialTransactions,
+  transactions,
 }: {
-  initialTransactions: TransactionRow[];
+  transactions: TransactionRow[];
 }) {
-  const [transactions, setTransactions] = useState<TransactionRow[]>(initialTransactions);
   const [freshHashes, setFreshHashes] = useState<Set<string>>(new Set());
-  const knownHashesRef = useRef<Set<string>>(new Set(initialTransactions.map((tx) => tx.hash)));
+  const knownHashesRef = useRef<Set<string>>(new Set(transactions.map((tx) => tx.hash)));
 
   useEffect(() => {
     if (freshHashes.size === 0) return;
@@ -37,48 +33,31 @@ export function RecentTransactionsLive({
 
   useEffect(() => {
     let mounted = true;
+    const incomingHashes = transactions.map((tx) => tx.hash);
+    const newOnes = incomingHashes.filter((hash) => !knownHashesRef.current.has(hash));
 
-    const refresh = async () => {
-      try {
-        const res = await fetch("/api/dashboard", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as DashboardResponse;
-        const latest = data.recentTransactions ?? [];
+    if (newOnes.length > 0) {
+      setFreshHashes((prev) => {
+        const next = new Set(prev);
+        newOnes.forEach((hash) => next.add(hash));
+        return next;
+      });
+
+      window.setTimeout(() => {
         if (!mounted) return;
+        setFreshHashes((prev) => {
+          const next = new Set(prev);
+          newOnes.forEach((hash) => next.delete(hash));
+          return next;
+        });
+      }, 2500);
+    }
 
-        const incomingHashes = latest.map((tx) => tx.hash);
-        const newOnes = incomingHashes.filter((hash) => !knownHashesRef.current.has(hash));
-
-        if (newOnes.length > 0) {
-          setFreshHashes((prev) => {
-            const next = new Set(prev);
-            newOnes.forEach((hash) => next.add(hash));
-            return next;
-          });
-
-          window.setTimeout(() => {
-            if (!mounted) return;
-            setFreshHashes((prev) => {
-              const next = new Set(prev);
-              newOnes.forEach((hash) => next.delete(hash));
-              return next;
-            });
-          }, 2500);
-        }
-
-        knownHashesRef.current = new Set(incomingHashes);
-        setTransactions(latest);
-      } catch {
-        // Keep current data; next poll will retry.
-      }
-    };
-
-    const interval = window.setInterval(refresh, 8000);
+    knownHashesRef.current = new Set(incomingHashes);
     return () => {
       mounted = false;
-      window.clearInterval(interval);
     };
-  }, []);
+  }, [transactions]);
 
   const rows = useMemo(() => transactions.slice(0, 5), [transactions]);
 
@@ -89,12 +68,14 @@ export function RecentTransactionsLive({
           No transactions indexed yet.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+          <AnimatePresence initial={false}>
           {rows.map((tx) => {
             const isFresh = freshHashes.has(tx.hash);
             return (
               <motion.div
                 key={tx.hash}
+                layout
                 initial={isFresh ? { opacity: 0, x: -56, scale: 0.985, filter: "blur(1.5px)" } : false}
                 animate={{
                   opacity: 1,
@@ -138,7 +119,8 @@ export function RecentTransactionsLive({
 
                   <div className="mt-auto flex items-end justify-between gap-2 pt-3">
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                      {tx.amount} <span className="text-[var(--text-muted)] text-xs">{formatCurrency(tx.asset)}</span>
+                      <AnimatedTransactionAmount amount={tx.amount} />{" "}
+                      <span className="text-[var(--text-muted)] text-xs">{formatCurrency(tx.asset)}</span>
                     </p>
                     <p className="text-sm text-[var(--text-secondary)] whitespace-nowrap">
                       <RelativeTime date={tx.timestamp} />
@@ -148,8 +130,19 @@ export function RecentTransactionsLive({
               </motion.div>
             );
           })}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );
+}
+
+function AnimatedTransactionAmount({ amount }: { amount: string }) {
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return amount;
+
+  const fraction = amount.split(".")[1] ?? "";
+  const decimals = Math.min(Math.max(fraction.length, value > 0 && value < 1 ? 4 : 0), 6);
+
+  return <AnimatedNumber value={value} decimals={decimals} duration={1400} />;
 }
