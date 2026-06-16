@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import Script from "next/script";
+import { Suspense } from "react";
 import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
 import { NavLinks } from "./components/NavLinks";
+import { GoogleAnalyticsPageView } from "./components/GoogleAnalyticsPageView";
 import "./globals.css";
+
+const GA_MEASUREMENT_ID = "G-1D7VRX7WY2";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +36,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen flex flex-col`}
       >
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
+          `}
+        </Script>
+        <Suspense fallback={null}>
+          <GoogleAnalyticsPageView measurementId={GA_MEASUREMENT_ID} />
+        </Suspense>
         <nav className="sticky top-0 z-50 w-full bg-[rgba(0,0,0,0.6)] backdrop-blur-[20px] backdrop-saturate-150 border-b border-[rgba(255,255,255,0.06)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[80px] flex items-center justify-between gap-4">
             <div className="h-full flex items-center gap-5 min-w-0">
