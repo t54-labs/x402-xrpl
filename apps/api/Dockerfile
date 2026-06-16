@@ -17,6 +17,7 @@ COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
 COPY . .
 RUN pnpm --filter @x402-xrpl/database generate
+RUN pnpm --filter @x402-xrpl/database build
 RUN pnpm --filter @x402-xrpl/api build
 
 FROM base AS runner
