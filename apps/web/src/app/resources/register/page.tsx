@@ -1,51 +1,164 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
+
+type RegisteredMerchant = {
+  address: string;
+  name: string | null;
+  logoUrl: string | null;
+};
+
+type RegisteredResource = {
+  merchantAddr: string;
+};
+
+type VerifyResult = {
+  success?: boolean;
+  error?: string;
+  registeredCount?: number;
+  discoveryChecked?: boolean;
+  discoveryFound?: number;
+  failed?: Array<{ url: string; error: string }>;
+  resources?: RegisteredResource[];
+  merchants?: RegisteredMerchant[];
+};
+
+type LogoResult = {
+  success?: boolean;
+  error?: string;
+};
+
+const MAX_LOGO_BYTES = 256 * 1024;
+const SUPPORTED_LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
 export default function RegisterResourcePage() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    success?: boolean;
-    error?: string;
-    registeredCount?: number;
-    discoveryChecked?: boolean;
-    discoveryFound?: number;
-    failed?: Array<{ url: string; error: string }>;
-  } | null>(null);
+  const [verifiedUrl, setVerifiedUrl] = useState("");
+  const [selectedMerchant, setSelectedMerchant] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoResult, setLogoResult] = useState<LogoResult | null>(null);
+  const [result, setResult] = useState<VerifyResult | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
+    setLogoFile(null);
+    setLogoPreview("");
+    setLogoResult(null);
 
     try {
+      const submittedUrl = url;
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: submittedUrl }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as VerifyResult;
       setResult(data);
-      if (res.ok) setUrl("");
+      if (res.ok && data.success) {
+        const merchants = getRegisteredMerchants(data);
+        setVerifiedUrl(submittedUrl);
+        setSelectedMerchant(merchants[0]?.address || "");
+        setUrl("");
+      } else {
+        setVerifiedUrl("");
+        setSelectedMerchant("");
+      }
     } catch {
       setResult({ error: "Network error occurred." });
+      setVerifiedUrl("");
+      setSelectedMerchant("");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setLogoResult(null);
+    setLogoFile(null);
+    setLogoPreview("");
+
+    if (!file) return;
+    if (!SUPPORTED_LOGO_TYPES.has(file.type)) {
+      setLogoResult({ error: "Use a PNG, JPG, WebP, or GIF logo." });
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      setLogoResult({ error: "Logo must be under 256KB." });
+      return;
+    }
+
+    setLogoFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setLogoPreview(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = async () => {
+    if (!logoFile || !logoPreview || !verifiedUrl || !selectedMerchant) return;
+    setLogoUploading(true);
+    setLogoResult(null);
+
+    try {
+      const res = await fetch("/api/merchant-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: verifiedUrl,
+          merchantAddress: selectedMerchant,
+          logoDataUrl: logoPreview,
+        }),
+      });
+      const data = await res.json() as LogoResult & { merchant?: RegisteredMerchant };
+      if (!res.ok || !data.success || !data.merchant) {
+        setLogoResult({ error: data.error || "Logo upload failed." });
+        return;
+      }
+
+      setResult((prev) => {
+        if (!prev) return prev;
+        const merchants = getRegisteredMerchants(prev);
+        const nextMerchants = merchants.map((merchant) =>
+          merchant.address === data.merchant?.address ? data.merchant : merchant
+        );
+        return { ...prev, merchants: nextMerchants };
+      });
+      setLogoFile(null);
+      setLogoResult({ success: true });
+    } catch {
+      setLogoResult({ error: "Network error occurred." });
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const registeredMerchants = result?.success ? getRegisteredMerchants(result) : [];
+  const selectedMerchantDetails = registeredMerchants.find((merchant) => merchant.address === selectedMerchant);
+
   return (
     <div className="min-h-[calc(100svh-80px)] flex items-center justify-center px-4 sm:px-6 py-8">
       <div className="w-full max-w-2xl">
-      <div className="mb-10 text-center animate-fade-up">
-        <img src="/icon.png" alt="" aria-hidden className="mx-auto mb-6 h-14 w-14 object-contain opacity-[0.18]" />
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Join the x402 Economy</h1>
-        <p className="text-[var(--text-muted)] mt-2 text-sm max-w-md mx-auto leading-relaxed">
-          Register your API resource to make it discoverable in the Agora. We will verify your HTTP 402 configuration and XRPL requirements instantly.
-        </p>
-      </div>
+        <div className="mb-10 text-center animate-fade-up">
+          <Image
+            src="/icon.png"
+            alt=""
+            aria-hidden
+            width={56}
+            height={56}
+            className="mx-auto mb-6 h-14 w-14 object-contain opacity-[0.18]"
+          />
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Join the x402 Economy</h1>
+          <p className="text-[var(--text-muted)] mt-2 text-sm max-w-md mx-auto leading-relaxed">
+            Register your API resource to make it discoverable in the Agora. We will verify your HTTP 402 configuration and XRPL requirements instantly.
+          </p>
+        </div>
 
       <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 animate-fade-up" style={{ animationDelay: "80ms" }}>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -102,6 +215,87 @@ export default function RegisterResourcePage() {
                 ))}
               </div>
             )}
+
+            {registeredMerchants.length > 0 && verifiedUrl && (
+              <div className="p-4 sm:p-5 rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] text-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Merchant logo</p>
+                    <p className="text-[var(--text-secondary)] mt-1">
+                      Upload a small logo for the verified XRPL merchant address.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-12 h-12 !rounded-md border border-[var(--border)] bg-[rgba(255,255,255,0.04)] overflow-hidden flex items-center justify-center">
+                      {(logoPreview || selectedMerchantDetails?.logoUrl) ? (
+                        <Image
+                          src={logoPreview || selectedMerchantDetails?.logoUrl || ""}
+                          alt=""
+                          width={48}
+                          height={48}
+                          unoptimized
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xs text-[var(--text-muted)]">Logo</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                      Verified address
+                    </label>
+                    <select
+                      value={selectedMerchant}
+                      onChange={(e) => setSelectedMerchant(e.target.value)}
+                      className="ui-control w-full bg-[rgba(255,255,255,0.03)] text-[var(--text-primary)] px-4 py-3 border border-[var(--border)] rounded-lg focus:border-[var(--brand-blue)] focus:outline-none transition-colors font-mono text-sm"
+                    >
+                      {registeredMerchants.map((merchant) => (
+                        <option key={merchant.address} value={merchant.address}>
+                          {merchant.name ? `${merchant.name} — ${merchant.address}` : merchant.address}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                      Logo file
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={handleLogoFileChange}
+                      className="ui-control w-full bg-[rgba(255,255,255,0.03)] text-[var(--text-secondary)] px-4 py-3 border border-[var(--border)] rounded-lg file:mr-4 file:border-0 file:bg-[var(--brand-blue)] file:text-white file:rounded-md file:px-3 file:py-1.5 file:text-xs file:font-medium"
+                    />
+                    <p className="text-[11px] text-[var(--text-muted)] mt-2">PNG, JPG, WebP, or GIF. Max 256KB.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleLogoUpload}
+                    disabled={!logoFile || logoUploading || !selectedMerchant}
+                    className="ui-control w-full bg-[var(--brand-blue)] text-white font-medium py-3 px-4 rounded-lg transition-all disabled:opacity-50"
+                  >
+                    {logoUploading ? "Uploading Logo..." : "Upload Logo"}
+                  </button>
+
+                  {logoResult?.success && (
+                    <div className="p-3 rounded-lg text-sm border bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)]">
+                      Logo uploaded successfully.
+                    </div>
+                  )}
+                  {logoResult?.error && (
+                    <div className="p-3 rounded-lg text-sm border bg-red-500/10 border-red-500/20 text-red-400">
+                      {logoResult.error}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -116,4 +310,15 @@ export default function RegisterResourcePage() {
       </div>
     </div>
   );
+}
+
+function getRegisteredMerchants(result: VerifyResult) {
+  if (result.merchants && result.merchants.length > 0) return result.merchants;
+
+  const seen = new Set<string>();
+  return (result.resources || []).flatMap((resource) => {
+    if (!resource.merchantAddr || seen.has(resource.merchantAddr)) return [];
+    seen.add(resource.merchantAddr);
+    return [{ address: resource.merchantAddr, name: null, logoUrl: null }];
+  });
 }
