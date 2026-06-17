@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "x402xrpl2026";
-
 export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -13,20 +10,28 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (username === ADMIN_USER && password === ADMIN_PASS) {
-        sessionStorage.setItem("admin_auth", "true");
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
         router.push("/admin");
       } else {
-        setError("Invalid credentials");
-        setLoading(false);
+        setError(data.error || "Invalid credentials");
       }
-    }, 500);
+    } catch {
+      setError("Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

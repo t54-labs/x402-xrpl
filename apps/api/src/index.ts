@@ -1,16 +1,29 @@
 import express from "express";
 import cors from "cors";
-import axios from "axios";
 import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
+import {
+  canIssueAdminSessions,
+  createAdminSession,
+  loadAdminConfig,
+  requireAdminAuth,
+  verifyAdminCredentials,
+} from "./adminAuth";
+import { createRateLimit } from "./rateLimit";
+import { assertSafeHttpUrl, safeHttpRequest } from "./safeFetch";
 
 dotenv.config();
 
 const PORT = parseInt(process.env.PORT || "4001", 10);
 const app = express();
 const MAX_LOGO_BYTES = 256 * 1024;
+const MAX_DISCOVERY_RESOURCES = 20;
 const LOGO_DATA_URL_RE = /^data:(image\/(?:png|jpeg|webp|gif));base64,([a-z0-9+/=\s]+)$/i;
+const verifyRateLimit = createRateLimit({ keyPrefix: "verify", windowMs: 60_000, max: 30 });
+const logoRateLimit = createRateLimit({ keyPrefix: "merchant-logo", windowMs: 60_000, max: 10 });
+const adminLoginRateLimit = createRateLimit({ keyPrefix: "admin-login", windowMs: 60_000, max: 10 });
 
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
@@ -52,6 +65,8 @@ function normalizeResourceUrl(input: string, origin: string) {
 }
 
 async function resolveX402ResourceUrls(parsedInput: URL) {
+  await assertSafeHttpUrl(parsedInput);
+
   const origin = parsedInput.origin;
   const discoveredUrls = new Set<string>();
   let discoveryChecked = false;
@@ -60,13 +75,17 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
   let discoveredMerchantDescription: string | null = null;
 
   try {
-    const discoveryResp = await axios.get(`${origin}/.well-known/x402`, {
+    const discoveryUrl = await assertSafeHttpUrl(new URL("/.well-known/x402", origin));
+    const discoveryResp = await safeHttpRequest(discoveryUrl, {
       timeout: 5000,
-      validateStatus: (status: number) => status === 200 || status === 404,
     });
     if (discoveryResp.status === 200) {
       discoveryChecked = true;
-      const discoveryData = discoveryResp.data;
+      const discoveryData = discoveryResp.data as {
+        name?: unknown;
+        description?: unknown;
+        resources?: unknown;
+      };
 
       if (typeof discoveryData?.name === "string") discoveredMerchantName = discoveryData.name;
       if (typeof discoveryData?.description === "string") discoveredMerchantDescription = discoveryData.description;
@@ -81,7 +100,11 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
         if (typeof resUrl !== "string") continue;
         try {
           const normalized = normalizeResourceUrl(resUrl, origin);
-          if (normalized) discoveredUrls.add(normalized);
+          if (normalized) {
+            await assertSafeHttpUrl(normalized);
+            discoveredUrls.add(normalized);
+          }
+          if (discoveredUrls.size >= MAX_DISCOVERY_RESOURCES) break;
         } catch { /* skip invalid discovery entries */ }
       }
       discoveryFound = discoveredUrls.size;
@@ -103,14 +126,15 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
 }
 
 async function fetchX402Requirement(resourceUrl: string) {
-  let response = await axios.get(resourceUrl, {
+  let response = await safeHttpRequest(resourceUrl, {
+    method: "GET",
     timeout: 7000,
-    validateStatus: () => true,
   });
   if (response.status !== 402) {
-    response = await axios.post(resourceUrl, {}, {
+    response = await safeHttpRequest(resourceUrl, {
+      method: "POST",
+      data: {},
       timeout: 7000,
-      validateStatus: () => true,
     });
   }
   if (response.status !== 402) throw new Error(`Request failed with status code ${response.status}`);
@@ -144,6 +168,23 @@ function parseLogoDataUrl(input: unknown) {
 // ── Health ──────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+app.post("/admin/login", adminLoginRateLimit, (req, res) => {
+  const config = loadAdminConfig();
+  if (!canIssueAdminSessions(config)) {
+    return res.status(503).json({ error: "Admin login is not configured" });
+  }
+
+  const { username, password } = req.body || {};
+  if (!verifyAdminCredentials(config, username, password)) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  res.json({
+    token: createAdminSession(config),
+    expiresIn: config.ttlSeconds,
+  });
 });
 
 // ── Stats (cached 10s) ──────────────────────────────────────
@@ -512,7 +553,7 @@ app.get("/search", async (req, res) => {
 });
 
 // ── Verify / Register ───────────────────────────────────────
-app.post("/verify", async (req, res) => {
+app.post("/verify", verifyRateLimit, async (req, res) => {
   try {
     const { url } = req.body;
 
@@ -596,7 +637,7 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-app.post("/merchant-logo", async (req, res) => {
+app.post("/merchant-logo", logoRateLimit, async (req, res) => {
   try {
     const { url, merchantAddress, logoDataUrl } = req.body;
     const parsedInput = parseHttpUrl(url);
@@ -646,7 +687,7 @@ app.post("/merchant-logo", async (req, res) => {
 });
 
 // ── Admin Stats ─────────────────────────────────────────────
-app.get("/admin/stats", async (_req, res) => {
+app.get("/admin/stats", requireAdminAuth, async (_req, res) => {
   try {
     const cached = getCached("admin_stats");
     if (cached) return res.json(cached);
