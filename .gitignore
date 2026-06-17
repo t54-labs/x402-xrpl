@@ -13,10 +13,14 @@ out/
 !.env.example
 
 # IDE
+.cursor/
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# private deployment manifests
+k8s/
 
 # OS
 .DS_Store
