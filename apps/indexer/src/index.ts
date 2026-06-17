@@ -4,6 +4,7 @@ import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
+import { selectNewTransactions, sumXrpVolume } from "./ledgerState";
 
 dotenv.config();
 
@@ -94,36 +95,45 @@ async function flushQueue() {
       const batch = writeQueue.splice(0);
       const batchLedger = Math.max(highestProcessedLedger, ...batch.map(tx => tx.ledgerIndex));
       const uniqueMerchants = [...new Set(batch.map((tx) => tx.merchantAddr))];
-      const batchVolumeXrp = batch
-        .filter((tx) => tx.asset === "XRP")
-        .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
 
       try {
-        await prisma.$transaction([
-          prisma.merchant.createMany({
+        const result = await prisma.$transaction(async (db) => {
+          await db.merchant.createMany({
             data: uniqueMerchants.map((addr) => ({ address: addr })),
             skipDuplicates: true,
-          }),
-          prisma.transaction.createMany({
-            data: batch.map((tx) => ({
-              hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
-              buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
-              amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
-              facilitator: tx.facilitator, sourceTag: tx.sourceTag,
-              destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
-              rawMemo: tx.rawMemo,
-            })),
-            skipDuplicates: true,
-          }),
-          prisma.$executeRawUnsafe(
+          });
+
+          const existingRows = await db.transaction.findMany({
+            where: { hash: { in: batch.map((tx) => tx.hash) } },
+            select: { hash: true },
+          });
+          const txsToInsert = selectNewTransactions(batch, new Set(existingRows.map((tx) => tx.hash)));
+          const insertedVolumeXrp = sumXrpVolume(txsToInsert);
+          const inserted = txsToInsert.length > 0
+            ? await db.transaction.createMany({
+              data: txsToInsert.map((tx) => ({
+                hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
+                buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
+                amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
+                facilitator: tx.facilitator, sourceTag: tx.sourceTag,
+                destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
+                rawMemo: tx.rawMemo,
+              })),
+              skipDuplicates: true,
+            })
+            : { count: 0 };
+
+          await db.$executeRawUnsafe(
             `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "totalTxCount" = "totalTxCount" + $2, "totalVolumeXrp" = "totalVolumeXrp" + $3, "updatedAt" = NOW() WHERE id = 'default'`,
-            batchLedger, batch.length, batchVolumeXrp
-          ),
-        ]);
+            batchLedger, inserted.count, insertedVolumeXrp
+          );
+
+          return { insertedCount: inserted.count };
+        });
 
         lastLedger = batchLedger;
         lastCheckpointTime = now;
-        console.log(`✅ Flushed ${batch.length} tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
+        console.log(`✅ Flushed ${result.insertedCount}/${batch.length} new tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
       } catch (err) {
         console.error(`❌ Flush failed (${batch.length} txs):`, err);
         writeQueue.unshift(...batch);
