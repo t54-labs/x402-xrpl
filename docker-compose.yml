@@ -23,7 +23,24 @@ services:
     ports:
       - "3000:3000"
     environment:
+      API_URL: http://api:4001
+    depends_on:
+      api:
+        condition: service_started
+    profiles:
+      - full
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "4001:4001"
+    environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/x402_xrpl
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD for the full stack profile}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?Set ADMIN_SESSION_SECRET for the full stack profile}
     depends_on:
       postgres:
         condition: service_healthy

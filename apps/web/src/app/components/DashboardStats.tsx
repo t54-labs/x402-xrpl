@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { formatCurrency } from "../utils/currency";
 
@@ -74,10 +75,12 @@ function MetricCell({ label, value }: { label: string; value: number }) {
 
 function MetricMark() {
   return (
-    <img
+    <Image
       src="/icon.png"
       alt=""
       aria-hidden="true"
+      width={56}
+      height={56}
       className="pointer-events-none absolute right-4 top-4 sm:right-5 sm:top-5 md:right-6 md:top-6 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 object-contain opacity-[0.12] transition-opacity duration-300 group-hover:opacity-[0.18]"
     />
   );

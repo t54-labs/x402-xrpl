@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.xrpl-ai.org";
 
 type AdminData = {
   overview: {
@@ -108,14 +106,20 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("admin_auth") !== "true") {
-      router.replace("/admin/login");
-      return;
-    }
-
-    fetch(`${API_URL}/admin/stats`)
-      .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); })
+    fetch("/api/admin/stats", { cache: "no-store" })
+      .then((r) => {
+        if (r.status === 401) {
+          router.replace("/admin/login");
+          return null;
+        }
+        if (!r.ok) throw new Error("Failed to load data");
+        return r.json();
+      })
+      .then((d) => {
+        if (!d) return;
+        setData(d);
+        setLoading(false);
+      })
       .catch(() => { setError("Failed to load data"); setLoading(false); });
   }, [router]);
 
@@ -193,8 +197,8 @@ export default function AdminDashboard() {
     recentTransactions.map((tx) => [tx.hash, tx.timestamp, tx.buyerAddress, tx.merchant?.name || tx.merchantAddr, tx.amount, formatCurrency(tx.asset)])
   );
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_auth");
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
     router.push("/admin/login");
   };
 
