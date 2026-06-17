@@ -92,16 +92,16 @@ function isBlockedIpv4(address: string) {
 }
 
 function isBlockedIpv6(address: string) {
-  const normalized = address.toLowerCase();
+  const words = parseIpv6Words(address);
+  if (!words) return true;
+
+  const first = words[0];
   return (
-    normalized === "::" ||
-    normalized === "::1" ||
-    normalized.startsWith("fc") ||
-    normalized.startsWith("fd") ||
-    normalized.startsWith("fe8") ||
-    normalized.startsWith("fe9") ||
-    normalized.startsWith("fea") ||
-    normalized.startsWith("feb")
+    words.every((word) => word === 0) ||
+    (words.slice(0, 7).every((word) => word === 0) && words[7] === 1) ||
+    (first & 0xfe00) === 0xfc00 ||
+    (first & 0xffc0) === 0xfe80 ||
+    (first & 0xff00) === 0xff00
   );
 }
 
@@ -111,25 +111,40 @@ function normalizeHostname(hostname: string) {
 }
 
 function mappedIpv4FromIpv6(address: string) {
-  const normalized = normalizeHostname(address);
-  if (!normalized.startsWith("::ffff:")) return null;
-
-  const suffix = normalized.slice("::ffff:".length);
-  if (net.isIP(suffix) === 4) return suffix;
-
-  const words = suffix.split(":");
-  if (words.length !== 2) return null;
-
-  const high = Number.parseInt(words[0], 16);
-  const low = Number.parseInt(words[1], 16);
-  if (!Number.isInteger(high) || !Number.isInteger(low) || high < 0 || high > 0xffff || low < 0 || low > 0xffff) {
-    return null;
-  }
+  const words = parseIpv6Words(address);
+  if (!words) return null;
+  if (!words.slice(0, 5).every((word) => word === 0) || words[5] !== 0xffff) return null;
 
   return [
-    (high >> 8) & 0xff,
-    high & 0xff,
-    (low >> 8) & 0xff,
-    low & 0xff,
+    (words[6] >> 8) & 0xff,
+    words[6] & 0xff,
+    (words[7] >> 8) & 0xff,
+    words[7] & 0xff,
   ].join(".");
+}
+
+function parseIpv6Words(address: string) {
+  const normalized = normalizeHostname(address).split("%")[0].toLowerCase();
+  const withExpandedIpv4 = normalized.replace(/(^|:)(\d+\.\d+\.\d+\.\d+)$/, (match, prefix, ipv4) => {
+    const parts = String(ipv4).split(".").map((part) => Number(part));
+    if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+      return match;
+    }
+    const high = ((parts[0] << 8) | parts[1]).toString(16);
+    const low = ((parts[2] << 8) | parts[3]).toString(16);
+    return `${prefix}${high}:${low}`;
+  });
+
+  const segments = withExpandedIpv4.split("::");
+  if (segments.length > 2) return null;
+
+  const head = segments[0] ? segments[0].split(":") : [];
+  const tail = segments.length === 2 && segments[1] ? segments[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  const parts = segments.length === 2
+    ? [...head, ...Array(Math.max(missing, 0)).fill("0"), ...tail]
+    : withExpandedIpv4.split(":");
+
+  if (parts.length !== 8 || parts.some((part) => !/^[0-9a-f]{1,4}$/.test(part))) return null;
+  return parts.map((part) => Number.parseInt(part, 16));
 }
