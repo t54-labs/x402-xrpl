@@ -6,7 +6,9 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "reconcile:state": "ts-node-dev --transpile-only --exit-child src/reconcile-state.ts",
+    "test": "vitest run --exclude \"dist/**\""
   },
   "dependencies": {
     "@x402-xrpl/database": "workspace:*",

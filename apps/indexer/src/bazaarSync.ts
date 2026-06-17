@@ -1,5 +1,5 @@
-import axios from "axios";
 import { prisma } from "@x402-xrpl/database";
+import { assertSafeHttpUrl, safeHttpRequest } from "./safeFetch";
 
 type XrplRequirement = {
   payTo?: string;
@@ -38,7 +38,7 @@ function parsePaymentRequired(headerValue: unknown): unknown {
   }
 }
 
-function extractXrplRequirement(paymentRequired: unknown): XrplRequirement | null {
+export function extractXrplRequirement(paymentRequired: unknown): XrplRequirement | null {
   const requirements = Array.isArray(paymentRequired)
     ? paymentRequired
     : isRecord(paymentRequired) && Array.isArray(paymentRequired.accepts)
@@ -48,7 +48,7 @@ function extractXrplRequirement(paymentRequired: unknown): XrplRequirement | nul
   for (const req of requirements) {
     if (!isRecord(req)) continue;
     const network = String(req.network || "").toLowerCase();
-    if (network !== "xrpl" && network !== "testnet") continue;
+    if (network !== "xrpl" && !network.startsWith("xrpl:") && network !== "testnet") continue;
 
     return {
       payTo: typeof req.payTo === "string" ? req.payTo : undefined,
@@ -118,9 +118,9 @@ async function verifyAndUpsertResource(
   } = {}
 ) {
   try {
-    const response = await axios.get(resourceUrl, {
+    const response = await safeHttpRequest(resourceUrl, {
+      method: "GET",
       timeout: 7000,
-      validateStatus: (status) => status === 402 || status === 200,
     });
 
     if (response.status === 402) {
@@ -157,11 +157,16 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
   try {
     const url = new URL(website);
     const discoveryUrl = `${url.origin}/.well-known/x402`;
+    await assertSafeHttpUrl(discoveryUrl);
     
     console.log(`[Auto-Discovery] Fetching ${discoveryUrl} for ${merchantAddress}...`);
     
-    const response = await axios.get(discoveryUrl, { timeout: 5000 });
-    const bazaarData = response.data;
+    const response = await safeHttpRequest(discoveryUrl, { method: "GET", timeout: 5000 });
+    if (response.status !== 200) {
+      console.log(`[Auto-Discovery] Discovery returned ${response.status} for ${merchantAddress}.`);
+      return;
+    }
+    const bazaarData = response.data as { resources?: unknown };
 
     // Discovery docs typically store resources as string URLs; support both string and object entries.
     const resources = Array.isArray(bazaarData)
@@ -189,6 +194,7 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
 
       const resourceUrl = normalizeDiscoveryResourceUrl(resourceCandidate, url.origin);
       if (!resourceUrl) continue;
+      await assertSafeHttpUrl(resourceUrl);
 
       const synced = await verifyAndUpsertResource(resourceUrl, url.origin, {
         name: res?.name || res?.title,
