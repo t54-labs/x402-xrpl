@@ -165,6 +165,10 @@ function parseLogoDataUrl(input: unknown) {
   return `data:${mime};base64,${bytes.toString("base64")}`;
 }
 
+function publicErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Invalid request";
+}
+
 // ── Health ──────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
@@ -561,6 +565,13 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
     if (!parsedInput) return res.status(400).json({ error: "Only valid http/https URLs are supported" });
 
     const failed: Array<{ url: string; error: string }> = [];
+    let resolvedResources: Awaited<ReturnType<typeof resolveX402ResourceUrls>>;
+    try {
+      resolvedResources = await resolveX402ResourceUrls(parsedInput);
+    } catch (error) {
+      return res.status(400).json({ error: publicErrorMessage(error) });
+    }
+
     const {
       origin,
       discoveredUrls,
@@ -568,7 +579,7 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       discoveryFound,
       discoveredMerchantName,
       discoveredMerchantDescription,
-    } = await resolveX402ResourceUrls(parsedInput);
+    } = resolvedResources;
 
     async function verifyAndRegister(resourceUrl: string) {
       const { decoded, xrplReq } = await fetchX402Requirement(resourceUrl);
@@ -651,7 +662,14 @@ app.post("/merchant-logo", logoRateLimit, async (req, res) => {
       return res.status(400).json({ error: "Logo must be a PNG, JPG, WebP, or GIF under 256KB" });
     }
 
-    const { origin, discoveredUrls } = await resolveX402ResourceUrls(parsedInput);
+    let resolvedResources: Awaited<ReturnType<typeof resolveX402ResourceUrls>>;
+    try {
+      resolvedResources = await resolveX402ResourceUrls(parsedInput);
+    } catch (error) {
+      return res.status(400).json({ error: publicErrorMessage(error) });
+    }
+
+    const { origin, discoveredUrls } = resolvedResources;
     const verifiedMerchantAddresses = new Set<string>();
     const failures: Array<{ url: string; error: string }> = [];
 
