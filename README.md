@@ -10,15 +10,18 @@ Built as part of the [x402 protocol](https://github.com/coinbase/x402) ecosystem
 x402-xrpl/
 ├── apps/
 │   ├── indexer/       # XRPL transaction indexer (WebSocket + backfill)
-│   └── web/           # Next.js explorer frontend + REST API
+│   ├── api/           # Express REST API for explorer data, registration, admin
+│   └── web/           # Next.js explorer frontend
 ├── packages/
 │   └── database/      # Shared Prisma schema & client
 └── docker-compose.yml # PostgreSQL (+ optional full stack)
 ```
 
-**Indexer** connects to the XRPL WebSocket, monitors all validated `Payment` transactions, detects x402 memos (`MemoType: "x402"`), and records them to PostgreSQL.
+**Indexer** connects to XRPL WebSocket nodes, monitors validated `Payment` transactions, detects x402 payments by known facilitator `SourceTag` values, and records them to PostgreSQL.
 
-**Web** is a Next.js app serving the explorer UI and public REST API. Pages include dashboard, transaction history, merchant profiles, Agora catalog, search, and resource registration.
+**API** is an Express service serving the public explorer API, resource verification and registration, and protected admin analytics.
+
+**Web** is a Next.js app serving the explorer UI and same-origin API proxies where the browser should not call the API service directly. Pages include dashboard, transaction history, merchant profiles, Agora catalog, search, and resource registration.
 
 **Database** is a shared Prisma package exporting the client and types for both apps.
 
@@ -42,6 +45,7 @@ docker compose up -d
 
 # Copy environment files
 cp apps/indexer/.env.example apps/indexer/.env
+cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 cp packages/database/.env.example packages/database/.env
 
@@ -55,7 +59,7 @@ pnpm --filter @x402-xrpl/database generate
 pnpm dev
 ```
 
-The web app runs at `http://localhost:3000`. The indexer connects to XRPL Testnet by default.
+The web app runs at `http://localhost:3000`, and the API runs at `http://localhost:4001`. The production defaults target XRPL Mainnet; set `XRPL_WSS` and `NEXT_PUBLIC_XRPL_NETWORK` explicitly for testnet/devnet work.
 
 ### Seeding Test Data
 
@@ -69,18 +73,22 @@ This creates a mock merchant, registers a resource, and submits a real x402 paym
 
 | Endpoint | Description |
 |---|---|
-| `GET /api/stats` | Network stats (volume, counts, indexer state) |
-| `GET /api/transactions?page=1&limit=25` | Paginated transactions, filterable by `merchant` or `buyer` |
-| `GET /api/merchants?page=1&limit=25` | Paginated merchant list with counts |
-| `GET /api/discovery/resources?limit=20&offset=0` | x402 Agora discovery endpoint (spec-compatible) |
-| `POST /api/verify` | Verify & register an x402-enabled endpoint |
+| `GET /stats` | Network stats (volume, counts, indexer state) |
+| `GET /dashboard` | Dashboard snapshot with recent transactions/resources and top merchants |
+| `GET /transactions?page=1&limit=25` | Paginated transactions, filterable by `merchant` or `buyer` |
+| `GET /merchants?page=1&limit=25` | Paginated merchant list with counts |
+| `GET /discovery/resources?limit=20&offset=0` | x402 Agora discovery endpoint (spec-compatible) |
+| `POST /verify` | Verify & register an x402-enabled endpoint |
+| `POST /admin/login` | Issue a short-lived admin session token when admin env vars are configured |
+| `GET /admin/stats` | Protected admin analytics; requires `Authorization: Bearer <token>` |
 
 ## x402 on XRPL
 
-The x402 standard is adapted for XRPL using the Memos field on `Payment` transactions:
+The current XRPL x402 detection path uses facilitator SourceTags on `Payment` transactions:
 
-- **MemoType**: Hex of `"x402"` (`78343032`)
-- **MemoData**: Hex-encoded JSON with `res` (resource URL) and optional `req` (request hash)
+- **SourceTag**: Facilitator identifier registered in the `FacilitatorTag` table.
+- **InvoiceID**: Optional invoice hash used for replay protection.
+- **MemoData**: Optional invoice binding/debug data, stored as `rawMemo` when present.
 
 See `packages/xrpl-x402-standard.md` for the full specification.
 
@@ -90,7 +98,7 @@ See `packages/xrpl-x402-standard.md` for the full specification.
 # Database only (default)
 docker compose up -d
 
-# Full stack (postgres + web + indexer)
+# Full stack (postgres + api + web + indexer)
 docker compose --profile full up -d
 ```
 

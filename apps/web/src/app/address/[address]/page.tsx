@@ -81,7 +81,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <img src="/icon.png" alt="" aria-hidden="true" className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
+        <Image src="/icon.png" alt="" aria-hidden="true" width={80} height={80} className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
           <div className="w-20 h-20 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
             {merchant.logoUrl ? (
@@ -143,7 +143,7 @@ function BuyerView({ address, data }: { address: string; data: AddressResponse }
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <img src="/icon.png" alt="" aria-hidden="true" className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
+        <Image src="/icon.png" alt="" aria-hidden="true" width={80} height={80} className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
           <div className="w-20 h-20 rounded-2xl bg-purple-400/10 border border-purple-400/20 flex items-center justify-center"><span className="text-3xl font-light text-purple-400">B</span></div>
           <div>
