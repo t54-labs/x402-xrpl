@@ -11,6 +11,8 @@ const EMPTY_DASHBOARD: DashboardData = {
   recentTransactions: [],
   recentResources: [],
   topMerchants: [],
+  activeAgents: 0,
+  facilitators: [],
 };
 
 export default async function Home() {

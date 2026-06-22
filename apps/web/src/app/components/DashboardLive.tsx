@@ -46,6 +46,13 @@ export type DashboardData = {
     volume: number;
     volumeByAsset?: AssetVolume[];
   }>;
+  activeAgents?: number;
+  facilitators?: Array<{
+    sourceTag: number;
+    name: string | null;
+    txCount: number;
+    volumeByAsset?: AssetVolume[];
+  }>;
 };
 
 export function DashboardLive({ initialData }: { initialData: DashboardData }) {
@@ -90,17 +97,59 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         <OverviewMetricsStrip
           volumes={data.volumeByAsset}
           fallbackXrp={data.totalVolumeXrp}
+          activeAgents={data.activeAgents ?? 0}
+          facilitators={data.facilitators?.length ?? 0}
           totalTransactions={data.totalTransactions}
           totalMerchants={data.totalMerchants}
-          totalResources={data.totalResources}
         />
       </div>
 
       <div className="flex flex-col gap-6 stagger-children">
         <FacilitatorPanel />
+        <FacilitatorsLeaderboard facilitators={data.facilitators ?? []} />
         <AgoraPanel resources={registeredResources} />
         <RecentTransactionsPanel transactions={data.recentTransactions} />
         <TopMerchantsPanel merchants={data.topMerchants} />
+      </div>
+    </div>
+  );
+}
+
+function FacilitatorsLeaderboard({ facilitators }: { facilitators: NonNullable<DashboardData["facilitators"]> }) {
+  if (!facilitators || facilitators.length === 0) return null;
+  return (
+    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+      <div className="px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Facilitators</h2>
+        </div>
+        <p className="text-sm text-[var(--text-muted)] mt-1">x402 facilitators settling on XRPL, by on-chain activity.</p>
+      </div>
+      <div className="divide-y divide-[var(--border)]">
+        {facilitators.map((f, i) => (
+          <div key={f.sourceTag} className="flex items-center justify-between gap-4 px-5 sm:px-6 py-3.5 hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-xs text-[var(--text-muted)] w-5 shrink-0">#{i + 1}</span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{f.name || `Facilitator ${f.sourceTag}`}</p>
+                <p className="text-[11px] text-[var(--text-muted)] font-mono">SourceTag {f.sourceTag}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 shrink-0 text-right">
+              <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{f.txCount} txs</span>
+              <div className="min-w-0">
+                {f.volumeByAsset && f.volumeByAsset.length > 0
+                  ? f.volumeByAsset.map((v) => (
+                      <span key={v.asset} className="block text-xs font-mono text-[var(--text-secondary)]">
+                        {v.total < 1 ? v.total.toFixed(3) : v.total.toFixed(2)} {formatCurrency(v.asset)}
+                      </span>
+                    ))
+                  : null}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

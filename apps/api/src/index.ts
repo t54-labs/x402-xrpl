@@ -225,7 +225,7 @@ app.get("/dashboard", async (_req, res) => {
     const cached = getCached("dashboard");
     if (cached) return res.json(cached);
 
-    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw] = await Promise.all([
+    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw] = await Promise.all([
       prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
@@ -245,6 +245,20 @@ app.get("/dashboard", async (_req, res) => {
       ),
       prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
         `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" GROUP BY asset ORDER BY total DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ c: bigint }>>(
+        `SELECT COUNT(DISTINCT "buyerAddress") as c FROM "Transaction"`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; name: string | null; tx_count: bigint }>>(
+        `SELECT t."sourceTag" as "sourceTag", f.name as name, COUNT(*) as tx_count
+         FROM "Transaction" t JOIN "FacilitatorTag" f ON f."sourceTag" = t."sourceTag"
+         WHERE t."sourceTag" IS NOT NULL
+         GROUP BY t."sourceTag", f.name ORDER BY tx_count DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; asset: string; total: string }>>(
+        `SELECT t."sourceTag" as "sourceTag", t.asset as asset, COALESCE(SUM(CAST(t.amount AS DOUBLE PRECISION)), 0) as total
+         FROM "Transaction" t WHERE t."sourceTag" IS NOT NULL
+         GROUP BY t."sourceTag", t.asset`
       ),
     ]);
 
@@ -283,12 +297,29 @@ app.get("/dashboard", async (_req, res) => {
 
     const volumeByAsset = volumeByAssetRaw.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
 
+    const facVolMap = new Map<number, Array<{ asset: string; total: number }>>();
+    for (const v of facilitatorVolRaw) {
+      const tag = Number(v.sourceTag);
+      const list = facVolMap.get(tag) || [];
+      list.push({ asset: v.asset, total: parseFloat(v.total || "0") });
+      facVolMap.set(tag, list);
+    }
+    const facilitators = facilitatorTxRaw.map((f) => ({
+      sourceTag: Number(f.sourceTag),
+      name: f.name,
+      txCount: Number(f.tx_count),
+      volumeByAsset: facVolMap.get(Number(f.sourceTag)) || [],
+    }));
+    const activeAgents = Number(activeAgentsRaw[0]?.c ?? 0);
+
     const data = {
       totalTransactions: indexerState?.totalTxCount ?? 0,
       totalMerchants,
       totalResources,
       totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
       volumeByAsset,
+      activeAgents,
+      facilitators,
       recentTransactions,
       recentResources,
       topMerchants,

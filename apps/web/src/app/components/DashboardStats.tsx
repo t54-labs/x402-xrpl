@@ -8,53 +8,44 @@ type AssetVolume = { asset: string; total: number };
 
 export function OverviewMetricsStrip({
   volumes,
-  fallbackXrp,
+  fallbackXrp = 0,
+  activeAgents,
+  facilitators,
   totalTransactions,
   totalMerchants,
-  totalResources,
 }: {
   volumes?: AssetVolume[];
-  fallbackXrp: number;
+  fallbackXrp?: number;
+  activeAgents: number;
+  facilitators: number;
   totalTransactions: number;
   totalMerchants: number;
-  totalResources: number;
 }) {
+  const xrp = volumes?.find((v) => v.asset === "XRP")?.total ?? fallbackXrp;
+  const rlusd = volumes?.find((v) => v.asset === "RLUSD")?.total ?? 0;
   return (
     <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[var(--border)]">
-        <div className="relative p-4 pr-14 sm:p-5 sm:pr-16 md:p-6 md:pr-20 group hover:bg-[rgba(255,255,255,0.015)] transition-colors col-span-2 md:col-span-1">
-          <MetricMark />
-          <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
-            Total Volume
-          </h3>
-          <div className="mt-2 md:mt-3 space-y-1">
-            {volumes && volumes.length > 0 ? (
-              volumes.map((v) => (
-                <p
-                  key={v.asset}
-                  className="text-xl sm:text-2xl md:text-3xl font-light text-[var(--text-primary)] tracking-tight"
-                >
-                  <AnimatedNumber
-                    value={v.total}
-                    decimals={v.total < 1 ? 4 : 2}
-                    duration={2000}
-                  />{" "}
-                  <span className="text-xs text-[var(--text-muted)]">{formatCurrency(v.asset)}</span>
-                </p>
-              ))
-            ) : (
-              <p className="text-xl sm:text-2xl md:text-3xl font-light text-[var(--text-primary)] tracking-tight">
-                <AnimatedNumber value={fallbackXrp} decimals={2} duration={2000} />{" "}
-                <span className="text-xs text-[var(--text-muted)]">XRP</span>
-              </p>
-            )}
-          </div>
-        </div>
-
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
+        <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
+        <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
+        <MetricCell label="Active agents" value={activeAgents} />
+        <MetricCell label="Facilitators" value={facilitators} />
         <MetricCell label="Transactions" value={totalTransactions} />
         <MetricCell label="Merchants" value={totalMerchants} />
-        <MetricCell label="Resources" value={totalResources} />
       </div>
+    </div>
+  );
+}
+
+function CurrencyCell({ label, value, asset }: { label: string; value: number; asset: string }) {
+  return (
+    <div className="relative p-4 pr-12 sm:p-5 group hover:bg-[rgba(255,255,255,0.015)] transition-colors">
+      <MetricMark />
+      <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">{label}</h3>
+      <p className="text-xl sm:text-2xl font-light text-[var(--text-primary)] mt-2 tracking-tight">
+        <AnimatedNumber value={value} decimals={value > 0 && value < 1 ? 4 : 2} duration={2000} />{" "}
+        <span className="text-xs text-[var(--text-muted)]">{formatCurrency(asset)}</span>
+      </p>
     </div>
   );
 }
