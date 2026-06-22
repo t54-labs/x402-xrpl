@@ -79,10 +79,10 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <header className="animate-fade-up space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
-          Network Overview
+          The XRPL AI Index
         </h1>
         <p className="text-sm text-[var(--text-muted)]">
-          Key activity metrics and ecosystem sections for x402 on XRPL.
+          The live ledger of the XRPL agentic economy — settlement across every facilitator on the XRP Ledger.
         </p>
       </header>
 
