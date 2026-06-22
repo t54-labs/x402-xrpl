@@ -6,12 +6,17 @@ import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 
 const links = [
-  { href: "/", label: "Dashboard" },
+  { href: "/", label: "Index" },
+  { href: "/build", label: "Build" },
+  { href: "/resources", label: "Resources" },
+  { href: "/partners", label: "Directory" },
+  { href: "/merchant-network", label: "Merchant Network" },
+  { href: "/events", label: "Events" },
+  { href: "/why-xrpl", label: "Why XRPL" },
   { href: "/transactions", label: "Transactions" },
   { href: "/merchants", label: "Merchants" },
   { href: "/agora", label: "Agora" },
-  { href: "/partners", label: "Partners" },
-  { href: "/resources/register", label: "Register" },
+  { href: "/resources/register", label: "Partner with us" },
 ];
 
 export function MobileNav() {
@@ -51,7 +56,7 @@ export function MobileNav() {
               <div className="animate-slide-down mx-auto max-w-7xl max-h-[calc(100svh-96px)] overflow-y-auto bg-[rgba(0,0,0,0.94)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.08)] rounded-xl p-2 space-y-1">
                 {links.map(({ href, label }) => {
                   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-                  const isRegister = label.includes("Register");
+                  const isRegister = label.includes("Partner");
                   return (
                     <Link
                       key={href}
