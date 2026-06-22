@@ -84,14 +84,13 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <header className="animate-fade-up space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
-          The XRPL AI Index
-        </h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          The live ledger of the XRPL agentic economy — settlement across every facilitator on the XRP Ledger.
-        </p>
-      </header>
+      <Hero />
+      <TrustBand />
+
+      <div className="flex items-center gap-2 animate-fade-up pt-2">
+        <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">The XRPL AI Index</h2>
+      </div>
 
       <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
         <OverviewMetricsStrip
@@ -111,6 +110,64 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         <RecentTransactionsPanel transactions={data.recentTransactions} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <div className="animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
+      <div>
+        <span className="inline-flex items-center gap-2 text-[11px] font-mono text-[var(--brand-blue)] bg-[rgba(0,140,255,0.08)] border border-[rgba(0,140,255,0.2)] px-2.5 py-1 rounded-md">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" /> institution-grade rails for agentic commerce on XRPL
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--text-primary)] mt-4 leading-[1.15]">
+          The live ledger of the XRPL agentic economy.
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-3 max-w-md leading-relaxed">
+          See who&rsquo;s transacting. Build on the standard. Onboard your network.
+        </p>
+        <div className="flex items-center gap-2.5 mt-5">
+          <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
+          <Link href="/resources/register" className="ui-control px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Partner with us</Link>
+        </div>
+      </div>
+      <div className="dashboard-panel bg-[rgba(255,255,255,0.02)] border border-[var(--border)] overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)]" />
+            <span className="text-xs font-medium text-[var(--text-secondary)]">Quickstart</span>
+          </div>
+          <span className="text-[10px] font-mono text-[var(--text-muted)]">ts · py</span>
+        </div>
+        <pre className="p-4 text-[12px] font-mono leading-relaxed overflow-x-auto">
+          <div className="text-[var(--brand-blue)]">$ npm i x402-xrpl</div>
+          <div className="text-[var(--text-secondary)]">import {"{"} x402Fetch {"}"} from &apos;x402-xrpl&apos;</div>
+          <div className="text-[var(--text-muted)]">→ 402 · xrpl · pay in RLUSD</div>
+          <div className="text-[var(--success)]">✓ verified intent L1–L3 · settled 4.2s</div>
+          <div className="text-[var(--text-muted)]">↳ your tx now appears in the Index</div>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+function TrustBand() {
+  const items = [
+    "Ripple — strategic investor",
+    "BNY Mellon — RLUSD custody",
+    "Deloitte — monthly attestation",
+    "SOC 2 — in progress",
+    "x402 Foundation — member",
+  ];
+  return (
+    <div className="animate-fade-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
+      <span className="text-[10px] text-[var(--text-muted)] mr-1">Backed &amp; verified:</span>
+      {items.map((t) => (
+        <span key={t} className="text-[11px] text-[var(--text-secondary)] bg-[rgba(255,255,255,0.03)] border border-[var(--border)] px-2.5 py-1 rounded-md">
+          {t}
+        </span>
+      ))}
     </div>
   );
 }
