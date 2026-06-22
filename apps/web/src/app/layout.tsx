@@ -55,7 +55,8 @@ export default function RootLayout({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[80px] flex items-center justify-between gap-4">
             <div className="h-full flex items-center gap-5 min-w-0">
               <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-                <span className="text-xl leading-none font-semibold tracking-tight text-[var(--text-primary)]">t54</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/t54-logo.svg" alt="t54" className="h-7 w-auto shrink-0" />
                 <span className="text-sm leading-none text-[var(--text-muted)]">&times;</span>
                 <svg viewBox="0 0 51 51" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="XRPL" className="w-6 h-6 shrink-0 transition-transform duration-200 group-hover:scale-110">
                   <path d="M25.1882 50.3765C39.0993 50.3765 50.3765 39.0993 50.3765 25.1882C50.3765 11.2772 39.0993 0 25.1882 0C11.2772 0 0 11.2772 0 25.1882C0 39.0993 11.2772 50.3765 25.1882 50.3765Z" fill="#FFFFFF"/>

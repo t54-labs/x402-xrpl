@@ -5,6 +5,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
     cache: "no-store",
+    // Never let an unreachable/slow API hang server rendering indefinitely.
+    signal: init?.signal ?? AbortSignal.timeout(8000),
   });
   if (!res.ok) {
     throw new Error(`API ${path} returned ${res.status}`);
