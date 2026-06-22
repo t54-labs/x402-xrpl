@@ -54,9 +54,9 @@ function hexHash(i: number): string {
 const RLUSD_ISSUER = "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De";
 
 const FACILITATORS = [
-  { sourceTag: 804681468, name: "t54 XRPL Facilitator", url: "https://xrpl-facilitator-mainnet.t54.ai", weight: 0.6 },
-  { sourceTag: 612345678, name: "Catalyst Pay", url: "https://catalyst.example", weight: 0.25 },
-  { sourceTag: 913572468, name: "LedgerGate", url: "https://ledgergate.example", weight: 0.15 },
+  { sourceTag: 804681468, name: "t54 XRPL Facilitator", url: "https://xrpl-facilitator-mainnet.t54.ai", weight: 0.6, description: "No-custody x402 verify + settle for XRPL, with X402 Secure Verifiable Intent.", website: "https://xrpl-x402.t54.ai", networks: ["xrpl:0", "xrpl:1"], assets: ["XRP", "RLUSD"] },
+  { sourceTag: 612345678, name: "Catalyst Pay", url: "https://catalyst.example", weight: 0.25, description: "Sample facilitator (seed data).", website: "https://catalyst.example", networks: ["xrpl:0"], assets: ["XRP", "RLUSD"] },
+  { sourceTag: 913572468, name: "LedgerGate", url: "https://ledgergate.example", weight: 0.15, description: "Sample facilitator (seed data).", website: "https://ledgergate.example", networks: ["xrpl:0"], assets: ["RLUSD"] },
 ];
 
 const MERCHANTS = [
@@ -107,12 +107,16 @@ async function main() {
   // Clean slate (staging only — guarded above).
   await prisma.transaction.deleteMany({});
   await prisma.resource.deleteMany({});
+  await prisma.directoryListing.deleteMany({});
   await prisma.merchant.deleteMany({});
   await prisma.facilitatorTag.deleteMany({});
 
   for (const f of FACILITATORS) {
     await prisma.facilitatorTag.create({
-      data: { sourceTag: f.sourceTag, name: f.name, url: f.url, isActive: true },
+      data: {
+        sourceTag: f.sourceTag, name: f.name, url: f.url, isActive: true, status: "listed",
+        description: f.description, website: f.website, networks: f.networks, assets: f.assets,
+      },
     });
   }
 
@@ -123,6 +127,28 @@ async function main() {
     merchantAddrs[m.name] = address;
     await prisma.merchant.create({
       data: { address, name: m.name, website: m.website, logoUrl: m.logoUrl, description: m.description },
+    });
+  }
+
+  // Directory listings (approved) mirroring the seeded merchants.
+  const CATEGORIES = ["AI Agent / Skill", "Data / Analytics", "Inference", "LLM gateway", "Agent memory", "Agentic commerce"];
+  for (let i = 0; i < MERCHANTS.length; i++) {
+    const m = MERCHANTS[i];
+    await prisma.directoryListing.create({
+      data: {
+        name: m.name,
+        tagline: m.description.length > 90 ? m.description.slice(0, 87) + "..." : m.description,
+        description: m.description,
+        website: m.website,
+        logoUrl: m.logoUrl,
+        category: CATEGORIES[i % CATEGORIES.length],
+        useCase: "Pay-per-use APIs",
+        asset: i % 2 === 0 ? "RLUSD" : "XRP",
+        merchantAddr: merchantAddrs[m.name],
+        verified402: true,
+        status: "approved",
+        partnerType: "service",
+      },
     });
   }
 

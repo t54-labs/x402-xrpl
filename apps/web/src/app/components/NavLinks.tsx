@@ -7,11 +7,11 @@ const links = [
   { href: "/", label: "Index" },
   { href: "/build", label: "Build" },
   { href: "/resources", label: "Resources" },
-  { href: "/partners", label: "Directory" },
+  { href: "/directory", label: "Directory" },
   { href: "/merchant-network", label: "Merchant Network" },
   { href: "/events", label: "Events" },
   { href: "/why-xrpl", label: "Why XRPL" },
-  { href: "/resources/register", label: "Partner with us" },
+  { href: "/join/service", label: "Partner with us" },
 ];
 
 export function NavLinks() {

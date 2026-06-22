@@ -129,7 +129,7 @@ function Hero() {
         </p>
         <div className="flex items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
-          <Link href="/resources/register" className="ui-control px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Partner with us</Link>
+          <Link href="/join/service" className="ui-control px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Partner with us</Link>
         </div>
       </div>
       <div className="dashboard-panel bg-[rgba(255,255,255,0.02)] border border-[var(--border)] overflow-hidden">
@@ -176,12 +176,17 @@ function FacilitatorsLeaderboard({ facilitators }: { facilitators: NonNullable<D
   if (!facilitators || facilitators.length === 0) return null;
   return (
     <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="px-5 sm:px-6 py-4 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Facilitators</h2>
+      <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Facilitators</h2>
+          </div>
+          <p className="text-sm text-[var(--text-muted)] mt-1">x402 facilitators settling on XRPL, by on-chain activity.</p>
         </div>
-        <p className="text-sm text-[var(--text-muted)] mt-1">x402 facilitators settling on XRPL, by on-chain activity.</p>
+        <Link href="/facilitators" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors shrink-0">
+          View all &rarr;
+        </Link>
       </div>
       <div className="divide-y divide-[var(--border)]">
         {facilitators.map((f, i) => (

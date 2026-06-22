@@ -332,6 +332,124 @@ app.get("/dashboard", async (_req, res) => {
   }
 });
 
+// ── Facilitator registry ─────────────────────────────────────
+app.get("/facilitators", async (_req, res) => {
+  try {
+    const cached = getCached("facilitators");
+    if (cached) return res.json(cached);
+    const [tags, stats, vol] = await Promise.all([
+      prisma.facilitatorTag.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; tx_count: bigint; buyers: bigint }>>(
+        `SELECT "sourceTag" as "sourceTag", COUNT(*) as tx_count, COUNT(DISTINCT "buyerAddress") as buyers
+         FROM "Transaction" WHERE "sourceTag" IS NOT NULL GROUP BY "sourceTag"`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; asset: string; total: string }>>(
+        `SELECT "sourceTag" as "sourceTag", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) as total
+         FROM "Transaction" WHERE "sourceTag" IS NOT NULL GROUP BY "sourceTag", asset`
+      ),
+    ]);
+    const statMap = new Map(stats.map((s) => [Number(s.sourceTag), { txCount: Number(s.tx_count), buyers: Number(s.buyers) }]));
+    const volMap = new Map<number, Array<{ asset: string; total: number }>>();
+    for (const v of vol) {
+      const t = Number(v.sourceTag);
+      const list = volMap.get(t) || [];
+      list.push({ asset: v.asset, total: parseFloat(v.total || "0") });
+      volMap.set(t, list);
+    }
+    const data = tags
+      .map((t) => ({
+        sourceTag: t.sourceTag,
+        name: t.name,
+        url: t.url,
+        website: t.website,
+        description: t.description,
+        logoUrl: t.logoUrl,
+        networks: t.networks,
+        assets: t.assets,
+        isActive: t.isActive,
+        txCount: statMap.get(t.sourceTag)?.txCount ?? 0,
+        activeBuyers: statMap.get(t.sourceTag)?.buyers ?? 0,
+        volumeByAsset: volMap.get(t.sourceTag) ?? [],
+      }))
+      .sort((a, b) => b.txCount - a.txCount);
+    setCache("facilitators", data, 10_000);
+    res.json(data);
+  } catch (err) {
+    console.error("GET /facilitators error:", err);
+    res.status(500).json({ error: "Failed to fetch facilitators" });
+  }
+});
+
+app.post("/join/facilitator", verifyRateLimit, async (req, res) => {
+  try {
+    const { name, sourceTag, url, website, description, networks, assets } = req.body ?? {};
+    const tag = Number(sourceTag);
+    if (!name || typeof name !== "string" || !Number.isInteger(tag) || tag < 0 || tag > 4294967295) {
+      return res.status(400).json({ error: "name and a valid integer sourceTag (0–4294967295) are required" });
+    }
+    const common = {
+      name: name.trim().slice(0, 120),
+      url: typeof url === "string" ? url.slice(0, 300) : null,
+      website: typeof website === "string" ? website.slice(0, 300) : null,
+      description: typeof description === "string" ? description.slice(0, 500) : null,
+      networks: Array.isArray(networks) ? networks.slice(0, 4).map(String) : [],
+      assets: Array.isArray(assets) ? assets.slice(0, 8).map(String) : [],
+      isActive: true,
+    };
+    const created = await prisma.facilitatorTag.upsert({
+      where: { sourceTag: tag },
+      update: common,
+      create: { sourceTag: tag, status: "listed", ...common },
+    });
+    clearDashboardCaches();
+    res.json({ success: true, facilitator: { sourceTag: created.sourceTag, name: created.name } });
+  } catch (err) {
+    console.error("POST /join/facilitator error:", err);
+    res.status(500).json({ error: "Failed to register facilitator" });
+  }
+});
+
+// ── Directory ────────────────────────────────────────────────
+app.get("/directory", async (req, res) => {
+  try {
+    const partnerType = typeof req.query.type === "string" ? req.query.type : undefined;
+    const listings = await prisma.directoryListing.findMany({
+      where: { status: "approved", ...(partnerType ? { partnerType } : {}) },
+      orderBy: { submittedAt: "desc" },
+    });
+    res.json(listings);
+  } catch (err) {
+    console.error("GET /directory error:", err);
+    res.status(500).json({ error: "Failed to fetch directory" });
+  }
+});
+
+app.post("/join/service", verifyRateLimit, async (req, res) => {
+  try {
+    const { name, tagline, description, website, category, useCase, asset, contactEmail, merchantAddr } = req.body ?? {};
+    if (!name || typeof name !== "string") return res.status(400).json({ error: "name is required" });
+    const created = await prisma.directoryListing.create({
+      data: {
+        name: name.trim().slice(0, 120),
+        tagline: typeof tagline === "string" ? tagline.slice(0, 160) : null,
+        description: typeof description === "string" ? description.slice(0, 600) : null,
+        website: typeof website === "string" ? website.slice(0, 300) : null,
+        category: typeof category === "string" ? category.slice(0, 60) : null,
+        useCase: typeof useCase === "string" ? useCase.slice(0, 60) : null,
+        asset: typeof asset === "string" ? asset.slice(0, 20) : null,
+        contactEmail: typeof contactEmail === "string" ? contactEmail.slice(0, 160) : null,
+        merchantAddr: typeof merchantAddr === "string" ? merchantAddr.slice(0, 60) : null,
+        status: "pending",
+        partnerType: "service",
+      },
+    });
+    res.json({ success: true, id: created.id, status: created.status });
+  } catch (err) {
+    console.error("POST /join/service error:", err);
+    res.status(500).json({ error: "Failed to submit listing" });
+  }
+});
+
 // ── Transactions (paginated) ────────────────────────────────
 app.get("/transactions", async (req, res) => {
   try {

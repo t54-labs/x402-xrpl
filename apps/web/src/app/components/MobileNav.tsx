@@ -9,14 +9,15 @@ const links = [
   { href: "/", label: "Index" },
   { href: "/build", label: "Build" },
   { href: "/resources", label: "Resources" },
-  { href: "/partners", label: "Directory" },
+  { href: "/directory", label: "Directory" },
   { href: "/merchant-network", label: "Merchant Network" },
   { href: "/events", label: "Events" },
   { href: "/why-xrpl", label: "Why XRPL" },
+  { href: "/facilitators", label: "Facilitators" },
   { href: "/transactions", label: "Transactions" },
   { href: "/merchants", label: "Merchants" },
   { href: "/agora", label: "Agora" },
-  { href: "/resources/register", label: "Partner with us" },
+  { href: "/join/service", label: "Partner with us" },
 ];
 
 export function MobileNav() {
