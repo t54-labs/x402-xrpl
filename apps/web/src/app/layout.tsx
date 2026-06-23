@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Script from "next/script";
 import { Suspense } from "react";
@@ -11,11 +11,16 @@ import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-1D7VRX7WY2";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// t54 brand typeface — Poppins for all sans-serif text (headings + body).
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Monospace stays Geist Mono — tabular figures for instrument numbers,
+// amounts, timestamps, and code blocks where column alignment matters.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -34,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen flex flex-col`}
+        className={`${poppins.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen flex flex-col`}
       >
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
