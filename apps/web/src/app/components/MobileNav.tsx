@@ -16,7 +16,6 @@ const links = [
   { href: "/transactions", label: "Transactions" },
   { href: "/merchants", label: "Merchants" },
   { href: "/agora", label: "Agora" },
-  { href: "/join/service", label: "Partner with us" },
 ];
 
 export function MobileNav() {

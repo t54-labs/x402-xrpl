@@ -11,7 +11,6 @@ const links = [
   // { href: "/merchant", label: "Merchant" }, // hidden for now (page kept)
   { href: "/events", label: "Events" },
   { href: "/why-xrpl", label: "Why XRPL" },
-  { href: "/join/service", label: "Partner with us" },
 ];
 
 export function NavLinks() {
