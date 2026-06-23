@@ -90,7 +90,12 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
   const [debug, setDebug] = useState(false);
   useEffect(() => {
     try {
-      setDebug(new URLSearchParams(window.location.search).has("debug"));
+      const sp = new URLSearchParams(window.location.search);
+      const host = window.location.hostname;
+      const isPreview = host.endsWith(".vercel.app") || host === "localhost" || host.startsWith("127.");
+      // Show the debug bar on any Vercel preview / local automatically; on the
+      // production domain it stays hidden unless ?debug is present.
+      setDebug(sp.has("debug") || (isPreview && !sp.has("nodebug")));
     } catch {}
   }, []);
   const feed = [...injected, ...(data.recentTransactions || [])].slice(0, 12);
