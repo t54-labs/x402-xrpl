@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { formatCurrency } from "../utils/currency";
 
@@ -29,7 +30,7 @@ export function OverviewMetricsStrip({
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
         <MetricCell label="Active agents" value={activeAgents} />
-        <MetricCell label="Facilitators" value={facilitators} />
+        <MetricCell label="Facilitators" value={facilitators} href="/facilitators" />
         <MetricCell label="Transactions" value={totalTransactions} />
         <MetricCell label="Merchants" value={totalMerchants} />
       </div>
@@ -50,18 +51,21 @@ function CurrencyCell({ label, value, asset }: { label: string; value: number; a
   );
 }
 
-function MetricCell({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="relative p-4 pr-14 sm:p-5 sm:pr-16 md:p-6 md:pr-20 group hover:bg-[rgba(255,255,255,0.015)] transition-colors">
+function MetricCell({ label, value, href }: { label: string; value: number; href?: string }) {
+  const cls = "relative block p-4 pr-14 sm:p-5 sm:pr-16 md:p-6 md:pr-20 group hover:bg-[rgba(255,255,255,0.015)] transition-colors";
+  const inner = (
+    <>
       <MetricMark />
       <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
         {label}
+        {href ? <span className="ml-1 text-[var(--text-muted)] group-hover:text-[var(--brand-blue)] transition-colors">&rarr;</span> : null}
       </h3>
       <p className="text-xl sm:text-2xl md:text-3xl font-light text-[var(--text-primary)] mt-2 md:mt-3 tracking-tight">
         <AnimatedNumber value={value} duration={1800} />
       </p>
-    </div>
+    </>
   );
+  return href ? <Link href={href} className={cls}>{inner}</Link> : <div className={cls}>{inner}</div>;
 }
 
 function MetricMark() {

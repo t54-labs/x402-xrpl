@@ -450,6 +450,49 @@ app.post("/join/service", verifyRateLimit, async (req, res) => {
   }
 });
 
+// ── Directory admin review queue ─────────────────────────────
+app.get("/admin/directory", requireAdminAuth, async (req, res) => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    const listings = await prisma.directoryListing.findMany({
+      where: status ? { status } : {},
+      orderBy: { submittedAt: "desc" },
+    });
+    res.json(listings);
+  } catch (err) {
+    console.error("GET /admin/directory error:", err);
+    res.status(500).json({ error: "Failed to fetch listings" });
+  }
+});
+
+app.post("/admin/directory/approve", requireAdminAuth, async (req, res) => {
+  try {
+    const { id } = req.body ?? {};
+    if (!id || typeof id !== "string") return res.status(400).json({ error: "id is required" });
+    const updated = await prisma.directoryListing.update({ where: { id }, data: { status: "approved", reviewComment: null } });
+    clearDashboardCaches();
+    res.json({ success: true, id: updated.id, status: updated.status });
+  } catch (err) {
+    console.error("POST /admin/directory/approve error:", err);
+    res.status(500).json({ error: "Failed to approve listing" });
+  }
+});
+
+app.post("/admin/directory/reject", requireAdminAuth, async (req, res) => {
+  try {
+    const { id, comment } = req.body ?? {};
+    if (!id || typeof id !== "string") return res.status(400).json({ error: "id is required" });
+    const updated = await prisma.directoryListing.update({
+      where: { id },
+      data: { status: "rejected", reviewComment: typeof comment === "string" ? comment.slice(0, 300) : null },
+    });
+    res.json({ success: true, id: updated.id, status: updated.status });
+  } catch (err) {
+    console.error("POST /admin/directory/reject error:", err);
+    res.status(500).json({ error: "Failed to reject listing" });
+  }
+});
+
 // ── Transactions (paginated) ────────────────────────────────
 app.get("/transactions", async (req, res) => {
   try {

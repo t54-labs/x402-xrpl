@@ -87,9 +87,14 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       <Hero />
       <TrustBand />
 
-      <div className="flex items-center gap-2 animate-fade-up pt-2">
-        <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">The XRPL AI Index</h2>
+      <div className="flex items-center justify-between gap-2 animate-fade-up pt-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">The XRPL AI Index</h2>
+        </div>
+        <Link href="/methodology" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors shrink-0">
+          How we measure &rarr;
+        </Link>
       </div>
 
       <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>

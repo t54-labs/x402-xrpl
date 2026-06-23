@@ -99,6 +99,59 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
+type PendingListing = { id: string; name: string; tagline: string | null; website: string | null; category: string | null };
+
+function DirectoryReview() {
+  const [items, setItems] = useState<PendingListing[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/directory?status=pending", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => setItems(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const act = async (id: string, action: "approve" | "reject") => {
+    setItems((x) => x.filter((i) => i.id !== id));
+    await fetch("/api/admin/directory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, id }),
+    }).catch(() => null);
+  };
+
+  if (!loaded || items.length === 0) return null;
+
+  return (
+    <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-shell)] overflow-hidden">
+      <div className="px-6 py-4 border-b border-[var(--border)]">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+          Directory submissions <span className="text-[var(--text-muted)] font-normal">· {items.length} pending</span>
+        </h3>
+      </div>
+      <div className="divide-y divide-[var(--border)]">
+        {items.map((l) => (
+          <div key={l.id} className="flex items-center justify-between gap-4 px-6 py-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {l.name}
+                {l.category ? <span className="text-[11px] text-[var(--text-muted)] ml-2">{l.category}</span> : null}
+              </p>
+              <p className="text-xs text-[var(--text-muted)] truncate">{l.tagline || l.website || ""}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => act(l.id, "approve")} className="px-3 py-1.5 text-xs font-medium rounded-[var(--radius-control)] bg-[var(--success)]/15 text-[var(--success)] border border-[var(--success)]/25 hover:bg-[var(--success)]/25 transition-colors">Approve</button>
+              <button onClick={() => act(l.id, "reject")} className="px-3 py-1.5 text-xs font-medium rounded-[var(--radius-control)] bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors">Reject</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [data, setData] = useState<AdminData | null>(null);
@@ -216,6 +269,8 @@ export default function AdminDashboard() {
           Sign Out
         </button>
       </div>
+
+      <DirectoryReview />
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
