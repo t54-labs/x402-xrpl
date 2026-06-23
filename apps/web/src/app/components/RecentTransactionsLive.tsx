@@ -198,11 +198,6 @@ export function RecentTransactionsLive({ transactions }: { transactions: Transac
   return (
     <div className="relative px-5 sm:px-6 py-5">
       <SpineDefs />
-      {/* horizontal spine baseline behind the row */}
-      <div
-        className="spine-line absolute left-6 right-6 top-1/2 h-px -translate-y-1/2"
-        style={{ background: "linear-gradient(90deg, transparent, var(--blue-28) 8%, var(--blue-28) 92%, transparent)" }}
-      />
       <motion.div layout className="relative flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
         <AnimatePresence initial={false}>
           {rows.map((tx) => (
