@@ -10,22 +10,58 @@
 
 :root {
   color-scheme: dark;
-  --bg-base: #000000;
-  --bg-surface: #000000;
-  --bg-elevated: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.18);
-  --border-hover: rgba(255, 255, 255, 0.4);
+  /* Warm oxide palette (was pure #000). Existing var names kept + re-pointed
+     so the whole site shifts warm without touching every component. */
+  --bg-base: #0C0A08;
+  --bg-surface: #14110D;
+  --bg-elevated: #1B1712;
+  --border: #2B2520;
+  --border-hover: #3A322B;
   --brand-blue: #008CFF;
   --brand-deep: #008CFF;
-  --text-primary: #f5f7fb;
-  --text-secondary: rgba(245, 247, 251, 0.76);
-  --text-muted: rgba(245, 247, 251, 0.56);
+  --text-primary: #F1EDE6;
+  --text-secondary: rgba(241, 237, 230, 0.72);
+  --text-muted: #998A82;
   --success: #10B981;
   --radius-shell: 16px;
   --radius-card: 12px;
   --radius-control: 10px;
   --radius-tag: 8px;
+
+  /* ── THE LEDGER SPINE — design system ── */
+  --ink-base: #0C0A08;
+  --ink-surface: #14110D;
+  --ink-raised: #1B1712;
+  --rule: #2B2520;
+  --paper: #F1EDE6;
+  --paper-mute: #998A82;
+  --paper-faint: #4E443C;
+  --t54-coral: #C9462E;   /* human / intent — oxide, not candy */
+  --amber: #E0941B;       /* pending / verifying */
+  --red: #D6442E;         /* denied / blocked */
+  --blue-08: rgba(0, 140, 255, 0.08);
+  --blue-16: rgba(0, 140, 255, 0.16);
+  --blue-28: rgba(0, 140, 255, 0.28);
+  --coral-08: rgba(201, 70, 46, 0.08);
+  --coral-16: rgba(201, 70, 46, 0.16);
+  --coral-28: rgba(201, 70, 46, 0.28);
+  --dur-micro: 120ms;
+  --dur-enter: 360ms;
+  --dur-cerem: 800ms;
+  --ease-tail: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-micro: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Static blueprint grid (precision texture, ~6% alpha, no blobs/box-shadow) */
+.spine-grid {
+  background-image:
+    linear-gradient(to right, rgba(241, 237, 230, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(241, 237, 230, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+@keyframes spine-breath { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.spine-line { animation: spine-breath 10s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .spine-line { animation: none; } }
 
 body {
   background: var(--bg-base);
