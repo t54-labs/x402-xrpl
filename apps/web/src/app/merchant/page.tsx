@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Merchant Network — t54 XRPL AI Index",
+  title: "Merchant — t54 XRPL AI Index",
   description: "Onboard established merchants to RLUSD settlement on XRPL through network partners.",
 };
 
@@ -15,11 +15,11 @@ const INTAKE_FIELDS = [
   "BD contact",
 ];
 
-export default function MerchantNetworkPage() {
+export default function MerchantPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <header className="animate-fade-up">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Merchant Network</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Merchant</h1>
         <p className="text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-2xl">
           Beyond developers, real merchants need to be reachable by AI agents. We bring established brands onto RLUSD settlement on XRPL through merchant-network partners.
         </p>

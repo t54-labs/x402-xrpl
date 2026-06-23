@@ -8,7 +8,7 @@ const links = [
   { href: "/build", label: "Build" },
   { href: "/resources", label: "Resources" },
   { href: "/directory", label: "Directory" },
-  { href: "/merchant-network", label: "Merchant Network" },
+  { href: "/merchant", label: "Merchant" },
   { href: "/events", label: "Events" },
   { href: "/why-xrpl", label: "Why XRPL" },
   { href: "/join/service", label: "Partner with us" },

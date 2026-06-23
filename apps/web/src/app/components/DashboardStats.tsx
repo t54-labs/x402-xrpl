@@ -11,16 +11,16 @@ export function OverviewMetricsStrip({
   volumes,
   fallbackXrp = 0,
   activeAgents,
-  facilitators,
   totalTransactions,
   totalMerchants,
+  totalResources,
 }: {
   volumes?: AssetVolume[];
   fallbackXrp?: number;
   activeAgents: number;
-  facilitators: number;
   totalTransactions: number;
   totalMerchants: number;
+  totalResources: number;
 }) {
   const xrp = volumes?.find((v) => v.asset === "XRP")?.total ?? fallbackXrp;
   const rlusd = volumes?.find((v) => v.asset === "RLUSD")?.total ?? 0;
@@ -30,9 +30,9 @@ export function OverviewMetricsStrip({
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
         <MetricCell label="Active agents" value={activeAgents} />
-        <MetricCell label="Facilitators" value={facilitators} href="/facilitators" />
         <MetricCell label="Transactions" value={totalTransactions} />
         <MetricCell label="Merchants" value={totalMerchants} />
+        <MetricCell label="Resources" value={totalResources} />
       </div>
     </div>
   );
