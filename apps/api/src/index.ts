@@ -220,12 +220,16 @@ app.get("/stats", async (_req, res) => {
 });
 
 // ── Dashboard (cached 10s) ───────────────────────────────────
-app.get("/dashboard", async (_req, res) => {
+app.get("/dashboard", async (req, res) => {
   try {
-    const cached = getCached("dashboard");
+    const range = req.query.range === "7d" ? "7d" : req.query.range === "30d" ? "30d" : "all";
+    const days = range === "7d" ? 7 : range === "30d" ? 30 : 0;
+    const tf = days ? `WHERE "timestamp" >= NOW() - INTERVAL '${days} days'` : "";
+    const cacheKey = `dashboard:${range}`;
+    const cached = getCached(cacheKey);
     if (cached) return res.json(cached);
 
-    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw] = await Promise.all([
+    const [indexerState, totalMerchantsAll, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw, windowCountsRaw] = await Promise.all([
       prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
@@ -244,10 +248,10 @@ app.get("/dashboard", async (_req, res) => {
          FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`
       ),
       prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
-        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" GROUP BY asset ORDER BY total DESC`
+        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" ${tf} GROUP BY asset ORDER BY total DESC`
       ),
       prisma.$queryRawUnsafe<Array<{ c: bigint }>>(
-        `SELECT COUNT(DISTINCT "buyerAddress") as c FROM "Transaction"`
+        `SELECT COUNT(DISTINCT "buyerAddress") as c FROM "Transaction" ${tf}`
       ),
       prisma.$queryRawUnsafe<Array<{ sourceTag: number; name: string | null; tx_count: bigint }>>(
         `SELECT t."sourceTag" as "sourceTag", f.name as name, COUNT(*) as tx_count
@@ -259,6 +263,9 @@ app.get("/dashboard", async (_req, res) => {
         `SELECT t."sourceTag" as "sourceTag", t.asset as asset, COALESCE(SUM(CAST(t.amount AS DOUBLE PRECISION)), 0) as total
          FROM "Transaction" t WHERE t."sourceTag" IS NOT NULL
          GROUP BY t."sourceTag", t.asset`
+      ),
+      prisma.$queryRawUnsafe<Array<{ tx: bigint; merchants: bigint }>>(
+        `SELECT COUNT(*) as tx, COUNT(DISTINCT "merchantAddr") as merchants FROM "Transaction" ${tf}`
       ),
     ]);
 
@@ -313,8 +320,9 @@ app.get("/dashboard", async (_req, res) => {
     const activeAgents = Number(activeAgentsRaw[0]?.c ?? 0);
 
     const data = {
-      totalTransactions: indexerState?.totalTxCount ?? 0,
-      totalMerchants,
+      range,
+      totalTransactions: days ? Number(windowCountsRaw[0]?.tx ?? 0) : (indexerState?.totalTxCount ?? 0),
+      totalMerchants: days ? Number(windowCountsRaw[0]?.merchants ?? 0) : totalMerchantsAll,
       totalResources,
       totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
       volumeByAsset,
@@ -324,7 +332,7 @@ app.get("/dashboard", async (_req, res) => {
       recentResources,
       topMerchants,
     };
-    setCache("dashboard", data, 10_000);
+    setCache(cacheKey, data, 10_000);
     res.json(data);
   } catch (err) {
     console.error("GET /dashboard error:", err);

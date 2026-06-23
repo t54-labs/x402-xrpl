@@ -196,6 +196,9 @@ async function main() {
     const amount = isXrp ? amountNum.toFixed(6) : amountNum.toFixed(2);
     if (isXrp) totalXrp += amountNum;
 
+    const verifiableIntent = rand() < 0.5;
+    const riskChecked = verifiableIntent && rand() < 0.6;
+
     await prisma.transaction.create({
       data: {
         hash: hexHash(i),
@@ -210,6 +213,8 @@ async function main() {
         facilitator: fac.name,
         sourceTag: fac.sourceTag,
         invoiceId: hexHash(i + 9000).slice(0, 32),
+        verifiableIntent,
+        riskChecked,
       },
     });
   }

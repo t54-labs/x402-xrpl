@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
@@ -19,6 +19,9 @@ export type TransactionRow = {
   amount: string;
   asset: string;
   timestamp: string;
+  sourceTag?: number | null;
+  verifiableIntent?: boolean;
+  riskChecked?: boolean;
   merchant?: { address: string; name: string | null } | null;
 };
 
@@ -57,44 +60,55 @@ export type DashboardData = {
 
 export function DashboardLive({ initialData }: { initialData: DashboardData }) {
   const [data, setData] = useState(initialData);
-  const mountedRef = useRef(false);
+  const [range, setRange] = useState<"7d" | "30d" | "all">("all");
 
   useEffect(() => {
-    mountedRef.current = true;
-
+    let active = true;
     const refresh = async () => {
       try {
-        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        const res = await fetch(`/api/dashboard?range=${range}`, { cache: "no-store" });
         if (!res.ok) return;
         const nextData = (await res.json()) as DashboardData;
-        if (mountedRef.current) setData(nextData);
+        if (active) setData(nextData);
       } catch {
-        // Keep the current dashboard snapshot; the next poll will retry.
+        // Keep the current snapshot; the next poll will retry.
       }
     };
-
+    refresh();
     const interval = window.setInterval(refresh, REFRESH_INTERVAL_MS);
     return () => {
-      mountedRef.current = false;
+      active = false;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [range]);
 
   const registeredResources = data.recentResources;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <Hero />
-      <TrustBand />
 
-      <div className="flex items-center justify-between gap-2 animate-fade-up pt-2">
+      <div className="flex items-center justify-between gap-2 animate-fade-up pt-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
           <h2 className="text-base font-semibold text-[var(--text-primary)]">The XRPL AI Index</h2>
         </div>
-        <Link href="/methodology" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors shrink-0">
-          How we measure &rarr;
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
+            {([["7d", "7D"], ["30d", "30D"], ["all", "All time"]] as const).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setRange(v)}
+                className={`px-2.5 py-1 rounded-md transition-colors ${range === v ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Link href="/methodology" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors shrink-0">
+            How we measure &rarr;
+          </Link>
+        </div>
       </div>
 
       <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
@@ -114,6 +128,8 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         <RecentTransactionsPanel transactions={data.recentTransactions} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
+
+      <BackedBy />
     </div>
   );
 }
@@ -156,22 +172,16 @@ function Hero() {
   );
 }
 
-function TrustBand() {
-  const items = [
-    "Ripple — strategic investor",
-    "BNY Mellon — RLUSD custody",
-    "Deloitte — monthly attestation",
-    "SOC 2 — in progress",
-    "x402 Foundation — member",
-  ];
+function BackedBy() {
   return (
-    <div className="animate-fade-up flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
-      <span className="text-[10px] text-[var(--text-muted)] mr-1">Backed &amp; verified:</span>
-      {items.map((t) => (
-        <span key={t} className="text-[11px] text-[var(--text-secondary)] bg-[rgba(255,255,255,0.03)] border border-[var(--border)] px-2.5 py-1 rounded-md">
-          {t}
-        </span>
-      ))}
+    <div className="animate-fade-up pt-8 mt-2 border-t border-[var(--border)] flex flex-col items-center gap-3">
+      <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Backed by</span>
+      <div className="flex items-center gap-10 opacity-70">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/ripple.svg" alt="Ripple" className="h-5 w-auto" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/xrpl-foundation.svg" alt="XRPL Foundation" className="h-5 w-auto" />
+      </div>
     </div>
   );
 }

@@ -128,6 +128,9 @@ model Transaction {
   invoiceId      String?  // Invoice ID from the x402 payment (hex or plain)
   
   rawMemo      String?    // Raw MemoData for debugging
+
+  verifiableIntent Boolean @default(false)  // carried an X402 Secure Verifiable Intent chain (L1-L3)
+  riskChecked      Boolean @default(false)  // passed X402 Secure risk control before settlement
   
   createdAt    DateTime   @default(now())
 
