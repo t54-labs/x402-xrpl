@@ -170,8 +170,6 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         <RecentTransactionsPanel transactions={feed} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
-
-      <BackedBy />
     </div>
   );
 }
@@ -209,20 +207,6 @@ function Hero() {
           <div className="text-[var(--brand-blue)]">✓ verified intent L1–L3 · settled 4.2s</div>
           <div className="text-[var(--text-muted)]">↳ your tx now appears in the Index</div>
         </pre>
-      </div>
-    </div>
-  );
-}
-
-function BackedBy() {
-  return (
-    <div className="animate-fade-up pt-8 mt-2 border-t border-[var(--border)] flex flex-col items-center gap-3">
-      <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Backed by</span>
-      <div className="flex items-center gap-10 opacity-70">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logos/ripple.svg" alt="Ripple" className="h-5 w-auto" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logos/xrpl-foundation.svg" alt="XRPL Foundation" className="h-5 w-auto" />
       </div>
     </div>
   );
