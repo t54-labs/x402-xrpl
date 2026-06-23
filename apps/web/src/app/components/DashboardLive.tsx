@@ -138,13 +138,13 @@ function Hero() {
   return (
     <div className="animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
       <div>
-        <span className="inline-flex items-center gap-2 text-[11px] font-mono text-[var(--brand-blue)] bg-[rgba(0,140,255,0.08)] border border-[rgba(0,140,255,0.2)] px-2.5 py-1 rounded-md">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" /> institution-grade rails for agentic commerce on XRPL
+        <span className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--paper-mute)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--t54-coral)]" /> institution-grade rails for agentic commerce
         </span>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--text-primary)] mt-4 leading-[1.15]">
-          The live ledger of the XRPL agentic economy.
+        <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
+          The live ledger of the <span className="text-[var(--t54-coral)]">agentic</span> economy on XRPL.
         </h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-3 max-w-md leading-relaxed">
+        <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-md leading-relaxed">
           See who&rsquo;s transacting. Build on the standard. Onboard your network.
         </p>
         <div className="flex items-center gap-2.5 mt-5">
@@ -164,7 +164,7 @@ function Hero() {
           <div className="text-[var(--brand-blue)]">$ npm i x402-xrpl</div>
           <div className="text-[var(--text-secondary)]">import {"{"} x402Fetch {"}"} from &apos;x402-xrpl&apos;</div>
           <div className="text-[var(--text-muted)]">→ 402 · xrpl · pay in RLUSD</div>
-          <div className="text-[var(--success)]">✓ verified intent L1–L3 · settled 4.2s</div>
+          <div className="text-[var(--brand-blue)]">✓ verified intent L1–L3 · settled 4.2s</div>
           <div className="text-[var(--text-muted)]">↳ your tx now appears in the Index</div>
         </pre>
       </div>
@@ -188,7 +188,7 @@ function BackedBy() {
 
 function FacilitatorPanel() {
   return (
-    <div className="dashboard-panel glow-border order-1 bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
+    <div className="dashboard-panel glow-border order-2 bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="space-y-3 min-w-0">
           <div className="flex items-center gap-2.5">
@@ -222,7 +222,7 @@ function FacilitatorPanel() {
 
 function AgoraPanel({ resources }: { resources: DashboardData["recentResources"] }) {
   return (
-    <div className="dashboard-panel order-2 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel order-3 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Agora</h2>
@@ -275,14 +275,14 @@ function AgoraPanel({ resources }: { resources: DashboardData["recentResources"]
 
 function RecentTransactionsPanel({ transactions }: { transactions: TransactionRow[] }) {
   return (
-    <div className="dashboard-panel order-4 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel order-1 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Recent Transactions</h2>
+            <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)] animate-[pulse_2s_infinite] shrink-0" />
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Live settlements</h2>
           </div>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Latest x402 payments observed on XRPL.</p>
+          <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--paper-mute)] mt-1.5">verified before settle · on the spine</p>
         </div>
         <Link href="/transactions" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
           View All &rarr;
@@ -298,7 +298,7 @@ function TopMerchantsPanel({ merchants }: { merchants: DashboardData["topMerchan
   if (merchants.length === 0) return null;
 
   return (
-    <div className="dashboard-panel order-3 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel order-4 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2">

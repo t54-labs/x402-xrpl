@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { formatCurrency } from "../utils/currency";
@@ -38,45 +37,42 @@ export function OverviewMetricsStrip({
   );
 }
 
+function Label({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--paper-mute)]">{children}</h3>;
+}
+
 function CurrencyCell({ label, value, asset }: { label: string; value: number; asset: string }) {
   return (
-    <div className="relative p-4 pr-12 sm:p-5 group hover:bg-[rgba(255,255,255,0.015)] transition-colors">
-      <MetricMark />
-      <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">{label}</h3>
-      <p className="text-xl sm:text-2xl font-light text-[var(--text-primary)] mt-2 tracking-tight">
-        <AnimatedNumber value={value} decimals={value > 0 && value < 1 ? 4 : 2} duration={2000} />{" "}
-        <span className="text-xs text-[var(--text-muted)]">{formatCurrency(asset)}</span>
+    <div className="relative p-4 sm:p-5 group transition-colors hover:bg-[var(--blue-08)]">
+      <Label>{label}</Label>
+      <p className="mt-2.5 flex items-baseline gap-1.5">
+        <span className="font-mono tabular-nums text-2xl sm:text-[28px] leading-none text-[var(--paper)]">
+          <AnimatedNumber value={value} decimals={value > 0 && value < 1 ? 4 : 2} duration={2000} />
+        </span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--paper-mute)]">{formatCurrency(asset)}</span>
       </p>
     </div>
   );
 }
 
 function MetricCell({ label, value, href }: { label: string; value: number; href?: string }) {
-  const cls = "relative block p-4 pr-14 sm:p-5 sm:pr-16 md:p-6 md:pr-20 group hover:bg-[rgba(255,255,255,0.015)] transition-colors";
   const inner = (
     <>
-      <MetricMark />
-      <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
+      <Label>
         {label}
-        {href ? <span className="ml-1 text-[var(--text-muted)] group-hover:text-[var(--brand-blue)] transition-colors">&rarr;</span> : null}
-      </h3>
-      <p className="text-xl sm:text-2xl md:text-3xl font-light text-[var(--text-primary)] mt-2 md:mt-3 tracking-tight">
+        {href ? <span className="ml-1 text-[var(--paper-faint)] group-hover:text-[var(--brand-blue)] transition-colors">&#8599;</span> : null}
+      </Label>
+      <p className="mt-2.5 font-mono tabular-nums text-2xl sm:text-[28px] leading-none text-[var(--paper)]">
         <AnimatedNumber value={value} duration={1800} />
       </p>
     </>
   );
-  return href ? <Link href={href} className={cls}>{inner}</Link> : <div className={cls}>{inner}</div>;
-}
-
-function MetricMark() {
-  return (
-    <Image
-      src="/icon.png"
-      alt=""
-      aria-hidden="true"
-      width={56}
-      height={56}
-      className="pointer-events-none absolute right-4 top-4 sm:right-5 sm:top-5 md:right-6 md:top-6 h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 object-contain opacity-[0.12] transition-opacity duration-300 group-hover:opacity-[0.18]"
-    />
+  const cls = "relative block p-4 sm:p-5 group transition-colors hover:bg-[var(--blue-08)]";
+  return href ? (
+    <Link href={href} className={cls}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }
