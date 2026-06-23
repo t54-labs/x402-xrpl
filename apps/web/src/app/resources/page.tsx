@@ -13,16 +13,6 @@ type Group = { title: string; blurb: string; items: Resource[] };
 
 const GROUPS: Group[] = [
   {
-    title: "Services AI can consume",
-    blurb: "AI services already reachable on XRPL rails — pay per call in XRP or RLUSD over x402.",
-    items: [
-      { name: "BlockRunAI", description: "Per-call LLM gateway across 30+ models, settled over x402.", href: "https://blockrun.ai", tag: "LLM gateway", maturity: "beta" },
-      { name: "AskSurf / Surf", description: "Conversational search and crypto-data skills, metered per query.", href: "https://github.com/asksurf-ai/surf-skills", tag: "Data / search" },
-      { name: "LucyOS", description: "Real-time token analytics for the XRPL ecosystem.", href: "https://lucyos.ai", tag: "Analytics" },
-      { name: "Heurist", description: "Decentralized AI inference — LLMs and image generation.", href: "https://www.heurist.ai", tag: "Inference" },
-    ],
-  },
-  {
     title: "Developer tools & SDKs",
     blurb: "Everything you need to take a payment from an AI agent on XRPL — first-party from t54, plus the official XRPL toolkit.",
     items: [
@@ -75,7 +65,8 @@ export default function ResourcesPage() {
           The toolkit for<br />building on XRPL.
         </h1>
         <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
-          What agents can consume, what developers build with, and what helps you ship.
+          What developers build with, and what helps you ship. Looking for live services agents can consume? See the{" "}
+          <Link href="/directory" className="text-[var(--brand-blue)] hover:underline">Directory</Link>.
         </p>
       </header>
 
