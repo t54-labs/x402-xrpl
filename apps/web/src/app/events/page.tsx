@@ -58,9 +58,12 @@ const EVENTS: EventItem[] = [
 export default function EventsPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <header className="animate-fade-up">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Events</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">
+      <header className="animate-fade-up max-w-3xl">
+        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Events</span>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+          Where XRPL-AI<br />builders gather.
+        </h1>
+        <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
           Programming for developers building AI on XRPL — curated by t54, alongside Ripple and XRPL Commons.
         </p>
       </header>

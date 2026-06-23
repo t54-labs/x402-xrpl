@@ -37,10 +37,11 @@ export default function JoinServicePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-      <header className="mb-8 animate-fade-up">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Join the directory</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-2 max-w-md">
-          List your AI service, agent, or tool in the XRPL AI Community directory. Submissions are reviewed before they go live.
+      <header className="mb-10 animate-fade-up">
+        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Join · Directory</span>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">List your<br />service.</h1>
+        <p className="text-[15px] text-[var(--text-secondary)] mt-5 max-w-lg leading-relaxed">
+          Add your AI service, agent, or tool to the XRPL AI Community directory. Submissions are reviewed before they go live.
         </p>
       </header>
 

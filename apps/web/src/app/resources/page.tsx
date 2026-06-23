@@ -69,17 +69,21 @@ function MaturityBadge({ maturity }: { maturity?: Resource["maturity"] }) {
 export default function ResourcesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
-      <header className="animate-fade-up">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Resources</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">
-          The toolkit for building AI on XRPL — what agents can consume, what developers build with, and what helps you ship.
+      <header className="animate-fade-up max-w-3xl">
+        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Resources</span>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+          The toolkit for<br />building on XRPL.
+        </h1>
+        <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
+          What agents can consume, what developers build with, and what helps you ship.
         </p>
       </header>
 
       {GROUPS.map((group, gi) => (
         <section key={group.title} className="animate-fade-up space-y-4" style={{ animationDelay: `${gi * 60}ms` }}>
           <div>
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">{group.title}</h2>
+            <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-[var(--paper-faint)] mb-2">{String(gi + 1).padStart(2, "0")} / {String(GROUPS.length).padStart(2, "0")}</div>
+            <h2 className="text-xl font-medium tracking-tight text-[var(--paper)]">{group.title}</h2>
             <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">{group.blurb}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -18,10 +18,13 @@ export default async function DirectoryPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <header className="animate-fade-up flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Directory</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">
-            AI services, agents, and tools building on XRPL — available on XRPL rails via x402 and RLUSD.
+        <div className="max-w-2xl">
+          <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Directory</span>
+          <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+            Who&rsquo;s building<br />on the rail.
+          </h1>
+          <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
+            AI services, agents, and tools — available on XRPL via x402 and RLUSD.
           </p>
         </div>
         <Link href="/join/service" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">

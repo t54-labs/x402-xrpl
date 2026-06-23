@@ -18,10 +18,13 @@ const INTAKE_FIELDS = [
 export default function MerchantPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <header className="animate-fade-up">
-        <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Merchant</h1>
-        <p className="text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-2xl">
-          Beyond developers, real merchants need to be reachable by AI agents. We bring established brands onto RLUSD settlement on XRPL through merchant-network partners.
+      <header className="animate-fade-up max-w-3xl">
+        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+          Real brands,<br />reachable by agents.
+        </h1>
+        <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
+          We bring established merchants onto RLUSD settlement on XRPL through merchant-network partners.
         </p>
       </header>
 
