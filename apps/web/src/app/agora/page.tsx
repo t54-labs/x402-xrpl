@@ -45,7 +45,7 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
           </div>
           <h2 className="text-lg text-[var(--text-primary)] mb-2">No Resources Listed Yet</h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">Be the first to register an x402-compatible API on the XRPL.</p>
-          <Link href="/resources/register" className="ui-control inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-blue)] text-white font-semibold rounded-lg transition-all text-sm">
+          <Link href="/join/service" className="ui-control inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-blue)] text-white font-semibold rounded-lg transition-all text-sm">
             Register Your API
           </Link>
         </div>

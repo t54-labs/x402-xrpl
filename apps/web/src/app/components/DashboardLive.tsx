@@ -290,7 +290,7 @@ function AgoraPanel({ resources }: { resources: DashboardData["recentResources"]
       ) : (
         <div className="flex flex-col items-center text-center py-12 gap-3">
           <p className="text-[var(--text-muted)] text-sm">No resources registered yet.</p>
-          <Link href="/resources/register" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors">
+          <Link href="/join/service" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors">
             Register the first one &rarr;
           </Link>
         </div>

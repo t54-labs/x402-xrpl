@@ -111,7 +111,7 @@ export default function ResourcesPage() {
             <p className="text-base font-semibold text-[var(--text-primary)]">Want your service listed?</p>
             <p className="text-sm text-[var(--text-muted)] mt-1">Add your x402 endpoint to the XRPL AI ecosystem.</p>
           </div>
-          <Link href="/resources/register" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">
+          <Link href="/join/service" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">
             Get listed
           </Link>
         </div>
