@@ -8,6 +8,15 @@
   --color-cyan-500: #008CFF;
 }
 
+/* Hide the horizontal scrollbar on carousels (the partial peeking card is the affordance). */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
   color-scheme: dark;
   /* Warm oxide palette (was pure #000). Existing var names kept + re-pointed

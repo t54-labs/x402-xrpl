@@ -43,43 +43,37 @@ function SpineDefs() {
   );
 }
 
-// Compact horizontal verification chain: L1 — L2 — L3 → shield.
+// Compact verification readout: L1 · L2 · L3 dots → shield. Solid dots are the
+// t54 branding element; the rail is kept to a single whisper-thin hairline.
 function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
   const reduce = useReducedMotion();
   const animateIn = fresh && !reduce;
   const active = state !== "idle";
-  const stroke = active ? "var(--brand-blue)" : "var(--paper-faint)";
-  const nodeX = [8, 78, 138];
+  const dotFill = active ? "var(--brand-blue)" : "var(--paper-faint)";
+  const nodeX = [10, 80, 140];
   return (
     <svg viewBox="0 0 176 16" width="100%" height="16" fill="none" role="img" aria-label="verification chain L1 L2 L3">
-      {[0, 1].map((i) => (
-        <motion.line
-          key={i}
-          x1={nodeX[i] + 7}
-          y1="8"
-          x2={nodeX[i + 1] - 7}
-          y2="8"
-          stroke={stroke}
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeDasharray={state === "idle" ? "2.5 4" : undefined}
-          initial={animateIn ? { pathLength: 0, opacity: 0.4 } : false}
-          animate={{ pathLength: 1, opacity: active ? 1 : 0.4 }}
-          transition={{ ...SPRING, delay: 0.08 + i * 0.14 }}
-        />
-      ))}
+      {/* one whisper-thin rail — used sparingly, just enough to seat the dots */}
+      <line
+        x1={nodeX[0]}
+        y1="8"
+        x2={nodeX[2]}
+        y2="8"
+        stroke={active ? "var(--brand-blue)" : "var(--paper-faint)"}
+        strokeWidth="1"
+        strokeOpacity={active ? 0.26 : 0.16}
+        strokeLinecap="round"
+      />
       {nodeX.map((x, i) => (
         <motion.circle
           key={x}
           cx={x}
           cy="8"
-          r="4"
-          fill="none"
-          stroke={stroke}
-          strokeWidth="1.75"
-          initial={animateIn ? { scale: 0.5, opacity: 0 } : false}
-          animate={{ scale: active ? 1 : 0.72, opacity: active ? 1 : 0.4 }}
-          transition={{ ...SPRING, delay: 0.04 + i * 0.14 }}
+          r={active ? 3.4 : 2.6}
+          fill={dotFill}
+          initial={animateIn ? { scale: 0, opacity: 0 } : false}
+          animate={{ scale: 1, opacity: active ? 1 : 0.55 }}
+          transition={{ ...SPRING, delay: 0.06 + i * 0.12 }}
         />
       ))}
       {state === "sealed" ? (
@@ -198,7 +192,7 @@ export function RecentTransactionsLive({ transactions }: { transactions: Transac
   return (
     <div className="relative px-5 sm:px-6 py-5">
       <SpineDefs />
-      <motion.div layout className="relative flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+      <motion.div layout className="hide-scrollbar relative flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
         <AnimatePresence initial={false}>
           {rows.map((tx) => (
             <SettlementCard key={tx.hash} tx={tx} fresh={freshHashes.has(tx.hash)} />
