@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-poppins), Arial, Helvetica, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* Use literal family names (Poppins / Geist Mono are registered globally by
+     next/font under their real names). Referencing var(--font-poppins) here is
+     unsafe: next/font only scopes that var to <body>, so at :root — where these
+     @theme tokens live — it is undefined and the whole declaration computes to
+     an invalid (empty) value, collapsing every font back to the browser default. */
+  --font-sans: "Poppins", Arial, Helvetica, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   /* t54 brand fonts — Youth Trial for titles/headings, Foundry Plek for labels/numbering. */
-  --font-youth: "Youth Trial", var(--font-poppins), sans-serif;
-  --font-plek: "Foundry Plek", var(--font-geist-mono), monospace;
+  --font-youth: "Youth Trial", "Poppins", sans-serif;
+  --font-plek: "Foundry Plek", "Geist Mono", monospace;
   --color-cyan-300: #008CFF;
   --color-cyan-400: #008CFF;
   --color-cyan-500: #008CFF;
