@@ -25,7 +25,7 @@ export default async function DirectoryPage() {
             Who&rsquo;s building<br />on the rail.
           </h1>
           <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
-            AI services, agents, and tools — available on XRPL via x402 and RLUSD.
+            AI services, agents, and tools — available on XRPL via x402, in RLUSD and XRP.
           </p>
         </div>
         <Link href="/join/service" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">

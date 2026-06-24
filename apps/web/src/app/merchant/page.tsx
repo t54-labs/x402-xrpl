@@ -1,7 +1,7 @@
 
 export const metadata = {
   title: "Merchant — t54 XRPL AI Index",
-  description: "Onboard established merchants to RLUSD settlement on XRPL through network partners.",
+  description: "Onboard established merchants to RLUSD and XRP settlement on XRPL through network partners.",
 };
 
 const BRANDS = ["Macy's", "Saks Fifth Avenue", "Harrods", "Michael Kors", "Zappos"];
@@ -11,7 +11,7 @@ const INTAKE_FIELDS = [
   "Estimated monthly settlement volume",
   "Current payment rails",
   "Target launch window",
-  "RLUSD readiness",
+  "RLUSD / XRP readiness",
   "Region / country",
   "BD contact",
 ];
@@ -26,7 +26,7 @@ export default function MerchantPage() {
           Real brands,<br />reachable by agents.
         </h1>
         <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
-          We bring established merchants onto RLUSD settlement on XRPL through merchant-network partners.
+          We bring established merchants onto RLUSD and XRP settlement on XRPL through merchant-network partners.
         </p>
       </header>
 
@@ -36,7 +36,7 @@ export default function MerchantPage() {
           <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-amber-400 bg-amber-500/8 border-amber-500/15">in discussion</span>
         </div>
         <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
-          CloudStore (nubestore.ai) is a plug-and-play agentic-checkout platform. Its existing network already includes major retailers — 500+ merchants, $1B+ GMV fulfilled. Through a CloudStore integration, established brands can settle agent purchases in RLUSD on XRPL.
+          CloudStore (nubestore.ai) is a plug-and-play agentic-checkout platform. Its existing network already includes major retailers — 500+ merchants, $1B+ GMV fulfilled. Through a CloudStore integration, established brands can settle agent purchases in RLUSD or XRP on XRPL.
         </p>
         <div className="flex flex-wrap gap-2 mt-4">
           {BRANDS.map((b) => (
@@ -58,7 +58,7 @@ export default function MerchantPage() {
         <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Institutional backdrop</h3>
           <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-2">
-            Ripple is one of 30+ launch partners for Mastercard&rsquo;s Agent Pay for Machines — agent commerce is arriving at the card-network scale, and XRPL + RLUSD is a settlement-grade rail for it.
+            Ripple is one of 30+ launch partners for Mastercard&rsquo;s Agent Pay for Machines — agent commerce is arriving at the card-network scale, and XRPL — with RLUSD and XRP — is a settlement-grade rail for it.
           </p>
         </div>
       </section>

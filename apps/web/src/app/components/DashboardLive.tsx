@@ -192,7 +192,6 @@ function Hero() {
         </p>
         <div className="flex items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
-          <Link href="/join/service" className="ui-control px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Partner with us</Link>
         </div>
       </div>
       <div className="dashboard-panel relative z-10 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
@@ -206,7 +205,7 @@ function Hero() {
         <pre className="p-4 text-[12px] font-mono leading-relaxed overflow-x-auto">
           <div className="text-[var(--brand-blue)]">$ npm i x402-xrpl</div>
           <div className="text-[var(--text-secondary)]">import {"{"} x402Fetch {"}"} from &apos;x402-xrpl&apos;</div>
-          <div className="text-[var(--text-muted)]">→ 402 · xrpl · pay in RLUSD</div>
+          <div className="text-[var(--text-muted)]">→ 402 · xrpl · pay in RLUSD or XRP</div>
           <div className="text-[var(--brand-blue)]">✓ verified intent L1–L3 · settled 4.2s</div>
           <div className="text-[var(--text-muted)]">↳ your tx now appears in the Index</div>
         </pre>
