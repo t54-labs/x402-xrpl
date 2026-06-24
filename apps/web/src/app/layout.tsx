@@ -100,7 +100,7 @@ export default function RootLayout({
           </div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-5">
             <p className="text-[10px] text-[var(--text-muted)] leading-relaxed max-w-3xl">
-              Mastercard, Mastercard Agent Pay, Agent Pay for Machines and Verifiable Intent are trademarks of Mastercard International Incorporated. References reflect publicly announced partner relationships and do not imply endorsement or a formal or exclusive partnership beyond the named-partner role in Agent Pay for Machines.
+              Mastercard, Mastercard Agent Pay, Agent Pay for Machines and Verifiable Intent are trademarks of Mastercard International Incorporated, used here for identification purposes only. References to Mastercard reflect relationships described in the parties&rsquo; public announcements and do not imply any endorsement of the hub, or any formal or exclusive partnership, beyond what those announcements state.
             </p>
           </div>
         </footer>

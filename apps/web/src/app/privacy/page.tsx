@@ -2,7 +2,7 @@ import { LegalDoc } from "../components/LegalDoc";
 
 export const metadata = {
   title: "Privacy Policy — t54 XRPL AI",
-  description: "Privacy Policy for XRPL AI — what limited data the t54 Labs hub collects, how it is used, and your choices and rights.",
+  description: "Privacy Policy for XRPL AI — what limited data T54 Labs Inc. collects, how it is used, and your choices and rights.",
 };
 
 const SECTIONS = [
@@ -41,7 +41,7 @@ const SECTIONS = [
       "We use Google Analytics, a measurement service provided by Google, to understand how the hub is used so we can improve it. Google Analytics is loaded with a measurement ID embedded in the site and may set cookies or use similar technologies in your browser to measure page views and aggregate usage.",
       "The analytics we review are aggregated and oriented toward traffic and performance rather than identifying individuals. We do not use this data to build advertising profiles of you.",
       "You can limit or block this collection in several ways: adjust your browser settings to refuse or delete cookies, use the Google Analytics Opt-out Browser Add-on, or rely on browser features and extensions that block analytics scripts. Blocking analytics does not affect your ability to use the informational features of the hub.",
-      "Some browsers and extensions send “Do Not Track” (DNT) or Global Privacy Control (GPC) signals. Because there is no common industry standard for DNT, we do not currently respond to DNT signals; where applicable law requires it, we treat a recognized GPC signal as a request to opt out of any “sale” or “sharing” of personal information — noting that, as described below, we do not sell or share personal data.",
+      "Some browsers and extensions send “Do Not Track” (DNT) or Global Privacy Control (GPC) signals. Because there is no common industry standard for DNT, we do not currently respond to DNT signals; where applicable law requires it, we treat a recognized GPC signal as a request to opt out of any “sale” or “sharing” of personal information — noting that, as described below, we do not sell personal information or share it for cross-context behavioral advertising.",
     ],
   },
   {
@@ -61,7 +61,7 @@ const SECTIONS = [
     heading: "Legal bases for processing",
     paragraphs: [
       "Where data protection laws such as the EU or UK GDPR apply to you, we rely on the following legal bases.",
-      "Our legitimate interests support running and securing the hub, understanding aggregate usage, and improving the service, in each case balanced against your interests and rights. When you email us, we process the information you provide in order to take steps at your request and to respond to you. Where the law requires it, we rely on your consent for non-essential analytics cookies, which you can withdraw at any time through the controls described above. We also process information where necessary to comply with a legal obligation.",
+      "We rely on our legitimate interests to operate, secure, and improve the hub and to understand aggregate usage, in each case balanced against your interests and rights. When you email us, we process the information you provide in order to take steps at your request and to respond to you. Where applicable data-protection or e-privacy law (for example in the EEA, the United Kingdom, and Switzerland) requires your prior consent before non-essential analytics cookies are set, we rely on that consent and use such cookies only where it has been given; you can refuse or withdraw consent using the controls described in “Cookies and analytics.” We also process information where necessary to comply with a legal obligation.",
     ],
   },
   {
@@ -72,7 +72,7 @@ const SECTIONS = [
     bullets: [
       "Vercel, which hosts and serves the website and processes standard request and server data, including IP addresses, as part of delivering the site.",
       "Google Analytics, which processes usage, device, and approximate-location data to provide aggregate measurement, as described in the cookies and analytics section.",
-      "t54's hosted x402 facilitator, SDKs, and documentation, which the hub links out to. The facilitator's verify and settle endpoints are non-custodial — they do not take custody of your funds. Any data you submit directly to the facilitator, SDKs, or docs is handled under their own terms and notices.",
+      "t54 Labs’ hosted x402 facilitator, SDKs, and documentation, which the hub links out to. The facilitator verifies x402 payment authorizations and relays signed transactions to the XRP Ledger for settlement by the network on a non-custodial basis — it does not take custody of your funds. Any data you submit directly to the facilitator, SDKs, or documentation is handled under their own terms and notices.",
     ],
   },
   {
@@ -117,6 +117,7 @@ const SECTIONS = [
       "Depending on where you live, you may have rights over the personal data we hold about you. These can include the right to access the data we hold, to request correction of inaccurate data, to request deletion, to object to or restrict certain processing, to withdraw consent where we rely on it, and to request portability of data you have provided.",
       "To exercise any of these rights, email us at support@t54.ai or privacy@t54.ai and describe your request. We may need to verify your identity or ask for additional detail before acting, particularly to make sure we are responding to the right person. We will respond within the timeframe required by applicable law.",
       "These rights apply to the limited data we control, such as analytics records and correspondence you send us. They cannot be applied to data on the public XRP Ledger, which we do not control and cannot alter or remove. If you are in the EU, UK, or another region with a data protection authority, you also have the right to lodge a complaint with your local supervisory authority.",
+      "If you are a California resident, you have rights under the California Consumer Privacy Act, as amended (CCPA/CPRA), including the right to know the categories and specific pieces of personal information we have collected, the right to delete and to correct it, and the right to opt out of the “sale” or “sharing” of personal information. As described above, we do not sell personal information and do not share it for cross-context behavioral advertising, and we do not collect sensitive personal information for purposes that would trigger a right to limit its use. We will not discriminate against you for exercising any of these rights. You may exercise them, or use an authorized agent to do so, by contacting privacy@t54.ai.",
     ],
   },
   {

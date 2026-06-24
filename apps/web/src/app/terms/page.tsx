@@ -2,7 +2,7 @@ import { LegalDoc } from "../components/LegalDoc";
 
 export const metadata = {
   title: "Terms & Conditions — t54 XRPL AI",
-  description: "Terms & Conditions for XRPL AI, the t54 Labs ecosystem hub indexing x402 agentic-payment services on the XRP Ledger.",
+  description: "Terms & Conditions for XRPL AI, the T54 Labs Inc. ecosystem hub indexing x402 agentic-payment services on the XRP Ledger.",
 };
 
 const SECTIONS = [
@@ -16,9 +16,10 @@ const SECTIONS = [
   {
     heading: "What the hub is",
     paragraphs: [
+      "In these Terms, “the hub” means the XRPL AI website at xrpl-ai.org and the informational features it provides. It does not include the separate t54 Labs x402 facilitator, SDKs or documentation, each of which is governed by its own terms.",
       "XRPL AI is an informational index and directory. It lists x402-enabled, agent-payable services, APIs and tools that operate on the XRP Ledger, surfaces live public settlement data read from XRPL mainnet, and lets you search by wallet address or transaction hash. It also links out to t54 Labs' hosted x402 facilitator, software development kits (SDKs) and documentation.",
       "The hub is a directory and reference layer only. It does not custody, hold or transmit funds; it does not execute trades, payments or transfers; and it does not move money on your behalf. Any value transfer that occurs does so directly on the XRP Ledger between the relevant parties and their wallets, outside the hub.",
-      "Where we link to the t54 Labs x402 facilitator, that facilitator verifies and settles x402 payments by submitting signed transactions to XRPL on a non-custodial basis — it does not take custody of your keys or funds. The facilitator, SDKs and documentation are governed by their own terms and notices, which apply in addition to these Terms when you use them.",
+      "Where we link to the t54 Labs x402 facilitator, that facilitator verifies x402 payment authorizations and relays the resulting signed transactions to the XRP Ledger for settlement by the network, on a non-custodial basis — it does not take custody of your keys or funds and does not hold, pool or transmit funds on your behalf. The facilitator, SDKs and documentation are governed by their own terms and notices, which apply in addition to these Terms when you use them.",
     ],
     bullets: [
       "The hub displays information about services it does not operate or control.",
@@ -31,6 +32,8 @@ const SECTIONS = [
     paragraphs: [
       "You may use the hub only if you can form a legally binding agreement with us and your use is permitted under the laws that apply to you. By using the hub you represent that you meet these requirements and that you are not located in, ordinarily resident in, or accessing the hub on behalf of a person or entity in a jurisdiction or on a list subject to comprehensive sanctions or trade restrictions administered by any relevant authority.",
       "You also represent that you are not a person with whom we are prohibited from dealing under applicable sanctions, export-control or anti-money-laundering laws. We may restrict, suspend or block access where we reasonably suspect unlawful activity, fraud, sanctions exposure, or a breach of these Terms.",
+      "The hub is not directed to children. You may use it only if you are at least 16 years old, or the age of majority in your jurisdiction if that is higher, and able to form a legally binding agreement with us.",
+      "We have no obligation to monitor, screen, or verify users or transactions, and any right to restrict, suspend, or block access is exercised at our discretion. You further represent that you will not use the hub, or any service or tool it links to, to send value to, transact with, or otherwise deal with any person or jurisdiction subject to sanctions or trade restrictions.",
     ],
   },
   {
@@ -85,7 +88,7 @@ const SECTIONS = [
     paragraphs: [
       "The hub and its content — including text, design, layout, graphics, the coral-dot brand motif, logos and software — are owned by or licensed to t54 Labs and are protected by intellectual property laws. We grant you a limited, personal, non-exclusive, non-transferable and revocable license to access and use the hub for its intended informational purposes. You may not copy, modify, distribute, sell, publicly display, create derivative works from, or commercially exploit any part of the hub without our prior written consent, except as expressly permitted by these Terms or applicable law.",
       "\"XRP\" and \"XRPL\" and related marks, and the names, logos and marks of listed third-party services, are the property of their respective owners and are referenced for identification and informational purposes only. Their use on the hub does not imply any affiliation with or endorsement by those owners beyond any relationship actually disclosed.",
-      "Mastercard, Mastercard Agent Pay, Agent Pay for Machines and Verifiable Intent are trademarks of Mastercard International Incorporated. References to them reflect publicly announced partner relationships and do not imply endorsement or a formal or exclusive partnership beyond the named-partner role in Agent Pay for Machines.",
+      "Mastercard, Mastercard Agent Pay, Agent Pay for Machines and Verifiable Intent are trademarks of Mastercard International Incorporated, used here for identification purposes only. References to Mastercard reflect relationships described in the parties’ public announcements and do not imply any endorsement of the hub, or any formal or exclusive partnership, beyond what those announcements state.",
       "If you send us feedback, suggestions or ideas about the hub, you grant us a perpetual, irrevocable, worldwide, royalty-free license to use them for any purpose without restriction or compensation.",
       "If you believe that a listing or any content on the hub infringes your intellectual property or other rights, contact us at support@t54.ai with enough detail to identify the material and your claim, and we will review it and, where appropriate, remove or disable access to it.",
     ],
@@ -108,7 +111,7 @@ const SECTIONS = [
     heading: "Limitation of liability",
     paragraphs: [
       "To the fullest extent permitted by law, t54 Labs and its affiliates, officers, employees, contractors and agents will not be liable for any indirect, incidental, special, consequential, exemplary or punitive damages, or for any loss of profits, revenue, data, goodwill, digital assets or business, arising out of or relating to your use of (or inability to use) the hub, any listed third-party service, or any on-chain transaction, whether based in contract, tort or any other theory, even if advised of the possibility of such damages.",
-      "Because the hub is provided to you free of charge and we do not custody funds or process payments, our total aggregate liability to you for all claims relating to the hub will not exceed one hundred United States dollars (USD $100). Nothing in these Terms excludes or limits liability that cannot lawfully be excluded or limited, such as liability for fraud or for death or personal injury caused by our negligence. Some jurisdictions do not allow certain limitations, so parts of this section may not apply to you.",
+      "Because the hub is provided to you free of charge and we do not custody funds or process payments, our total aggregate liability to you for all claims relating to the hub will not exceed the greater of (a) the amounts, if any, you paid us for use of the hub in the twelve months before the claim (which, for the hub, is nothing) and (b) one hundred United States dollars (USD $100). If any part of this limitation is held unenforceable, the remaining limitations will continue to apply and our liability will be limited to the greatest extent permitted by applicable law. Nothing in these Terms excludes or limits liability that cannot lawfully be excluded or limited, such as liability for fraud, fraudulent misrepresentation, gross negligence, willful misconduct, or for death or personal injury caused by our negligence. Some jurisdictions do not allow certain limitations, so parts of this section may not apply to you.",
     ],
   },
   {
@@ -116,13 +119,14 @@ const SECTIONS = [
     paragraphs: [
       "You agree to defend, indemnify and hold harmless t54 Labs and its affiliates, officers, employees, contractors and agents from and against any claims, liabilities, damages, losses and expenses, including reasonable legal fees, arising out of or related to your use of the hub, any listing or content you submit, your dealings with any third-party service, your on-chain transactions or agent activity, or your breach of these Terms or of any applicable law or third-party right.",
       "Where applicable law limits a consumer's obligation to indemnify, this section applies only to the extent permitted by that law.",
+      "We may, at our option and expense, assume the exclusive defense and control of any matter otherwise subject to indemnification by you, in which case you will cooperate with us. You will not settle any such matter in a way that imposes any obligation or liability on, or requires any admission by, t54 Labs without our prior written consent.",
     ],
   },
   {
     heading: "Changes to the hub and to these terms",
     paragraphs: [
       "We may add, change, suspend or discontinue any part of the hub — including directory listings, data displays and linked resources — at any time and without notice or liability.",
-      "We may also update these Terms from time to time. When we do, we will revise the \"Last updated\" date above and post the current version on the hub. Changes take effect when posted, and your continued use of the hub after they take effect constitutes acceptance of the revised Terms.",
+      "We may also update these Terms from time to time. When we do, we will revise the “Last updated” date above and post the current version on the hub, and for material changes we will take reasonable steps to provide additional notice, such as a notice on the hub. Changes apply prospectively from the time they take effect; if you do not agree to a change, your remedy is to stop using the hub. Your continued use of the hub after a change takes effect constitutes acceptance of the revised Terms.",
     ],
   },
   {
@@ -130,6 +134,14 @@ const SECTIONS = [
     paragraphs: [
       "These Terms, and any dispute arising out of or relating to them or to your use of the hub, are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws rules.",
       "Before bringing any formal proceeding, you agree to first contact us at support@t54.ai and attempt in good faith to resolve the dispute informally. If it cannot be resolved within a reasonable period, the dispute will be subject to the exclusive jurisdiction of the courts of the State of Delaware, United States, except where applicable mandatory law gives you the right to bring proceedings elsewhere.",
+      "To the extent permitted by applicable law, you and t54 Labs each waive any right to a jury trial, and any dispute will be brought only in an individual capacity and not as a plaintiff or class member in any purported class, collective, or representative proceeding. This paragraph does not apply where applicable law gives you a non-waivable right to participate in such proceedings.",
+    ],
+  },
+  {
+    heading: "Termination and survival",
+    paragraphs: [
+      "We may suspend or terminate your access to the hub, and we may discontinue the hub or any part of it, at any time, as described above.",
+      "The sections titled “Disclaimer of warranties,” “Limitation of liability,” “Indemnification,” “Intellectual property and trademarks,” “Governing law and dispute resolution,” and “General,” together with any other provision that by its nature should survive, will survive any termination or suspension of your access and any discontinuation of the hub.",
     ],
   },
   {
@@ -137,6 +149,7 @@ const SECTIONS = [
     paragraphs: [
       "If any provision of these Terms is found unenforceable, the remaining provisions will stay in full effect. Our failure to enforce any provision is not a waiver of it. You may not assign or transfer your rights or obligations under these Terms without our consent; we may assign ours to an affiliate or successor without notice or your consent.",
       "These Terms, together with our Privacy Policy and any notices applicable to the linked facilitator, SDKs and documentation, constitute the entire agreement between you and us regarding the hub and supersede any prior understandings. We are not liable for any failure or delay in performance caused by events beyond our reasonable control.",
+      "Our affiliates, officers, employees, contractors and agents are intended third-party beneficiaries of the “Disclaimer of warranties,” “Limitation of liability” and “Indemnification” sections and may enforce them. No other person or entity is a third-party beneficiary of these Terms.",
     ],
   },
 ];
