@@ -158,7 +158,6 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         <OverviewMetricsStrip
           volumes={data.volumeByAsset}
           fallbackXrp={data.totalVolumeXrp}
-          activeAgents={data.activeAgents ?? 0}
           totalTransactions={data.totalTransactions}
           totalMerchants={data.totalMerchants}
           totalResources={data.totalResources}

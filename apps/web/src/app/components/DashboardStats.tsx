@@ -9,26 +9,30 @@ type AssetVolume = { asset: string; total: number };
 export function OverviewMetricsStrip({
   volumes,
   fallbackXrp = 0,
-  activeAgents,
   totalTransactions,
   totalMerchants,
   totalResources,
 }: {
   volumes?: AssetVolume[];
   fallbackXrp?: number;
-  activeAgents: number;
   totalTransactions: number;
   totalMerchants: number;
   totalResources: number;
 }) {
-  const xrp = volumes?.find((v) => v.asset === "XRP")?.total ?? fallbackXrp;
-  const rlusd = volumes?.find((v) => v.asset === "RLUSD")?.total ?? 0;
+  // Canonicalize asset codes before matching — RLUSD arrives as its 40-hex
+  // currency code (524C555344…) on-chain, which formatCurrency decodes to "RLUSD".
+  const byAsset = new Map<string, number>();
+  for (const v of volumes ?? []) {
+    const name = formatCurrency(v.asset);
+    byAsset.set(name, (byAsset.get(name) ?? 0) + v.total);
+  }
+  const xrp = byAsset.get("XRP") ?? fallbackXrp;
+  const rlusd = byAsset.get("RLUSD") ?? 0;
   return (
     <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
-        <MetricCell label="Active agents" value={activeAgents} />
         <MetricCell label="Transactions" value={totalTransactions} />
         <MetricCell label="Merchants" value={totalMerchants} />
         <MetricCell label="Resources" value={totalResources} />
