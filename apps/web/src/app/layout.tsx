@@ -89,7 +89,7 @@ export default function RootLayout({
             <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
               <Link href="/terms" className="hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
               <Link href="/privacy" className="hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
-              <a href="https://github.com/coinbase/x402" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
+              <a href="https://x402.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
               <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
               <a href="https://x.com/t54ai" target="_blank" rel="noreferrer" aria-label="t54 on X" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">

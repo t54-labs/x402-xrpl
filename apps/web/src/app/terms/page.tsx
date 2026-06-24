@@ -128,8 +128,8 @@ const SECTIONS = [
   {
     heading: "Governing law and dispute resolution",
     paragraphs: [
-      "These Terms, and any dispute arising out of or relating to them or to your use of the hub, are governed by the laws of [Governing-law jurisdiction], without regard to its conflict-of-laws rules.",
-      "Before bringing any formal proceeding, you agree to first contact us at support@t54.ai and attempt in good faith to resolve the dispute informally. If it cannot be resolved within a reasonable period, the dispute will be subject to the exclusive jurisdiction of the courts of [Governing-law jurisdiction], except where applicable mandatory law gives you the right to bring proceedings elsewhere.",
+      "These Terms, and any dispute arising out of or relating to them or to your use of the hub, are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws rules.",
+      "Before bringing any formal proceeding, you agree to first contact us at support@t54.ai and attempt in good faith to resolve the dispute informally. If it cannot be resolved within a reasonable period, the dispute will be subject to the exclusive jurisdiction of the courts of the State of Delaware, United States, except where applicable mandatory law gives you the right to bring proceedings elsewhere.",
     ],
   },
   {
@@ -147,7 +147,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms & Conditions"
       lastUpdated="June 24, 2026"
-      intro={"XRPL AI is an ecosystem hub at xrpl-ai.org that catalogs x402-enabled, agent-payable services on the XRP Ledger and displays public, on-chain settlement data from XRPL mainnet. The hub is built and operated by [t54 Labs legal entity] (\"t54 Labs,\" \"we,\" \"us,\" or \"our\"). These Terms & Conditions (\"Terms\") govern your access to and use of the website and the informational features it provides. By accessing or using the hub, you agree to be bound by these Terms; if you do not agree, do not use the hub."}
+      intro={"XRPL AI is an ecosystem hub at xrpl-ai.org that catalogs x402-enabled, agent-payable services on the XRP Ledger and displays public, on-chain settlement data from XRPL mainnet. The hub is built and operated by T54 Labs Inc. (\"t54 Labs,\" \"we,\" \"us,\" or \"our\"). These Terms & Conditions (\"Terms\") govern your access to and use of the website and the informational features it provides. By accessing or using the hub, you agree to be bound by these Terms; if you do not agree, do not use the hub."}
       sections={SECTIONS}
       contact={"Questions about these Terms can be sent to support@t54.ai; for privacy or data requests, contact privacy@t54.ai."}
     />
