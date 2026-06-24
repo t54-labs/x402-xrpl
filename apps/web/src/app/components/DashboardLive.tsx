@@ -131,6 +131,17 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       ) : null}
       <Hero />
 
+      {/* Mastercard Verifiable Intent — the agent-authority layer integrated across the hub */}
+      <div className="animate-fade-up flex items-start sm:items-center gap-4 dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] px-5 py-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logos/mastercard.svg" alt="Mastercard" className="h-7 w-auto shrink-0 mt-0.5 sm:mt-0" />
+        <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+          <span className="text-[var(--paper)] font-medium">Verifiable Intent, built in.</span> Every agent payment on the hub can carry
+          Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54&rsquo;s
+          X402 Secure before it settles. <span className="text-[var(--paper-mute)]">Ripple &amp; t54 Labs are named partners.</span>
+        </p>
+      </div>
+
       <div className="flex items-center justify-end gap-2 animate-fade-up pt-2 flex-wrap">
         <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
           {([["7d", "7D"], ["30d", "30D"], ["all", "All time"]] as const).map(([v, label]) => (

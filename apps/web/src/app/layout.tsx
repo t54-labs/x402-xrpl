@@ -91,6 +91,11 @@ export default function RootLayout({
               <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
             </div>
           </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-5">
+            <p className="text-[10px] text-[var(--text-muted)] leading-relaxed max-w-3xl">
+              Mastercard, Mastercard Agent Pay, Agent Pay for Machines and Verifiable Intent are trademarks of Mastercard International Incorporated. References reflect publicly announced partner relationships and do not imply endorsement or a formal or exclusive partnership beyond the named-partner role in Agent Pay for Machines.
+            </p>
+          </div>
         </footer>
       </body>
     </html>

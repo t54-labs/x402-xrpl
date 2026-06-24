@@ -20,29 +20,29 @@ function PartLabel({ n, total, title }: { n: string; total: string; title: strin
 
 const WHY = [
   {
-    stat: "3–5s",
-    title: "Settlement is final, in seconds",
-    body: "An XRPL Payment finalizes on-ledger in a few seconds — not a pending authorization, not a T+2 batch. The agent calls, pays, and the money is actually settled before your response comes back. Done on-ledger, with no reconciliation to chase.",
+    spec: "Native DEX · auto-bridging",
+    title: "One Payment, any asset",
+    body: "An agent pays in XRP and the merchant lands RLUSD — atomically, routed through XRPL's in-protocol DEX. No swap, no router, no bridge, no half-finished state. General-purpose chains need a separate approve → swap → pay, each able to fail on its own.",
   },
   {
-    stat: "<$0.001",
-    title: "Fees small enough for per-call pricing",
-    body: "Network fees are a fraction of a cent, so charging $0.001–$0.02 per request is economical. Machine commerce is a million tiny payments; XRPL is one of the few rails where that math works.",
+    spec: "XLS-70 / XLS-80",
+    title: "Know-Your-Agent, in-protocol",
+    body: "On-ledger Credentials + Permissioned Domains let a counterparty verify an issuer-signed attestation (KYC-verified, non-sanctioned) on the ledger — KYA enforced at settlement rather than in middleware, and without ever exposing the PII behind it.",
   },
   {
-    stat: "RLUSD",
-    title: "An institution-grade unit of account",
-    body: "Agents settle in RLUSD — Ripple's regulated, fully-reserved stablecoin native to XRPL — or in XRP. A stable, on-ledger dollar means your pricing and your books don't move while the agent transacts.",
+    spec: "DepositAuth · Freeze / Clawback",
+    title: "Allowlisting and issuer recourse",
+    body: "Receivers can accept only credentialed senders (DepositAuth / DepositPreauth); issuers of regulated tokens can Freeze or Claw back a disputed or compromised balance (XLS-39). Recourse without a custodian — while base-layer XRP stays final.",
   },
   {
-    stat: "0 keys",
-    title: "Payer-signed and non-custodial",
-    body: "The agent signs its own Payment with its own key. The t54 facilitator only verifies the signature and submits it to XRPL — it never holds funds and issues no API keys. Your keys, your money, the whole way through.",
+    spec: "Escrow · Payment Channels",
+    title: "Programmable settlement",
+    body: "Lock pay-on-delivery Escrow that releases on a proof or a deadline, or stream per-call micropayments over a Payment Channel that settles once on-ledger. Conditional, high-frequency machine payments — with no escrow contract to write or audit.",
   },
   {
-    stat: "L1–L3",
-    title: "Verifiable Intent is built in",
-    body: "Every payment can carry a know-your-agent credential (L1), an owner→agent delegation (L2), and the agent's signature (L3) — checked against a per-payment risk policy before settlement. The control layer autonomous spend actually needs.",
+    spec: "Mastercard Verifiable Intent",
+    title: "Authority is provable, before the money moves",
+    body: "X402 Secure implements a Verifiable Intent chain — a Know-Your-Agent credential, an owner-signed delegation with spend limits, and a per-payment agent signature — checked against your risk policy before settlement. Verifiable Intent is Mastercard's framework (Agent Pay for Machines); Ripple and t54 Labs are named partners.",
   },
 ];
 
@@ -119,12 +119,16 @@ export default function BuildPage() {
       <section className="mt-20 animate-fade-up" style={{ animationDelay: "60ms" }}>
         <PartLabel n="01" total="04" title="Why XRPL" />
         <h2 className="mt-7 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] max-w-2xl">
-          Agents need a rail built for tiny, final, programmable payments.
+          What general-purpose chains can&rsquo;t give an agent — built into the protocol.
         </h2>
+        <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+          &ldquo;Fast and cheap&rdquo; is table stakes. XRPL&rsquo;s edge for agent commerce is institutional and
+          payment-native: identity, recourse, and conditional settlement live in the ledger, not in a contract you have to trust.
+        </p>
         <div className="mt-10 space-y-px">
           {WHY.map((w) => (
-            <div key={w.title} className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-2 sm:gap-8 py-6 border-t border-[var(--rule)]">
-              <div className="font-mono tabular-nums text-3xl sm:text-4xl text-[var(--paper)] leading-none tracking-tight">{w.stat}</div>
+            <div key={w.title} className="grid grid-cols-1 sm:grid-cols-[210px_1fr] gap-1.5 sm:gap-8 py-6 border-t border-[var(--rule)]">
+              <div className="text-[11px] font-plek uppercase tracking-[0.16em] text-[var(--brand-blue)] sm:pt-1.5">{w.spec}</div>
               <div>
                 <h3 className="text-base font-semibold text-[var(--text-primary)]">{w.title}</h3>
                 <p className="mt-2 text-[14px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">{w.body}</p>
