@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { DotField } from "../../components/BrandDots";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
@@ -61,17 +61,56 @@ export default async function AddressPage({ params, searchParams }: PageProps) {
   return <BuyerView address={address} data={data} />;
 }
 
+
 function VolumeDisplay({ volumes, fallback }: { volumes?: AssetVolume[]; fallback?: number }) {
-  if (volumes && volumes.length > 0) {
+  const items = volumes && volumes.length > 0 ? volumes : [{ asset: "XRP", total: fallback ?? 0 }];
+  return (
+    <div className="flex flex-col gap-0.5">
+      {items.map((v) => (
+        <p key={v.asset} className="text-2xl font-mono tabular-nums leading-none text-[var(--paper)]">
+          {v.total.toFixed(v.total > 0 && v.total < 1 ? 4 : 2)}
+          <span className="ml-1.5 text-[11px] font-plek uppercase tracking-[0.16em] text-[var(--paper-mute)]">{formatCurrency(v.asset)}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function StatCell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-plek uppercase tracking-[0.2em] text-[var(--paper-mute)]">{label}</p>
+      <div className="mt-2">{children}</div>
+    </div>
+  );
+}
+
+function Avatar({ logoUrl, name, accent }: { logoUrl?: string | null; name?: string | null; accent: "blue" | "coral" }) {
+  if (logoUrl) {
     return (
-      <div className="flex flex-col gap-0.5">
-        {volumes.map((v) => (
-          <p key={v.asset} className="text-2xl font-light text-white">{v.total.toFixed(v.total < 1 ? 4 : 2)} <span className="text-sm text-gray-500">{formatCurrency(v.asset)}</span></p>
-        ))}
-      </div>
+      <span className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl} alt={name || ""} className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+      </span>
     );
   }
-  return <p className="text-2xl font-light text-white">{(fallback ?? 0).toFixed(2)} <span className="text-sm text-gray-500">XRP</span></p>;
+  const tint =
+    accent === "coral"
+      ? "border-[rgba(201,70,46,0.25)] bg-[rgba(201,70,46,0.08)] text-[var(--t54-coral)]"
+      : "border-[rgba(0,140,255,0.2)] bg-[rgba(0,140,255,0.08)] text-[var(--brand-blue)]";
+  return (
+    <span className={`flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl border text-3xl font-medium ${tint}`}>
+      {(name?.[0] || (accent === "coral" ? "B" : "M")).toUpperCase()}
+    </span>
+  );
+}
+
+function hostOf(u: string) {
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
 }
 
 function MerchantView({ address, data }: { address: string; data: AddressResponse }) {
@@ -80,54 +119,52 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <Image src="/icon.png" alt="" aria-hidden="true" width={80} height={80} className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center overflow-hidden">
-            {merchant.logoUrl ? (
-              <Image src={merchant.logoUrl} alt={merchant.name || "Merchant"} width={80} height={80} className="object-cover w-full h-full" />
-            ) : (
-              <span className="text-3xl font-light text-cyan-400">{merchant.name ? merchant.name.charAt(0).toUpperCase() : "M"}</span>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-light text-white tracking-tight">{merchant.name || "Unknown Merchant"}</h1>
-              <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Merchant</span>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="font-mono text-sm text-cyan-400 bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20">{address}</span>
+      <div className="dashboard-panel relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8">
+        <DotField className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block text-[var(--paper-faint)] opacity-[0.1]" cols={10} rows={4} />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 sm:gap-6">
+          <Avatar logoUrl={merchant.logoUrl} name={merchant.name} accent="blue" />
+          <div className="min-w-0">
+            <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
+            <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">{merchant.name || "Unknown merchant"}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              <span className="font-mono text-[12px] text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] px-3 py-1 rounded-md border border-[rgba(0,140,255,0.12)] break-all">{address}</span>
               <CopyButton text={address} />
-              <a href={`${getExplorerUrl()}/accounts/${address}`} target="_blank" rel="noreferrer" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">XRPL Explorer ↗</a>
+              {merchant.website ? (
+                <a href={merchant.website} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">Website &#8599;</a>
+              ) : null}
+              <a href={`${getExplorerUrl()}/accounts/${address}`} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">XRPL Explorer &#8599;</a>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-10 pt-8 border-t border-white/5">
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Volume</p><div className="mt-1"><VolumeDisplay volumes={data.volumeByAsset} fallback={data.totalVolume} /></div></div>
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Payments Received</p><p className="text-2xl font-light text-white mt-1">{totalTxCount}</p></div>
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Active APIs</p><p className="text-2xl font-light text-white mt-1">{merchant.resources.length}</p></div>
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Joined</p><p className="text-sm font-medium text-gray-300 mt-2">{new Date(merchant.createdAt).toLocaleDateString()}</p></div>
+        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-7 border-t border-[var(--rule)]">
+          <StatCell label="Total volume"><VolumeDisplay volumes={data.volumeByAsset} fallback={data.totalVolume} /></StatCell>
+          <StatCell label="Payments received"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{totalTxCount.toLocaleString()}</p></StatCell>
+          <StatCell label="Active APIs"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{merchant.resources.length}</p></StatCell>
+          <StatCell label="Joined"><p className="mt-1 text-sm text-[var(--text-secondary)]">{new Date(merchant.createdAt).toLocaleDateString()}</p></StatCell>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-          <h2 className="text-xl font-light text-white">Offered APIs</h2>
-          <div className="space-y-4">
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-4">
+          <h2 className="text-lg font-medium tracking-tight text-[var(--paper)]">Offered APIs</h2>
+          <div className="space-y-3">
             {merchant.resources.map((res) => (
-              <div key={res.id} className="ui-card bg-[#131518] rounded-xl border border-white/5 p-5 hover:border-cyan-500/30 transition-colors">
-                <h3 className="font-medium text-gray-200 truncate">{res.name || "Unnamed Resource"}</h3>
-                <p className="text-xs text-gray-500 mt-1 font-mono truncate" title={res.url}>{res.url}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex flex-col"><span className="text-[10px] text-gray-500 uppercase tracking-wider">Price</span><span className="text-sm text-cyan-400 font-medium">{res.priceAmount} {formatCurrency(res.priceAsset)}</span></div>
-                  <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider font-semibold ${res.isActive ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>{res.isActive ? "Active" : "Inactive"}</span>
+              <div key={res.id} className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">{res.name || "Unnamed resource"}</h3>
+                <p className="mt-1 text-[11px] font-mono text-[var(--text-muted)] truncate" title={res.url}>{res.url}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="font-mono text-[13px] text-[var(--brand-blue)]">{res.priceAmount} {formatCurrency(res.priceAsset)}</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border ${res.isActive ? "text-emerald-400 bg-emerald-500/8 border-emerald-500/15" : "text-[var(--text-muted)] bg-[rgba(255,255,255,0.04)] border-[var(--border)]"}`}>{res.isActive ? "Active" : "Inactive"}</span>
                 </div>
               </div>
             ))}
-            {merchant.resources.length === 0 && <div className="ui-card bg-[#131518] rounded-xl border border-white/5 p-8 text-center text-gray-500 text-sm">No resources registered for this merchant.</div>}
+            {merchant.resources.length === 0 && (
+              <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">No resources registered for this merchant.</div>
+            )}
           </div>
         </div>
-        <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-xl font-light text-white">Recent Payments</h2>
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-lg font-medium tracking-tight text-[var(--paper)]">Recent payments</h2>
           <TxTable transactions={data.transactions} perspective="merchant" page={data.pagination.page} totalPages={data.pagination.totalPages} basePath={`/address/${address}`} />
         </div>
       </div>
@@ -142,30 +179,29 @@ function BuyerView({ address, data }: { address: string; data: AddressResponse }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 p-8 relative overflow-hidden shadow-2xl">
-        <Image src="/icon.png" alt="" aria-hidden="true" width={80} height={80} className="absolute top-8 right-8 h-20 w-20 object-contain opacity-[0.06] pointer-events-none" />
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-purple-400/10 border border-purple-400/20 flex items-center justify-center"><span className="text-3xl font-light text-purple-400">B</span></div>
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-light text-white tracking-tight">Buyer Address</h1>
-              <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">Buyer</span>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="font-mono text-sm text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full border border-purple-400/20">{address}</span>
+      <div className="dashboard-panel relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8">
+        <DotField className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block text-[var(--paper-faint)] opacity-[0.1]" cols={10} rows={4} />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 sm:gap-6">
+          <Avatar accent="coral" name={null} />
+          <div className="min-w-0">
+            <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Buyer</span>
+            <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">Buyer address</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2.5">
+              <span className="font-mono text-[12px] text-[var(--t54-coral)] bg-[rgba(201,70,46,0.07)] px-3 py-1 rounded-md border border-[rgba(201,70,46,0.16)] break-all">{address}</span>
               <CopyButton text={address} />
-              <a href={`${getExplorerUrl()}/accounts/${address}`} target="_blank" rel="noreferrer" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">XRPL Explorer ↗</a>
+              <a href={`${getExplorerUrl()}/accounts/${address}`} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">XRPL Explorer &#8599;</a>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-white/5">
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Total Spent</p><div className="mt-1"><VolumeDisplay volumes={data.spentByAsset} fallback={totalSpent} /></div></div>
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Payments Made</p><p className="text-2xl font-light text-white mt-1">{txCount}</p></div>
-          <div><p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Merchants Used</p><p className="text-2xl font-light text-white mt-1">{uniqueMerchants}</p></div>
+        <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 gap-6 mt-8 pt-7 border-t border-[var(--rule)]">
+          <StatCell label="Total spent"><VolumeDisplay volumes={data.spentByAsset} fallback={totalSpent} /></StatCell>
+          <StatCell label="Payments made"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{txCount.toLocaleString()}</p></StatCell>
+          <StatCell label="Merchants used"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{uniqueMerchants}</p></StatCell>
         </div>
       </div>
-      <div className="space-y-6">
-        <h2 className="text-xl font-light text-white">Payment History</h2>
+
+      <div className="space-y-4">
+        <h2 className="text-lg font-medium tracking-tight text-[var(--paper)]">Payment history</h2>
         <TxTable transactions={data.transactions} perspective="buyer" page={data.pagination.page} totalPages={data.pagination.totalPages} basePath={`/address/${address}`} />
       </div>
     </div>
@@ -177,42 +213,55 @@ function TxTable({ transactions, perspective, page, totalPages, basePath }: {
 }) {
   const counterLabel = perspective === "merchant" ? "Buyer" : "Merchant";
   return (
-    <div className="table-shell bg-[#131518] rounded-xl border border-white/5 overflow-hidden">
+    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left whitespace-nowrap">
-          <thead className="bg-[#181a1e] border-b border-white/5 !rounded-none">
-            <tr className="!rounded-none">
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">Hash</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">{counterLabel}</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest !rounded-none">Resource</th>
-              <th className="px-6 py-4 text-[10px] font-semibold text-gray-500 uppercase tracking-widest text-right !rounded-none">Value</th>
+          <thead className="border-b border-[var(--border)]">
+            <tr>
+              <th className="px-5 py-3 text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">Hash</th>
+              <th className="px-5 py-3 text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">{counterLabel}</th>
+              <th className="px-5 py-3 text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">Resource</th>
+              <th className="px-5 py-3 text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)] text-right">Value</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-[var(--border)]">
             {transactions.map((tx) => {
               const counterAddr = perspective === "merchant" ? tx.buyerAddress : tx.merchantAddr;
               const counterName = perspective === "buyer" ? tx.merchant?.name : null;
               return (
-                <tr key={tx.hash} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300">{tx.hash.substring(0, 10)}...</Link>
-                    <div className="text-[10px] text-gray-500 mt-1"><RelativeTime date={tx.timestamp} /></div>
+                <tr key={tx.hash} className="transition-colors hover:bg-[rgba(255,255,255,0.02)]">
+                  <td className="px-5 py-3.5">
+                    <Link href={`/tx/${tx.hash}`} className="font-mono text-[13px] text-[var(--brand-blue)] hover:underline">{tx.hash.substring(0, 10)}&#8230;</Link>
+                    <div className="mt-0.5 text-[10px] text-[var(--text-muted)]"><RelativeTime date={tx.timestamp} /></div>
                   </td>
-                  <td className="px-6 py-4"><Link href={`/address/${counterAddr}`} className="font-mono text-sm text-gray-400 hover:text-cyan-400 transition-colors">{counterName || `${counterAddr.substring(0, 12)}...`}</Link></td>
-                  <td className="px-6 py-4 max-w-[200px]">{tx.resource ? <div className="text-xs text-gray-300 font-mono truncate" title={tx.resource.url}>{tx.resource.url}</div> : <span className="text-xs text-gray-600 italic">Unknown</span>}</td>
-                  <td className="px-6 py-4 text-sm text-right"><span className="font-medium text-white">{tx.amount}</span><span className="text-gray-500 text-xs ml-1">{formatCurrency(tx.asset)}</span></td>
+                  <td className="px-5 py-3.5">
+                    <Link href={`/address/${counterAddr}`} className="font-mono text-[13px] text-[var(--text-secondary)] transition-colors hover:text-[var(--brand-blue)]">{counterName || `${counterAddr.substring(0, 12)}…`}</Link>
+                  </td>
+                  <td className="px-5 py-3.5 max-w-[220px]">
+                    {tx.resource ? (
+                      <span className="block text-[12px] font-mono text-[var(--text-secondary)] truncate" title={tx.resource.url}>{hostOf(tx.resource.url)}</span>
+                    ) : (
+                      <span className="text-[12px] italic text-[var(--text-muted)]">Unknown</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <span className="font-mono tabular-nums text-[13px] text-[var(--paper)]">{tx.amount}</span>
+                    <span className="ml-1 text-[11px] text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
+                  </td>
                 </tr>
               );
             })}
-            {transactions.length === 0 && <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500 text-sm">No transactions recorded yet.</td></tr>}
+            {transactions.length === 0 && (
+              <tr><td colSpan={4} className="px-5 py-12 text-center text-sm text-[var(--text-muted)]">No transactions recorded yet.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 p-4 border-t border-white/5">
-          {page > 1 && <Link href={`${basePath}?page=${page - 1}`} className="ui-control px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">&larr; Previous</Link>}
-          <span className="text-sm text-gray-500 px-4">Page {page} of {totalPages}</span>
-          {page < totalPages && <Link href={`${basePath}?page=${page + 1}`} className="ui-control px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all">Next &rarr;</Link>}
+        <div className="flex items-center justify-center gap-3 p-4 border-t border-[var(--border)]">
+          {page > 1 && <Link href={`${basePath}?page=${page - 1}`} className="ui-control px-3.5 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors">&larr; Prev</Link>}
+          <span className="text-[12px] text-[var(--text-muted)]">Page {page} of {totalPages}</span>
+          {page < totalPages && <Link href={`${basePath}?page=${page + 1}`} className="ui-control px-3.5 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors">Next &rarr;</Link>}
         </div>
       )}
     </div>

@@ -124,7 +124,17 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
                     href={`/address/${m.address}`}
                     className="group flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 transition-colors hover:bg-[rgba(255,255,255,0.03)]"
                   >
-                    <span className="w-7 shrink-0 text-right font-mono text-[12px] text-[var(--paper-faint)]">{rank}</span>
+                    <span className="w-6 shrink-0 text-right font-mono text-[12px] text-[var(--paper-faint)]">{rank}</span>
+                    {m.logoUrl ? (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[rgba(0,0,0,0.08)] bg-white">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={m.logoUrl} alt="" className="h-5 w-5 object-contain" />
+                      </span>
+                    ) : (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[rgba(255,255,255,0.03)]">
+                        <span className="h-1 w-1 rounded-full bg-[var(--paper-faint)]" />
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--paper)]">
                         {m.name || shortAddr(m.address)}
