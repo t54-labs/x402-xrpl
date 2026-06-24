@@ -151,7 +151,6 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
           fallbackXrp={data.totalVolumeXrp}
           totalTransactions={data.totalTransactions}
           totalMerchants={data.totalMerchants}
-          totalResources={data.totalResources}
         />
       </div>
 

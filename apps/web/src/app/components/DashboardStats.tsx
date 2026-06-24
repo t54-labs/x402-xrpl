@@ -11,13 +11,11 @@ export function OverviewMetricsStrip({
   fallbackXrp = 0,
   totalTransactions,
   totalMerchants,
-  totalResources,
 }: {
   volumes?: AssetVolume[];
   fallbackXrp?: number;
   totalTransactions: number;
   totalMerchants: number;
-  totalResources: number;
 }) {
   // Canonicalize asset codes before matching — RLUSD arrives as its 40-hex
   // currency code (524C555344…) on-chain, which formatCurrency decodes to "RLUSD".
@@ -30,12 +28,11 @@ export function OverviewMetricsStrip({
   const rlusd = byAsset.get("RLUSD") ?? 0;
   return (
     <div className="dashboard-panel border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
         <MetricCell label="Transactions" value={totalTransactions} />
         <MetricCell label="Merchants" value={totalMerchants} />
-        <MetricCell label="Resources" value={totalResources} />
       </div>
     </div>
   );

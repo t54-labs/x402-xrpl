@@ -145,7 +145,7 @@ const SECTIONS = [
     heading: "Governing law",
     paragraphs: [
       "This Privacy Policy and any matter relating to it are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws rules, except where mandatory local data protection laws grant you rights that cannot be overridden.",
-      "The data controller responsible for the limited personal data described in this policy is T54 Labs Inc..",
+      "The data controller responsible for the limited personal data described in this policy is T54 Labs Inc., with its principal place of business at 1825 S Grant St, San Mateo, CA 94402, USA..",
     ],
   },
 ];
