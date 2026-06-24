@@ -81,14 +81,114 @@ export function Halftone({
   );
 }
 
-// XRPL × t54 — the XRP Ledger "X" mark rendered in t54 dots. The X is two
-// curved ribbons crossing; we fill that silhouette with a halftone dot field
-// (size-graded toward each ribbon's centerline, sparse coral accents) and let
-// the pulse ripple outward from the crossing. Deterministic (SSR-safe).
+// --- XRP Ledger "X" mark, reconstructed from the official logo outline ---
+// (viewBox 0 0 512 424). The mark is two horizontally-ended curved bands: a top
+// valley that dips to the center and a bottom caret that rises to it. We sample
+// the exact bezier/arc outline into polygons so the dot fill lands precisely
+// inside the real silhouette — horizontal tips and all.
+type Pt = [number, number];
+
+function cubicPts(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: number): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    const mt = 1 - t;
+    out.push([
+      mt * mt * mt * p0[0] + 3 * mt * mt * t * p1[0] + 3 * mt * t * t * p2[0] + t * t * t * p3[0],
+      mt * mt * mt * p0[1] + 3 * mt * mt * t * p1[1] + 3 * mt * t * t * p2[1] + t * t * t * p3[1],
+    ]);
+  }
+  return out;
+}
+
+// SVG elliptical-arc (endpoint param) → sampled points, per the W3C conversion.
+function arcPts(x1: number, y1: number, rx: number, ry: number, sweep: number, x2: number, y2: number, n: number): Pt[] {
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const x1p = dx;
+  const y1p = dy;
+  let rx2 = rx * rx;
+  let ry2 = ry * ry;
+  const x1p2 = x1p * x1p;
+  const y1p2 = y1p * y1p;
+  const lam = x1p2 / rx2 + y1p2 / ry2;
+  if (lam > 1) {
+    const s = Math.sqrt(lam);
+    rx *= s;
+    ry *= s;
+    rx2 = rx * rx;
+    ry2 = ry * ry;
+  }
+  let num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2;
+  if (num < 0) num = 0;
+  const co = (0 !== sweep ? -1 : 1) * Math.sqrt(num / (rx2 * y1p2 + ry2 * x1p2));
+  const cxp = (co * rx * y1p) / ry;
+  const cyp = (-co * ry * x1p) / rx;
+  const cx = cxp + (x1 + x2) / 2;
+  const cy = cyp + (y1 + y2) / 2;
+  const ang = (ux: number, uy: number, vx: number, vy: number) => {
+    const d = ux * vx + uy * vy;
+    const l = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+    let a = Math.acos(Math.max(-1, Math.min(1, d / l)));
+    if (ux * vy - uy * vx < 0) a = -a;
+    return a;
+  };
+  const ux = (x1p - cxp) / rx;
+  const uy = (y1p - cyp) / ry;
+  const th1 = ang(1, 0, ux, uy);
+  let dth = ang(ux, uy, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+  if (!sweep && dth > 0) dth -= 2 * Math.PI;
+  if (sweep && dth < 0) dth += 2 * Math.PI;
+  const out: Pt[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = th1 + dth * (i / n);
+    out.push([rx * Math.cos(t) + cx, ry * Math.sin(t) + cy]);
+  }
+  return out;
+}
+
+const XRP_TOP: Pt[] = [
+  [437, 0], [511, 0], [357, 152.48],
+  ...cubicPts([357, 152.48], [301.23, 207.67], [210.81, 207.67], [155, 152.48], 16),
+  [0.94, 0], [75, 0], [192, 115.83],
+  ...arcPts(192, 115.83, 91.11, 91.11, 0, 319.91, 115.83, 16),
+];
+const XRP_BOTTOM: Pt[] = [
+  [74.05, 424], [0, 424], [155, 270.58],
+  ...cubicPts([155, 270.58], [210.77, 215.39], [301.19, 215.39], [357, 270.58], 16),
+  [512, 424], [438, 424], [320, 307.23],
+  ...arcPts(320, 307.23, 91.11, 91.11, 0, 192.09, 307.23, 16),
+];
+
+function inPoly(x: number, y: number, poly: Pt[]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function edgeDist(x: number, y: number, poly: Pt[]): number {
+  let md = Infinity;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const x1 = poly[j][0], y1 = poly[j][1], x2 = poly[i][0], y2 = poly[i][1];
+    const ax = x2 - x1, ay = y2 - y1;
+    const l2 = ax * ax + ay * ay;
+    let t = l2 ? ((x - x1) * ax + (y - y1) * ay) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const d = Math.hypot(x - (x1 + t * ax), y - (y1 + t * ay));
+    if (d < md) md = d;
+  }
+  return md;
+}
+
+// XRPL × t54 — the official XRP "X" silhouette rendered as a t54 dot field:
+// halftone (dots grow toward each band's spine), sparse coral accents, and a
+// pulse rippling out from the center waist. Deterministic (SSR-safe).
 export function XrplDotMark({
   className = "",
-  size = 620,
-  gap = 3.4,
+  size = 720,
+  gap = 13,
   animated = true,
 }: {
   className?: string;
@@ -96,48 +196,26 @@ export function XrplDotMark({
   gap?: number;
   animated?: boolean;
 }) {
-  const VB = 120;
-  const cx = 60;
-  const cy = 60;
-  // two S-curved ribbons (top-left↔bottom-right, top-right↔bottom-left)
-  const ribbonA = [
-    [16, 17], [30, 31], [44, 46], [54, 56], [60, 60], [66, 64], [76, 74], [90, 89], [104, 103],
-  ];
-  const ribbonB = [
-    [104, 17], [90, 31], [76, 46], [66, 56], [60, 60], [54, 64], [44, 74], [30, 89], [16, 103],
-  ];
-  const half = 7.6; // ribbon half-width (VB units)
-  const segs: number[][] = [];
-  for (const rb of [ribbonA, ribbonB]) {
-    for (let i = 0; i < rb.length - 1; i++) segs.push([rb[i][0], rb[i][1], rb[i + 1][0], rb[i + 1][1]]);
-  }
-  const distToSeg = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const l2 = dx * dx + dy * dy;
-    let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-  };
-
+  const W = 512;
+  const H = 424;
+  const cx = 256;
+  const cy = 212;
+  const maxR = Math.hypot(cx, cy);
   const dots: React.ReactElement[] = [];
   let k = 0;
-  const maxR = Math.hypot(VB / 2, VB / 2);
-  for (let y = gap / 2; y < VB; y += gap) {
-    for (let x = gap / 2; x < VB; x += gap) {
-      let md = Infinity;
-      for (const s of segs) {
-        const d = distToSeg(x, y, s[0], s[1], s[2], s[3]);
-        if (d < md) md = d;
-      }
-      if (md > half) continue;
-      const edge = 1 - md / half; // 1 at the centerline, 0 at the ribbon edge
-      const r = (0.55 + edge * 1.2).toFixed(2);
+  for (let y = gap / 2; y < H; y += gap) {
+    for (let x = gap / 2; x < W; x += gap) {
+      const top = inPoly(x, y, XRP_TOP);
+      const inside = top || inPoly(x, y, XRP_BOTTOM);
+      if (!inside) continue;
+      const ed = edgeDist(x, y, top ? XRP_TOP : XRP_BOTTOM);
+      const t = Math.min(ed / 24, 1); // 0 at the band edge → 1 deep on the spine
+      const r = (1.7 + t * 2.6).toFixed(2);
       const ix = Math.round(x);
       const iy = Math.round(y);
-      const coral = edge > 0.35 && (ix * 7 + iy * 13) % 23 === 0;
+      const coral = ed > 11 && (ix * 7 + iy * 13) % 31 === 0;
       const dist = Math.hypot(x - cx, y - cy);
-      const delay = -((dist / maxR) * 2.1 + ((ix + iy) % 5) * 0.12).toFixed(2);
+      const delay = -((dist / maxR) * 2.0 + ((ix + iy) % 5) * 0.12).toFixed(2);
       dots.push(
         <circle
           key={k}
@@ -153,7 +231,14 @@ export function XrplDotMark({
     }
   }
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${VB} ${VB}`} fill="none" aria-hidden className={className}>
+    <svg
+      width={size}
+      height={Math.round((size * H) / W)}
+      viewBox={`0 0 ${W} ${H}`}
+      fill="none"
+      aria-hidden
+      className={className}
+    >
       {dots}
     </svg>
   );
