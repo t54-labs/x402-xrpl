@@ -152,7 +152,7 @@ export default function WhyXrplPage() {
               <span className="text-[var(--paper)]">Verifiable Intent</span> is Mastercard&rsquo;s framework for credentialed,
               consent-bound agent payments — introduced with Agent Pay for Machines (June 2026), co-developed with Google
               to work alongside Google&rsquo;s Agent Payments Protocol (AP2), and contributed into the FIDO Alliance for
-              standardization. <span className="text-[var(--paper)]">Ripple and t54 Labs are named partners.</span>
+              standardization.
             </p>
             <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-3xl">
               t54&rsquo;s X402 Secure implements a Verifiable Intent chain on XRPL — a Know-Your-Agent credential
