@@ -181,13 +181,13 @@ function Hero() {
       <Halftone animated size={480} cell={16} className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.6]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
-          <BrandDots count={3} className="shrink-0" /> institution-grade rails for agentic commerce
+          <BrandDots count={3} className="shrink-0" /> XRPL · the AI ecosystem hub
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
-          The live ledger of the <span className="text-[var(--t54-coral)]">agentic</span> economy on XRPL.
+          The trusted home for AI on <span className="text-[var(--t54-coral)]">XRPL</span>.
         </h1>
-        <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-md leading-relaxed">
-          See who&rsquo;s transacting. Build on the standard. Onboard your network.
+        <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-lg leading-relaxed">
+          Every agent, service, and tool of the XRP Ledger&rsquo;s AI ecosystem, in one place — with risk control built into every payment. The on-ramp institutions choose for agent commerce.
         </p>
         <div className="flex items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
