@@ -92,13 +92,13 @@ export default function WhyXrplPage() {
           The differentiator is the stack, not the coin.
         </h2>
         <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed">
-          Regulated RLUSD (NYDFS, BNY Mellon custody, monthly Deloitte attestation) settles natively here, alongside XRPL&rsquo;s own institutional primitives — escrow, multi-sig, DepositAuth, credentials — and the t54 facilitator never takes custody. RLUSD and USDC sit at the same regulatory tier; we anchor the claim to the rail, not to a &ldquo;only regulated stablecoin&rdquo; argument.
+          XRPL is an institution-grade, institution-secure rail. RLUSD and XRP settle natively, alongside XRPL&rsquo;s own institutional primitives — escrow, multi-sig, DepositAuth, on-chain credentials — and the t54 facilitator never takes custody. The differentiator isn&rsquo;t the coin; it&rsquo;s the whole stack agents settle on.
         </p>
         <div className="mt-8 flex items-center gap-5">
-          <Link href="/why-xrpl/compliance" className="ui-control px-5 py-2.5 bg-[var(--brand-blue)] text-white font-medium text-sm">
-            Compliance &amp; security
+          <Link href="/build" className="ui-control px-5 py-2.5 bg-[var(--brand-blue)] text-white font-medium text-sm">
+            Start building
           </Link>
-          <Link href="/build" className="text-sm text-[var(--text-secondary)] hover:text-[var(--paper)] transition-colors">Start building &rarr;</Link>
+          <Link href="/resources" className="text-sm text-[var(--text-secondary)] hover:text-[var(--paper)] transition-colors">Browse the toolkit &rarr;</Link>
         </div>
       </section>
     </div>

@@ -60,12 +60,12 @@ export default function MethodologyPage() {
           <p>Metrics are computed from an independent XRPL ledger index maintained by t54 — not re-published from a third-party explorer. Volume is summed by asset from each detected settlement; active agents are distinct buyer addresses; facilitators are distinct registered SourceTags seen on-chain.</p>
         </Section>
 
-        <Section n="04" label="By asset" title="No blended number, yet.">
-          <p>Headline volume is reported per asset (XRP and RLUSD), not as a single blended USD figure. A blended headline needs a price-normalization layer (an XRP daily price + an RLUSD ≈ $1 assumption) and is deliberately deferred until that layer ships and its assumptions can be stated here.</p>
+        <Section n="04" label="By asset" title="Reported per asset.">
+          <p>Headline volume is reported per asset (XRP and RLUSD), not as a single blended USD figure — each asset summed directly from on-chain settlements, with no price-normalization assumptions baked into the number.</p>
         </Section>
 
-        <Section n="05" label="Honesty" title="A first-mover scoreboard.">
-          <p>Agentic settlement on XRPL is early. We present it as a first-mover scoreboard with real, independently-indexed numbers and growth — never implying parity with larger stablecoin-settlement ecosystems. Figures shown in non-production environments may be illustrative seed data.</p>
+        <Section n="05" label="Scope" title="A first-mover scoreboard.">
+          <p>A first-mover scoreboard of real, independently-indexed XRPL settlement — XRP and RLUSD volume summed from on-chain activity, reported as it grows.</p>
         </Section>
       </div>
     </div>
