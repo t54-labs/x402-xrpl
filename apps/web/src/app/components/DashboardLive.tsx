@@ -184,7 +184,7 @@ function Hero() {
           <BrandDots count={3} className="shrink-0" /> XRPL · the AI ecosystem hub
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
-          The trusted home for AI on <span className="text-[var(--t54-coral)]">XRPL</span>.
+          The trusted home for AI on <span className="text-[var(--t54-coral)]">XRPL</span>
         </h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-lg leading-relaxed">
           Every agent, service, and tool of the XRP Ledger&rsquo;s AI ecosystem, in one place — with risk control built into every payment. The on-ramp institutions choose for agent commerce.

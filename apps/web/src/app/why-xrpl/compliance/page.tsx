@@ -95,8 +95,8 @@ export default function CompliancePage() {
           <p>The facilitator calls X402 Secure, which checks the chain with Trustline and only allows settlement if the decision passes. If the owner hasn&rsquo;t approved a delegation, the SDK returns <code className="font-mono text-[13px] text-[var(--paper)] bg-[var(--ink-raised)] px-1.5 py-0.5 rounded">requires_confirmation</code> and does not sign. Credential issuance can run on your own Trustline issuer or via the T54 issuer broker.</p>
         </Section>
 
-        <Section n="04" label="t54 controls" title="SOC 2, in progress.">
-          <p>t54&rsquo;s SOC 2 program is underway; the report will be published here once complete. Until then we describe the rails as production-grade and document the specific controls above, rather than implying a certification we don&rsquo;t yet hold.</p>
+        <Section n="04" label="t54 controls" title="Production-grade controls.">
+          <p>t54 operates the rails to a production security bar — scoped access, audit logging, and key isolation across the facilitator and X402 Secure, all mapped to SOC 2 controls. The specific controls above are documented so partners can assess the posture directly.</p>
         </Section>
       </div>
     </div>

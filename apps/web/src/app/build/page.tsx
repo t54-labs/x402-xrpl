@@ -22,7 +22,7 @@ const WHY = [
   {
     stat: "3–5s",
     title: "Settlement is final, in seconds",
-    body: "An XRPL Payment finalizes on-ledger in a few seconds — not a pending authorization, not a T+2 batch. The agent calls, pays, and the money is actually settled before your response comes back. No chargebacks, no reconciliation, no clawbacks.",
+    body: "An XRPL Payment finalizes on-ledger in a few seconds — not a pending authorization, not a T+2 batch. The agent calls, pays, and the money is actually settled before your response comes back. Done on-ledger, with no reconciliation to chase.",
   },
   {
     stat: "<$0.001",
@@ -110,7 +110,7 @@ export default function BuildPage() {
         </h1>
         <p className="mt-6 text-[16px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           x402 makes HTTP&nbsp;402 real: your server answers a request with a price, the agent signs an XRPL Payment,
-          and the t54 facilitator verifies and settles it on-ledger in seconds — no custody, no API keys, no chargebacks.
+          and the t54 facilitator verifies and settles it on-ledger in seconds — no custody, no API keys.
           Here&rsquo;s why XRPL is the rail for machine payments, and how to ship your first paid endpoint.
         </p>
       </header>
