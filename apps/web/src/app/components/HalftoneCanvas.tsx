@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Animated t54 halftone aperture. Same iris/lens dot layout as the static
 // <Halftone>, but drawn on a canvas with a requestAnimationFrame loop so every
 // dot can pulse (size + opacity) without the cost of hundreds of animated SVG
 // nodes. Two combined waves give it life: a radial ripple breathing outward
 // from the centre plus a slow angular shimmer rotating around the ring.
+//
+// Rendered client-only (after mount) so it never participates in SSR/hydration —
+// that keeps the effect's canvas ref stable even if the surrounding tree is
+// re-rendered during hydration recovery (otherwise the rAF loop ends up drawing
+// to a detached canvas and the visible one stays blank).
 export function HalftoneCanvas({
   className = "",
   size = 480,
@@ -17,8 +22,12 @@ export function HalftoneCanvas({
   cell?: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
+    if (!mounted) return;
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -70,7 +79,6 @@ export function HalftoneCanvas({
       const t = (ts - startTs) / 1000;
       ctx.clearRect(0, 0, size, size);
       for (const d of dots) {
-        // radial ripple outward + slow angular shimmer
         const wave = reduce
           ? 0
           : 0.66 * Math.sin(d.dist * 7.2 - t * 1.5) + 0.34 * Math.sin(d.angle * 4 + t * 0.8);
@@ -88,7 +96,9 @@ export function HalftoneCanvas({
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [size, cell]);
+  }, [mounted, size, cell]);
+
+  if (!mounted) return null;
 
   return (
     <canvas
