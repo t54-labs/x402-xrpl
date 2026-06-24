@@ -179,7 +179,7 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
 function Hero() {
   return (
     <div className="animate-fade-up relative grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
-      <XrplDotMark animated size={660} className="pointer-events-none absolute right-[-70px] top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.6]" />
+      <XrplDotMark animated size={720} className="pointer-events-none absolute right-[-20px] top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.7]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
           <BrandDots count={3} className="shrink-0" /> XRPL · the AI ecosystem hub
@@ -194,7 +194,7 @@ function Hero() {
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
         </div>
       </div>
-      <div className="dashboard-panel relative z-10 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+      <div className="dashboard-panel relative z-10 bg-[rgba(20,17,13,0.55)] backdrop-blur-[3px] border border-[var(--border)] overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)]" />
