@@ -38,7 +38,7 @@ export function OverviewMetricsStrip({
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--paper-mute)]">{children}</h3>;
+  return <h3 className="text-[10px] font-plek uppercase tracking-[0.2em] text-[var(--paper-mute)]">{children}</h3>;
 }
 
 function CurrencyCell({ label, value, asset }: { label: string; value: number; asset: string }) {
@@ -49,7 +49,7 @@ function CurrencyCell({ label, value, asset }: { label: string; value: number; a
         <span className="font-mono tabular-nums text-2xl sm:text-[28px] leading-none text-[var(--paper)]">
           <AnimatedNumber value={value} decimals={value > 0 && value < 1 ? 4 : 2} duration={2000} />
         </span>
-        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--paper-mute)]">{formatCurrency(asset)}</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">{formatCurrency(asset)}</span>
       </p>
     </div>
   );

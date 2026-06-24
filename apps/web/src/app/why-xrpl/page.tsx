@@ -52,7 +52,7 @@ export default function WhyXrplPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
       <header className="animate-fade-up max-w-4xl">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL</span>
         <h1 className="mt-6 text-5xl sm:text-7xl font-medium tracking-[-0.04em] leading-[0.98] text-[var(--paper)]">
           Verify before<br />you <span className="text-[var(--t54-coral)]">settle</span>.
         </h1>
@@ -72,11 +72,11 @@ export default function WhyXrplPage() {
             <div className={`lg:col-span-7 ${i % 2 ? "lg:order-2 lg:col-start-6" : ""}`}>
               <div className="flex items-baseline gap-3" style={{ justifyContent: i % 2 ? "flex-end" : "flex-start" }}>
                 <span className="font-mono tabular-nums text-6xl sm:text-8xl leading-[0.9] text-[var(--paper)] tracking-tight">{s.metric}</span>
-                <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-[var(--paper-mute)] pb-2">{s.unit}</span>
+                <span className="text-[11px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)] pb-2">{s.unit}</span>
               </div>
             </div>
             <div className={`lg:col-span-5 ${i % 2 ? "lg:order-1" : ""}`}>
-              <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-faint)]">Fig {s.fig}</span>
+              <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-faint)]">Fig {s.fig}</span>
               <h2 className="mt-2 text-2xl font-medium tracking-tight text-[var(--paper)]">{s.title}</h2>
               <p className="mt-3 text-[15px] text-[var(--text-secondary)] leading-relaxed">{s.body}</p>
             </div>

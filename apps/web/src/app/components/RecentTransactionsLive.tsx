@@ -129,7 +129,7 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
             <span className="font-mono tabular-nums text-[20px] leading-none text-[var(--paper)]">
               <AnimatedTransactionAmount amount={tx.amount} />
             </span>
-            <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] font-plek text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
           </Link>
           <span className="text-[10px] font-mono text-[var(--t54-coral)] truncate max-w-[72px] text-right">{merchantName}</span>
         </div>
@@ -140,12 +140,12 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
 
         <div className="mt-3 flex items-center justify-between">
           {sealed ? (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-[0.14em] text-[var(--paper)]" style={{ border: "1px solid var(--blue-28)" }}>
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-plek uppercase tracking-[0.14em] text-[var(--paper)]" style={{ border: "1px solid var(--blue-28)" }}>
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
               Sealed
             </span>
           ) : (
-            <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-[var(--paper-faint)]">{verified ? "Verified" : "Unverified"}</span>
+            <span className="text-[9px] font-plek uppercase tracking-[0.14em] text-[var(--paper-faint)]">{verified ? "Verified" : "Unverified"}</span>
           )}
           <span className="text-[10px] font-mono text-[var(--paper-faint)]"><RelativeTime date={tx.timestamp} /></span>
         </div>

@@ -19,8 +19,8 @@ function Section({ n, label, title, children }: { n: string; label: string; titl
   return (
     <section className="animate-fade-up grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-10">
       <div className="lg:col-span-3">
-        <div className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-faint)]">{n}</div>
-        <div className="mt-1 text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--paper-mute)]">{label}</div>
+        <div className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-faint)]">{n}</div>
+        <div className="mt-1 text-[11px] font-plek uppercase tracking-[0.2em] text-[var(--paper-mute)]">{label}</div>
       </div>
       <div className="lg:col-span-9">
         <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] leading-tight">{title}</h2>
@@ -56,7 +56,7 @@ export default function CompliancePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
       <header className="animate-fade-up max-w-3xl">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL · Compliance</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL · Compliance</span>
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">
           Trust, stated<br />precisely.
         </h1>

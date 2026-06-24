@@ -60,7 +60,7 @@ export default function ResourcesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
       <header className="animate-fade-up max-w-3xl">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Resources</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Resources</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
           The toolkit for<br />building on XRPL.
         </h1>
@@ -73,7 +73,7 @@ export default function ResourcesPage() {
       {GROUPS.map((group, gi) => (
         <section key={group.title} className="animate-fade-up space-y-4" style={{ animationDelay: `${gi * 60}ms` }}>
           <div>
-            <div className="text-[10px] font-mono uppercase tracking-[0.24em] text-[var(--paper-faint)] mb-2">{String(gi + 1).padStart(2, "0")} / {String(GROUPS.length).padStart(2, "0")}</div>
+            <div className="text-[10px] font-plek uppercase tracking-[0.24em] text-[var(--paper-faint)] mb-2">{String(gi + 1).padStart(2, "0")} / {String(GROUPS.length).padStart(2, "0")}</div>
             <h2 className="text-xl font-medium tracking-tight text-[var(--paper)]">{group.title}</h2>
             <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">{group.blurb}</p>
           </div>

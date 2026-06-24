@@ -10,7 +10,7 @@ export default function BuildPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-20">
       <header className="animate-fade-up max-w-3xl">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Build · first payment under 30 min</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Build · first payment under 30 min</span>
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">
           Watch it settle.<br />Then ship it.
         </h1>
@@ -31,7 +31,7 @@ export default function BuildPage() {
         ].map((c) => (
           <a key={c.label} href={c.href} target="_blank" rel="noreferrer" className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-all">
             <p className="text-sm font-semibold text-[var(--paper)]">{c.label}</p>
-            <p className="text-[11px] font-mono uppercase tracking-[0.14em] text-[var(--paper-mute)] mt-1.5">{c.note}</p>
+            <p className="text-[11px] font-plek uppercase tracking-[0.14em] text-[var(--paper-mute)] mt-1.5">{c.note}</p>
           </a>
         ))}
       </section>

@@ -66,7 +66,7 @@ export function BuildConsole() {
                   className="w-3.5 h-3.5 rounded-full border-2"
                   style={{ borderColor: i === 0 ? "var(--t54-coral)" : "var(--brand-blue)", background: "var(--ink-surface)" }}
                 />
-                <span className="mt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--paper-mute)] leading-tight">{s}</span>
+                <span className="mt-3 text-[10px] font-plek uppercase tracking-[0.14em] text-[var(--paper-mute)] leading-tight">{s}</span>
               </div>
             ))}
           </div>
@@ -80,7 +80,7 @@ export function BuildConsole() {
             <button
               key={k}
               onClick={() => setTab(k)}
-              className={`px-3 py-2 text-[11px] font-mono uppercase tracking-[0.14em] transition-colors border-b-2 -mb-px ${
+              className={`px-3 py-2 text-[11px] font-plek uppercase tracking-[0.14em] transition-colors border-b-2 -mb-px ${
                 tab === k
                   ? "text-[var(--paper)] border-[var(--brand-blue)]"
                   : "text-[var(--paper-mute)] border-transparent hover:text-[var(--paper)]"

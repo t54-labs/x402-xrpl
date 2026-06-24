@@ -19,7 +19,7 @@ export default function MerchantPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <header className="animate-fade-up max-w-3xl">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
           Real brands,<br />reachable by agents.
         </h1>

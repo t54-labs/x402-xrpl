@@ -3,6 +3,9 @@
 @theme {
   --font-sans: var(--font-poppins), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* t54 brand fonts — Youth Trial for titles/headings, Foundry Plek for labels/numbering. */
+  --font-youth: "Youth Trial", var(--font-poppins), sans-serif;
+  --font-plek: "Foundry Plek", var(--font-geist-mono), monospace;
   --color-cyan-300: #008CFF;
   --color-cyan-400: #008CFF;
   --color-cyan-500: #008CFF;
@@ -15,6 +18,52 @@
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* --- t54 brand fonts (self-hosted from public/fonts) --- */
+@font-face {
+  font-family: "Youth Trial";
+  src: url("/fonts/Youth-Thin-trial.otf") format("opentype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Youth Trial";
+  src: url("/fonts/Youth-Light-trial.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Youth Trial";
+  src: url("/fonts/Youth-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+/* Medium is the brand heading weight — also serve it for 500/600/700 so
+   font-medium / font-semibold / font-bold headings don't fall back to Black. */
+@font-face {
+  font-family: "Youth Trial";
+  src: url("/fonts/Youth-Medium.otf") format("opentype");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Youth Trial";
+  src: url("/fonts/Youth-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Foundry Plek";
+  src: url("/fonts/FoundryPlek-Medium.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
@@ -80,6 +129,12 @@ body {
 
 body::before {
   content: none;
+}
+
+/* t54 brand: all headings render in Youth Trial. Body stays Poppins (--font-sans),
+   labels/numbering use Foundry Plek via the font-plek utility. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-youth);
 }
 
 main,

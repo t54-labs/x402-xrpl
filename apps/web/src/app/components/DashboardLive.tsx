@@ -120,7 +120,7 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       {debug ? (
         <div className="dashboard-panel bg-[var(--ink-raised)] border border-[rgba(0,140,255,0.3)] px-4 py-2.5 flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--brand-blue)]">debug</span>
+          <span className="text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--brand-blue)]">debug</span>
           <span className="text-[11px] font-mono text-[var(--paper-mute)] mr-1">inject settlement</span>
           <button onClick={() => injectTx({ verifiableIntent: true, riskChecked: true })} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper)] transition-colors hover:bg-[var(--blue-08)]">Sealed</button>
           <button onClick={() => injectTx({ verifiableIntent: true, riskChecked: false })} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper)] transition-colors hover:bg-[var(--blue-08)]">Verified</button>
@@ -178,7 +178,7 @@ function Hero() {
   return (
     <div className="animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
       <div>
-        <span className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--paper-mute)]">
+        <span className="inline-flex items-center gap-2 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--t54-coral)]" /> institution-grade rails for agentic commerce
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
@@ -308,7 +308,7 @@ function RecentTransactionsPanel({ transactions }: { transactions: TransactionRo
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)] animate-[pulse_2s_infinite] shrink-0" />
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Live settlements</h2>
           </div>
-          <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--paper-mute)] mt-1.5">verified before settle · on the spine</p>
+          <p className="text-[11px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)] mt-1.5">verified before settle · on the spine</p>
         </div>
         <Link href="/transactions" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
           View All &rarr;

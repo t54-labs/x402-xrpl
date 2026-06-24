@@ -167,7 +167,7 @@ export default function JoinServicePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       <header className="mb-10 animate-fade-up">
-        <span className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--paper-mute)]">Get listed</span>
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Get listed</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
           Put your service<br />on the rail.
         </h1>
