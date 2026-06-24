@@ -29,7 +29,7 @@ export function OverviewMetricsStrip({
   const xrp = byAsset.get("XRP") ?? fallbackXrp;
   const rlusd = byAsset.get("RLUSD") ?? 0;
   return (
-    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
