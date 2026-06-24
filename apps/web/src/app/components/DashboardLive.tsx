@@ -131,26 +131,17 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       ) : null}
       <Hero />
 
-      <div className="flex items-center justify-between gap-2 animate-fade-up pt-2 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">The XRPL AI Index</h2>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
-            {([["7d", "7D"], ["30d", "30D"], ["all", "All time"]] as const).map(([v, label]) => (
-              <button
-                key={v}
-                onClick={() => setRange(v)}
-                className={`px-2.5 py-1 rounded-md transition-colors ${range === v ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <Link href="/methodology" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors shrink-0">
-            How we measure &rarr;
-          </Link>
+      <div className="flex items-center justify-end gap-2 animate-fade-up pt-2 flex-wrap">
+        <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
+          {([["7d", "7D"], ["30d", "30D"], ["all", "All time"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setRange(v)}
+              className={`px-2.5 py-1 rounded-md transition-colors ${range === v ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
