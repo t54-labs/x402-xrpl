@@ -131,17 +131,6 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       ) : null}
       <Hero />
 
-      {/* Mastercard Verifiable Intent — the agent-authority layer integrated across the hub */}
-      <div className="animate-fade-up flex items-start sm:items-center gap-4 dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] px-5 py-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logos/mastercard.svg" alt="Mastercard" className="h-7 w-auto shrink-0 mt-0.5 sm:mt-0" />
-        <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-          <span className="text-[var(--paper)] font-medium">Verifiable Intent, built in.</span> Every agent payment on the hub can carry
-          Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54&rsquo;s
-          X402 Secure before it settles.
-        </p>
-      </div>
-
       <div className="flex items-center justify-end gap-2 animate-fade-up pt-2 flex-wrap">
         <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
           {([["7d", "7D"], ["30d", "30D"], ["all", "All time"]] as const).map(([v, label]) => (
@@ -167,9 +156,21 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       </div>
 
       <div className="flex flex-col gap-6 stagger-children">
+        <RecentTransactionsPanel transactions={feed} />
+
+        {/* Mastercard Verifiable Intent — the agent-authority layer integrated across the hub */}
+        <div className="flex items-start sm:items-center gap-4 dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] px-5 py-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logos/mastercard.svg" alt="Mastercard" className="h-7 w-auto shrink-0 mt-0.5 sm:mt-0" />
+          <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+            <span className="text-[var(--paper)] font-medium">Verifiable Intent, built in.</span> Every agent payment on the hub can carry
+            Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54&rsquo;s
+            X402 Secure before it settles.
+          </p>
+        </div>
+
         <FacilitatorPanel />
         <AgoraPanel resources={registeredResources} />
-        <RecentTransactionsPanel transactions={feed} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
     </div>
@@ -216,7 +217,7 @@ function Hero() {
 
 function FacilitatorPanel() {
   return (
-    <div className="dashboard-panel glow-border order-2 bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
+    <div className="dashboard-panel glow-border bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="space-y-3 min-w-0">
           <div className="flex items-center gap-2.5">
@@ -250,7 +251,7 @@ function FacilitatorPanel() {
 
 function AgoraPanel({ resources }: { resources: DashboardData["recentResources"] }) {
   return (
-    <div className="dashboard-panel order-3 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Agora</h2>
@@ -303,7 +304,7 @@ function AgoraPanel({ resources }: { resources: DashboardData["recentResources"]
 
 function RecentTransactionsPanel({ transactions }: { transactions: TransactionRow[] }) {
   return (
-    <div className="dashboard-panel order-1 relative bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel relative bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <DotField className="pointer-events-none absolute top-2 right-4 z-0 text-[var(--paper-faint)] opacity-[0.12]" cols={12} rows={3} />
       <div className="relative z-10 flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
@@ -327,7 +328,7 @@ function TopMerchantsPanel({ merchants }: { merchants: DashboardData["topMerchan
   if (merchants.length === 0) return null;
 
   return (
-    <div className="dashboard-panel order-4 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2">
