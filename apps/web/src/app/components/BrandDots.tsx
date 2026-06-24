@@ -23,6 +23,56 @@ export function BrandDots({ className = "", count = 4 }: { className?: string; c
   );
 }
 
+// Halftone aperture — the t54 "shape built from graded dots" motif. A radial
+// ring of dots whose size swells toward a mid-radius band (an iris/lens), with a
+// small center dot and sparse coral accents along the ring. Base dot color is
+// currentColor so the parent controls it. Deterministic (SSR-safe).
+export function Halftone({
+  className = "",
+  size = 360,
+  cell = 12,
+}: {
+  className?: string;
+  size?: number;
+  cell?: number;
+}) {
+  const n = Math.floor(size / cell);
+  const center = (n - 1) / 2;
+  const dots: React.ReactElement[] = [];
+  let k = 0;
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      const dx = col - center;
+      const dy = row - center;
+      const dist = Math.sqrt(dx * dx + dy * dy) / center; // 0 at center → ~1 at edge
+      if (dist > 1.04) continue; // clip to a circle
+      // gaussian ring peaking around dist 0.66 (the iris band) + a small pupil
+      const ring = Math.exp(-Math.pow((dist - 0.66) / 0.24, 2));
+      const pupil = dist < 0.1 ? 0.85 : 0;
+      const intensity = Math.max(ring, pupil);
+      if (intensity < 0.05) continue;
+      const r = 0.6 + intensity * (cell * 0.46);
+      const onRing = Math.abs(dist - 0.66) < 0.18;
+      const coral = onRing && (row * 31 + col * 17) % 17 === 0;
+      dots.push(
+        <circle
+          key={k}
+          cx={col * cell + cell / 2}
+          cy={row * cell + cell / 2}
+          r={r}
+          fill={coral ? "var(--t54-coral)" : "currentColor"}
+        />,
+      );
+      k++;
+    }
+  }
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" aria-hidden className={className}>
+      {dots}
+    </svg>
+  );
+}
+
 export function DotField({
   className = "",
   cols = 16,

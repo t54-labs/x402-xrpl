@@ -8,7 +8,7 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
-import { BrandDots, DotField } from "./BrandDots";
+import { BrandDots, DotField, Halftone } from "./BrandDots";
 import { formatCurrency } from "../utils/currency";
 
 const REFRESH_INTERVAL_MS = 8000;
@@ -177,8 +177,9 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
 
 function Hero() {
   return (
-    <div className="animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
-      <div>
+    <div className="animate-fade-up relative grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
+      <Halftone className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.55]" size={480} />
+      <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
           <BrandDots count={3} className="shrink-0" /> institution-grade rails for agentic commerce
         </span>
@@ -193,7 +194,7 @@ function Hero() {
           <Link href="/join/service" className="ui-control px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Partner with us</Link>
         </div>
       </div>
-      <div className="dashboard-panel bg-[rgba(255,255,255,0.02)] border border-[var(--border)] overflow-hidden">
+      <div className="dashboard-panel relative z-10 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)]" />
