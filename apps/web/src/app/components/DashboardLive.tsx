@@ -92,11 +92,9 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
   useEffect(() => {
     try {
       const sp = new URLSearchParams(window.location.search);
-      const host = window.location.hostname;
-      const isPreview = host.endsWith(".vercel.app") || host === "localhost" || host.startsWith("127.");
-      // Show the debug bar on any Vercel preview / local automatically; on the
-      // production domain it stays hidden unless ?debug is present.
-      setDebug(sp.has("debug") || (isPreview && !sp.has("nodebug")));
+      // The debug bar (synthetic-settlement injectors) is opt-in: it shows only
+      // when ?debug is in the URL, so every shared link is clean by default.
+      setDebug(sp.has("debug"));
     } catch {}
   }, []);
   const feed = [...injected, ...(data.recentTransactions || [])].slice(0, 12);

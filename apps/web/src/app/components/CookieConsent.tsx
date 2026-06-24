@@ -39,25 +39,36 @@ export function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-[rgba(255,255,255,0.08)] bg-[rgba(10,8,6,0.92)] backdrop-blur-[12px]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
-        <p className="flex-1 text-[12px] leading-relaxed text-[var(--text-secondary)]">
-          We use cookies for anonymous analytics (Google Analytics) to understand how the hub is used — no advertising, and we don&rsquo;t sell or share your data. See our{" "}
-          <Link href="/privacy" className="text-[var(--text-primary)] underline underline-offset-2 hover:text-[var(--brand-blue)] transition-colors">
-            Privacy Policy
-          </Link>
-          .
-        </p>
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--t54-coral)] bg-[rgba(10,8,6,0.98)] backdrop-blur-[16px] animate-fade-up">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 sm:py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+        <div className="flex-1 min-w-0">
+          <p className="flex items-center gap-2 text-[15px] font-semibold text-[var(--paper)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--t54-coral)] shrink-0" />
+            Cookies &amp; analytics
+          </p>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)] max-w-2xl">
+            We use Google Analytics to understand how the hub is used so we can improve it. It&rsquo;s
+            anonymous, there is no advertising, and we never sell or share your data. Accept to help us, or
+            decline to keep analytics off — you can change your choice anytime. See our{" "}
+            <Link
+              href="/privacy"
+              className="text-[var(--paper)] underline underline-offset-2 hover:text-[var(--brand-blue)] transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => choose(false)}
-            className="ui-control px-3.5 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
+            className="ui-control px-5 py-2.5 text-[13px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
           >
-            Reject
+            Decline
           </button>
           <button
             onClick={() => choose(true)}
-            className="ui-control px-3.5 py-1.5 text-[12px] font-medium bg-[var(--brand-blue)] text-white hover:opacity-90 transition-opacity"
+            className="ui-control px-6 py-2.5 text-[13px] font-semibold bg-[var(--brand-blue)] text-white hover:opacity-90 transition-opacity"
           >
             Accept
           </button>
