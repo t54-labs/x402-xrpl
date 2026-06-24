@@ -81,6 +81,84 @@ export function Halftone({
   );
 }
 
+// XRPL × t54 — the XRP Ledger "X" mark rendered in t54 dots. The X is two
+// curved ribbons crossing; we fill that silhouette with a halftone dot field
+// (size-graded toward each ribbon's centerline, sparse coral accents) and let
+// the pulse ripple outward from the crossing. Deterministic (SSR-safe).
+export function XrplDotMark({
+  className = "",
+  size = 620,
+  gap = 3.4,
+  animated = true,
+}: {
+  className?: string;
+  size?: number;
+  gap?: number;
+  animated?: boolean;
+}) {
+  const VB = 120;
+  const cx = 60;
+  const cy = 60;
+  // two S-curved ribbons (top-left↔bottom-right, top-right↔bottom-left)
+  const ribbonA = [
+    [16, 17], [30, 31], [44, 46], [54, 56], [60, 60], [66, 64], [76, 74], [90, 89], [104, 103],
+  ];
+  const ribbonB = [
+    [104, 17], [90, 31], [76, 46], [66, 56], [60, 60], [54, 64], [44, 74], [30, 89], [16, 103],
+  ];
+  const half = 7.6; // ribbon half-width (VB units)
+  const segs: number[][] = [];
+  for (const rb of [ribbonA, ribbonB]) {
+    for (let i = 0; i < rb.length - 1; i++) segs.push([rb[i][0], rb[i][1], rb[i + 1][0], rb[i + 1][1]]);
+  }
+  const distToSeg = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const l2 = dx * dx + dy * dy;
+    let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+  };
+
+  const dots: React.ReactElement[] = [];
+  let k = 0;
+  const maxR = Math.hypot(VB / 2, VB / 2);
+  for (let y = gap / 2; y < VB; y += gap) {
+    for (let x = gap / 2; x < VB; x += gap) {
+      let md = Infinity;
+      for (const s of segs) {
+        const d = distToSeg(x, y, s[0], s[1], s[2], s[3]);
+        if (d < md) md = d;
+      }
+      if (md > half) continue;
+      const edge = 1 - md / half; // 1 at the centerline, 0 at the ribbon edge
+      const r = (0.55 + edge * 1.2).toFixed(2);
+      const ix = Math.round(x);
+      const iy = Math.round(y);
+      const coral = edge > 0.35 && (ix * 7 + iy * 13) % 23 === 0;
+      const dist = Math.hypot(x - cx, y - cy);
+      const delay = -((dist / maxR) * 2.1 + ((ix + iy) % 5) * 0.12).toFixed(2);
+      dots.push(
+        <circle
+          key={k}
+          cx={x.toFixed(1)}
+          cy={y.toFixed(1)}
+          r={r}
+          fill={coral ? "var(--t54-coral)" : "currentColor"}
+          className={animated ? "ht-dot" : undefined}
+          style={animated ? { animationDelay: `${delay}s` } : undefined}
+        />,
+      );
+      k++;
+    }
+  }
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${VB} ${VB}`} fill="none" aria-hidden className={className}>
+      {dots}
+    </svg>
+  );
+}
+
 // Standard page-header accent — a faint halftone aperture in the top-right,
 // sitting behind content. The parent container must be `relative isolate`
 // (and usually `overflow-hidden`) so the z-[-1] graphic stays behind the text
