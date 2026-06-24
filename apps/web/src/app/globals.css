@@ -39,6 +39,20 @@
 @media (prefers-reduced-motion: reduce) {
   .ht-dot { animation: none; }
 }
+/* Stronger throb for SvgDotMark — dots swell almost to touching at the wave peak
+   and shrink to specks in the trough, for a pronounced size pulse. */
+@keyframes dot-throb {
+  0%, 100% { opacity: 0.3; transform: scale(0.4); }
+  50%      { opacity: 1;   transform: scale(1.75); }
+}
+.dot-throb {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dot-throb 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-throb { animation: none; }
+}
 
 /* --- t54 brand fonts (self-hosted from public/fonts) --- */
 @font-face {

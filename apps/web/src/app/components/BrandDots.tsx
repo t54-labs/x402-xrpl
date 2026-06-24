@@ -287,7 +287,7 @@ export function SvgDotMark({
           cy={y.toFixed(1)}
           r={r}
           fill={coral ? "var(--t54-coral)" : "currentColor"}
-          className={animated ? "ht-dot" : undefined}
+          className={animated ? "dot-throb" : undefined}
           style={animated ? { animationDelay: `${delay}s` } : undefined}
         />,
       );
