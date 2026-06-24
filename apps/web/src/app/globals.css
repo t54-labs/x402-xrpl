@@ -200,6 +200,16 @@ footer {
   to { opacity: 1; }
 }
 
+/* Cookie banner — slides up from the bottom edge so it's clearly noticed. */
+@keyframes cookie-rise {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cookie-rise { animation: cookie-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .cookie-rise { animation: fade-in 0.3s ease both; }
+}
+
 @keyframes slide-down {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }

@@ -39,7 +39,7 @@ export function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--t54-coral)] bg-[rgba(10,8,6,0.98)] backdrop-blur-[16px] animate-fade-up">
+    <div className="fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--t54-coral)] bg-[rgba(10,8,6,0.98)] backdrop-blur-[16px] cookie-rise">
       <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 sm:py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
         <div className="flex-1 min-w-0">
           <p className="flex items-center gap-2 text-[15px] font-semibold text-[var(--paper)]">
