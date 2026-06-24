@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ResourceLogo } from "../components/ResourceLogo";
 
 type Resource = {
   name: string;
@@ -89,10 +90,13 @@ export default function ResourcesPage() {
                 className="group block dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-all duration-200"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]">
-                    {r.tag}
-                  </span>
-                  <MaturityBadge maturity={r.maturity} />
+                  <ResourceLogo href={r.href} name={r.name} />
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]">
+                      {r.tag}
+                    </span>
+                    <MaturityBadge maturity={r.maturity} />
+                  </div>
                 </div>
                 <h3 className="text-sm font-semibold text-[var(--text-primary)]">{r.name}</h3>
                 <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-2">{r.description}</p>
