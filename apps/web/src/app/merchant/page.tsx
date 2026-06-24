@@ -1,3 +1,5 @@
+import { PageHalftone } from "@/app/components/BrandDots";
+
 export const metadata = {
   title: "Merchant — t54 XRPL AI Index",
   description: "Onboard established merchants to RLUSD settlement on XRPL through network partners.",
@@ -17,7 +19,8 @@ const INTAKE_FIELDS = [
 
 export default function MerchantPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <div className="relative isolate overflow-hidden max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+      <PageHalftone />
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">

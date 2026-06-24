@@ -73,6 +73,19 @@ export function Halftone({
   );
 }
 
+// Standard page-header accent — a faint halftone aperture in the top-right,
+// sitting behind content. The parent container must be `relative isolate`
+// (and usually `overflow-hidden`) so the z-[-1] graphic stays behind the text
+// but above the page background.
+export function PageHalftone({ className = "" }: { className?: string }) {
+  return (
+    <Halftone
+      size={300}
+      className={`pointer-events-none absolute -top-10 right-0 z-[-1] hidden lg:block text-[var(--paper-faint)] opacity-40 ${className}`}
+    />
+  );
+}
+
 export function DotField({
   className = "",
   cols = 16,

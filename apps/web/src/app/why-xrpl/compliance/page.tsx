@@ -1,3 +1,5 @@
+import { PageHalftone } from "@/app/components/BrandDots";
+
 export const metadata = {
   title: "Compliance & Security — t54 XRPL AI Index",
   description: "Custody, attestation, and the Verifiable Intent model behind XRPL agentic commerce.",
@@ -54,7 +56,8 @@ function IntentChain() {
 
 export default function CompliancePage() {
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
+    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-24 relative isolate overflow-hidden">
+      <PageHalftone />
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL · Compliance</span>
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">

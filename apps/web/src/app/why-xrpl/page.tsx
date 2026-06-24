@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHalftone } from "@/app/components/BrandDots";
 
 export const metadata = {
   title: "Why XRPL — t54 XRPL AI Index",
@@ -50,7 +51,8 @@ function ChainRule() {
 
 export default function WhyXrplPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
+    <div className="max-w-6xl mx-auto px-4 sm:px-8 py-16 sm:py-24 relative isolate overflow-hidden">
+      <PageHalftone />
       <header className="animate-fade-up max-w-4xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL</span>
         <h1 className="mt-6 text-5xl sm:text-7xl font-medium tracking-[-0.04em] leading-[0.98] text-[var(--paper)]">

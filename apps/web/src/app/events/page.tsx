@@ -1,3 +1,5 @@
+import { PageHalftone } from "@/app/components/BrandDots";
+
 export const metadata = {
   title: "Events — t54 XRPL AI Index",
   description: "Programming for AI developers building on XRPL.",
@@ -57,7 +59,8 @@ const EVENTS: EventItem[] = [
 
 export default function EventsPage() {
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8 relative isolate overflow-hidden">
+      <PageHalftone />
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Events</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">

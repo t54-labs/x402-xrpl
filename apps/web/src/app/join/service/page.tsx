@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { PageHalftone } from "@/app/components/BrandDots";
 
 type RegisteredMerchant = {
   address: string;
@@ -165,7 +166,8 @@ export default function JoinServicePage() {
   const label = "block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 relative isolate overflow-hidden">
+      <PageHalftone />
       <header className="mb-10 animate-fade-up">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Get listed</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">

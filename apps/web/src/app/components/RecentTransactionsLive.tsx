@@ -43,36 +43,26 @@ function SpineDefs() {
   );
 }
 
-// Compact verification readout: L1 · L2 · L3 dots → shield. Solid dots are the
-// t54 branding element; the rail is kept to a single whisper-thin hairline.
+// Compact verification readout: L1 · L2 · L3 dots → shield. Solid dots only
+// (the t54 branding element) — no connector line.
 function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
   const reduce = useReducedMotion();
   const animateIn = fresh && !reduce;
   const active = state !== "idle";
   const dotFill = active ? "var(--brand-blue)" : "var(--paper-faint)";
-  const nodeX = [10, 80, 140];
+  const nodeX = [18, 70, 122];
   return (
     <svg viewBox="0 0 176 16" width="100%" height="16" fill="none" role="img" aria-label="verification chain L1 L2 L3">
-      {/* one whisper-thin rail — used sparingly, just enough to seat the dots */}
-      <line
-        x1={nodeX[0]}
-        y1="8"
-        x2={nodeX[2]}
-        y2="8"
-        stroke={active ? "var(--brand-blue)" : "var(--paper-faint)"}
-        strokeWidth="1"
-        strokeOpacity={active ? 0.26 : 0.16}
-        strokeLinecap="round"
-      />
+      {/* t54 brand dots — solid, no connector line */}
       {nodeX.map((x, i) => (
         <motion.circle
           key={x}
           cx={x}
           cy="8"
-          r={active ? 3.4 : 2.6}
+          r={active ? 3.9 : 3}
           fill={dotFill}
           initial={animateIn ? { scale: 0, opacity: 0 } : false}
-          animate={{ scale: 1, opacity: active ? 1 : 0.55 }}
+          animate={{ scale: 1, opacity: active ? 1 : 0.5 }}
           transition={{ ...SPRING, delay: 0.06 + i * 0.12 }}
         />
       ))}
