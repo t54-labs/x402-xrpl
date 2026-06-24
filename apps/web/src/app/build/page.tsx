@@ -108,7 +108,7 @@ export default function BuildPage() {
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">
           Build the agentic<br />economy on XRPL
         </h1>
-        <p className="mt-6 text-[16px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+        <p className="mt-6 text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           x402 makes HTTP&nbsp;402 real: your server answers a request with a price, the agent signs an XRPL Payment,
           and the t54 facilitator verifies and settles it on-ledger in seconds — no custody, no API keys.
           Here&rsquo;s why XRPL is the rail for machine payments, and how to ship your first paid endpoint.

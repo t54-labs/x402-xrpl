@@ -102,12 +102,12 @@ function ChainRule() {
 export default function WhyXrplPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
-      <header className="animate-fade-up max-w-4xl">
+      <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Why XRPL</span>
-        <h1 className="mt-6 text-5xl sm:text-7xl font-medium tracking-[-0.04em] leading-[0.98] text-[var(--paper)]">
+        <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">
           The rail was built<br />for <span className="text-[var(--t54-coral)]">payments</span>
         </h1>
-        <p className="mt-8 text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+        <p className="mt-6 text-lg text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           &ldquo;Fast and final&rdquo; is table stakes — every L1 claims it. XRPL&rsquo;s edge is what general-purpose chains
           don&rsquo;t have in-protocol: an institution-grade settlement and compliance stack on one 14-year ledger, where
           identity, recourse, and conditional payment are built into the chain — not bolted on in smart contracts an
