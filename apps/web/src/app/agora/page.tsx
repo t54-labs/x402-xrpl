@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PageHalftone } from "@/app/components/BrandDots";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
 
@@ -28,8 +27,8 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
   const totalPages = data.pagination.totalPages;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-6 sm:space-y-8 relative isolate overflow-hidden">
-      <PageHalftone />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-6 sm:space-y-8">
+
       <header className="animate-fade-up">
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Agora</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">

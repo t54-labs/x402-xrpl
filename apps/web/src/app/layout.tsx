@@ -7,7 +7,6 @@ import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
 import { NavLinks } from "./components/NavLinks";
 import { GoogleAnalyticsPageView } from "./components/GoogleAnalyticsPageView";
-import { DotField } from "./components/BrandDots";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-1D7VRX7WY2";
@@ -84,9 +83,8 @@ export default function RootLayout({
           {children}
         </main>
         
-        <footer className="relative isolate overflow-hidden border-t border-[rgba(255,255,255,0.06)] py-8">
-          <DotField className="pointer-events-none absolute right-0 -top-5 z-[-1] hidden sm:block text-[var(--paper-faint)] opacity-[0.13]" cols={26} rows={5} />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <footer className="border-t border-[rgba(255,255,255,0.06)] py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-[11px] text-[var(--text-muted)]">&copy; 2026 t54 labs. All rights reserved.</p>
             <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
               <a href="https://github.com/coinbase/x402" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>

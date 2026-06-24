@@ -43,42 +43,44 @@ function SpineDefs() {
   );
 }
 
-// Compact verification readout: L1 · L2 · L3 dots → shield. Solid dots only
-// (the t54 branding element) — no connector line.
+// Verification readout with a deliberate t54 dot rhythm — NOT three even dots.
+// A TIGHT PAIR (the owner→agent delegation, bound together) — a clear gap — a
+// SINGLE dot (the agent's signature) that locks into the shield (the seal).
+// The spacing carries the meaning: what is bound, what acts, what is sealed.
 function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
   const reduce = useReducedMotion();
   const animateIn = fresh && !reduce;
   const active = state !== "idle";
+  const sealed = state === "sealed";
   const dotFill = active ? "var(--brand-blue)" : "var(--paper-faint)";
-  const nodeX = [18, 70, 122];
+  const dots = [14, 25, 64]; // pair (14,25 — tight) · gap · signature (64) → seal
   return (
-    <svg viewBox="0 0 176 16" width="100%" height="16" fill="none" role="img" aria-label="verification chain L1 L2 L3">
-      {/* t54 brand dots — solid, no connector line */}
-      {nodeX.map((x, i) => (
+    <svg viewBox="0 0 112 16" width="100%" height="16" fill="none" role="img" aria-label="verification: delegation pair, signature, seal">
+      {dots.map((x, i) => (
         <motion.circle
           key={x}
           cx={x}
           cy="8"
-          r={active ? 3.9 : 3}
+          r={active ? 4 : 3.4}
           fill={dotFill}
           initial={animateIn ? { scale: 0, opacity: 0 } : false}
           animate={{ scale: 1, opacity: active ? 1 : 0.5 }}
-          transition={{ ...SPRING, delay: 0.06 + i * 0.12 }}
+          transition={{ ...SPRING, delay: 0.05 + i * 0.1 }}
         />
       ))}
-      {state === "sealed" ? (
+      {sealed ? (
         <motion.path
-          d="M159 0.5 l7.5 2.8 v4.4 c0 3.7 -2.6 6.9 -7.5 8.3 c-4.9 -1.4 -7.5 -4.6 -7.5 -8.3 V3.3 z"
+          d="M97 0.5 l7.5 2.8 v4.4 c0 3.7 -2.6 6.9 -7.5 8.3 c-4.9 -1.4 -7.5 -4.6 -7.5 -8.3 V3.3 z"
           fill="var(--brand-blue)"
           stroke="var(--brand-blue)"
           strokeWidth="2"
           filter="url(#spine-glow)"
           initial={animateIn ? { scale: 0.6, opacity: 0 } : false}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ ...SPRING, delay: 0.42 }}
+          transition={{ ...SPRING, delay: 0.38 }}
         />
       ) : (
-        <path d="M159 1 l6.8 2.5 v4 c0 3.3 -2.3 6.2 -6.8 7.5 c-4.5 -1.3 -6.8 -4.2 -6.8 -7.5 V3.5 z" fill="none" stroke="var(--paper-faint)" strokeWidth="1.4" />
+        <path d="M97 1 l6.8 2.5 v4 c0 3.3 -2.3 6.2 -6.8 7.5 c-4.5 -1.3 -6.8 -4.2 -6.8 -7.5 V3.5 z" fill="none" stroke="var(--paper-faint)" strokeWidth="1.4" />
       )}
     </svg>
   );

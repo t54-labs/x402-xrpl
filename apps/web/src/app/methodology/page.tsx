@@ -1,4 +1,3 @@
-import { PageHalftone } from "@/app/components/BrandDots";
 
 export const metadata = {
   title: "Methodology — t54 XRPL AI Index",
@@ -34,8 +33,8 @@ function Section({ n, label, title, children }: { n: string; label: string; titl
 
 export default function MethodologyPage() {
   return (
-    <div className="relative isolate overflow-hidden max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
-      <PageHalftone />
+    <div className=" max-w-5xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
+
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Index · Methodology</span>
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">

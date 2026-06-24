@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { DirectoryGrid, type Listing } from "./DirectoryGrid";
-import { PageHalftone } from "@/app/components/BrandDots";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +16,8 @@ export default async function DirectoryPage() {
   const listings = await getDirectory();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8 relative isolate overflow-hidden">
-      <PageHalftone />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+
       <header className="animate-fade-up flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div className="max-w-2xl">
           <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Directory</span>

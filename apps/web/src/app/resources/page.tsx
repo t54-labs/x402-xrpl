@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PageHalftone } from "@/app/components/BrandDots";
 
 type Resource = {
   name: string;
@@ -59,8 +58,8 @@ function MaturityBadge({ maturity }: { maturity?: Resource["maturity"] }) {
 
 export default function ResourcesPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10 relative isolate overflow-hidden">
-      <PageHalftone />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-10">
+
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Resources</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
