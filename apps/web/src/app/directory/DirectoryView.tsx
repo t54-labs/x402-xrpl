@@ -33,35 +33,40 @@ const hostOf = (u: string) => {
   }
 };
 
+const MERCHANTS_PER_PAGE = 15;
+
 const cardHover =
   "group relative block rounded-[16px] bg-[var(--bg-surface)] border border-[var(--border)] p-5 transition duration-200 ease-out hover:-translate-y-1 hover:bg-[var(--ink-raised)] hover:border-[rgba(201,70,46,0.5)] hover:[filter:drop-shadow(0_10px_22px_rgba(0,0,0,0.45))_drop-shadow(0_6px_18px_rgba(201,70,46,0.16))]";
 
-export function DirectoryView({ services, merchants }: { services: Service[]; merchants: Merchant[] }) {
-  const [tab, setTab] = useState<"services" | "merchants">("services");
+function SectionHead({ n, title, count, sub }: { n: string; title: string; count: number; sub: string }) {
+  return (
+    <div>
+      <div className="flex items-baseline gap-3">
+        <span className="text-[10px] font-plek uppercase tracking-[0.24em] text-[var(--paper-faint)]">{n}</span>
+        <h2 className="text-xl font-medium tracking-tight text-[var(--paper)]">{title}</h2>
+        <span className="text-[12px] font-mono text-[var(--text-muted)]">{count}</span>
+      </div>
+      <p className="mt-1 text-sm text-[var(--text-muted)] max-w-2xl">{sub}</p>
+    </div>
+  );
+}
 
-  const sortedMerchants = useMemo(
+export function DirectoryView({ services, merchants }: { services: Service[]; merchants: Merchant[] }) {
+  const sorted = useMemo(
     () => [...merchants].sort((a, b) => (b._count?.transactions ?? 0) - (a._count?.transactions ?? 0)),
     [merchants],
   );
-
-  const seg = (on: boolean) =>
-    `px-3.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
-      on ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-    }`;
+  const [page, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(sorted.length / MERCHANTS_PER_PAGE));
+  const start = (page - 1) * MERCHANTS_PER_PAGE;
+  const slice = sorted.slice(start, start + MERCHANTS_PER_PAGE);
 
   return (
-    <div className="space-y-6">
-      <div className="animate-fade-up inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5">
-        <button onClick={() => setTab("services")} className={seg(tab === "services")}>
-          Services · {services.length}
-        </button>
-        <button onClick={() => setTab("merchants")} className={seg(tab === "merchants")}>
-          Merchants · {merchants.length}
-        </button>
-      </div>
-
-      {tab === "services" ? (
-        services.length === 0 ? (
+    <div className="space-y-12">
+      {/* 01 — Services (Agora) */}
+      <section className="animate-fade-up space-y-4">
+        <SectionHead n="01" title="Services" count={services.length} sub="Live x402 endpoints that agents can pay to use, indexed from XRPL mainnet." />
+        {services.length === 0 ? (
           <Empty label="No services indexed yet." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -100,32 +105,70 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
               </a>
             ))}
           </div>
-        )
-      ) : sortedMerchants.length === 0 ? (
-        <Empty label="No merchants indexed yet." />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {sortedMerchants.map((m) => (
-            <Link key={m.address} href={`/address/${m.address}`} className={cardHover}>
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.04)] font-plek text-[12px] text-[var(--paper-mute)]">
-                  {(m.name?.[0] || "r").toUpperCase()}
+        )}
+      </section>
+
+      {/* 02 — Merchants (paginated list, by activity) */}
+      <section className="animate-fade-up space-y-4">
+        <SectionHead n="02" title="Merchants" count={merchants.length} sub="Addresses settling x402 payments on XRPL, ranked by transaction count." />
+        {sorted.length === 0 ? (
+          <Empty label="No merchants indexed yet." />
+        ) : (
+          <>
+            <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
+              {slice.map((m, i) => {
+                const rank = start + i + 1;
+                return (
+                  <Link
+                    key={m.address}
+                    href={`/address/${m.address}`}
+                    className="group flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 transition-colors hover:bg-[rgba(255,255,255,0.03)]"
+                  >
+                    <span className="w-7 shrink-0 text-right font-mono text-[12px] text-[var(--paper-faint)]">{rank}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--paper)]">
+                        {m.name || shortAddr(m.address)}
+                      </p>
+                      <p className="text-[11px] font-mono text-[var(--text-muted)] truncate">{m.name ? m.address : "XRPL merchant"}</p>
+                    </div>
+                    <span className="shrink-0 font-mono text-[12px] text-[var(--brand-blue)] tabular-nums">
+                      {(m._count?.transactions ?? 0).toLocaleString()} <span className="text-[var(--text-muted)]">txns</span>
+                    </span>
+                    <span className="hidden sm:block shrink-0 w-16 text-right text-[11px] text-[var(--text-muted)] tabular-nums">
+                      {m._count?.resources ?? 0} svc
+                    </span>
+                    <span className="shrink-0 text-[var(--paper-faint)] transition-transform group-hover:translate-x-0.5">&rarr;</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {pages > 1 ? (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-[var(--text-muted)]">
+                  Page {page} of {pages} · {sorted.length} merchants
                 </span>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">{m.name || shortAddr(m.address)}</h3>
-                  <p className="text-[11px] font-mono text-[var(--text-muted)] truncate">
-                    {m.name ? shortAddr(m.address) : "XRPL merchant"}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="ui-control px-3 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] enabled:hover:text-[var(--text-primary)] enabled:hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => Math.min(pages, p + 1))}
+                    disabled={page === pages}
+                    className="ui-control px-3 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] enabled:hover:text-[var(--text-primary)] enabled:hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
-                <span className="font-mono text-[var(--brand-blue)]">{(m._count?.transactions ?? 0).toLocaleString()} txns</span>
-                <span>{m._count?.resources ?? 0} services</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            ) : null}
+          </>
+        )}
+      </section>
     </div>
   );
 }

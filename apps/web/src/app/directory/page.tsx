@@ -14,9 +14,14 @@ async function getServices(): Promise<Service[]> {
 }
 
 async function getMerchants(): Promise<Merchant[]> {
+  // The /merchants endpoint caps at 100/page and sorts by createdAt; pull the
+  // first couple of pages so we have the full set to sort by activity client-side.
   try {
-    const r = await apiFetch<{ items: Merchant[] }>("/merchants?limit=100");
-    return r.items ?? [];
+    const [p1, p2] = await Promise.all([
+      apiFetch<{ items: Merchant[] }>("/merchants?limit=100&page=1"),
+      apiFetch<{ items: Merchant[] }>("/merchants?limit=100&page=2"),
+    ]);
+    return [...(p1.items ?? []), ...(p2.items ?? [])];
   } catch {
     return [];
   }
