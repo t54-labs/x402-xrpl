@@ -52,7 +52,7 @@ export function MobileNav() {
               className="fixed top-[80px] left-0 right-0 bottom-0 z-[998] bg-[rgba(0,0,0,0.35)]"
             />
             <div className="fixed top-[80px] left-0 right-0 z-[999] px-4 py-3">
-              <div className="animate-slide-down mx-auto max-w-7xl max-h-[calc(100svh-96px)] overflow-y-auto bg-[rgba(0,0,0,0.94)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.08)] rounded-xl p-2 space-y-1">
+              <div className="animate-slide-down font-youth mx-auto max-w-7xl max-h-[calc(100svh-96px)] overflow-y-auto bg-[rgba(0,0,0,0.94)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.08)] rounded-xl p-2 space-y-1">
                 {links.map(({ href, label }) => {
                   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
                   const isRegister = label.includes("Partner");

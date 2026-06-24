@@ -136,10 +136,16 @@ body::before {
   content: none;
 }
 
-/* t54 brand: all headings render in Youth Trial. Body stays Poppins (--font-sans),
-   labels/numbering use Foundry Plek via the font-plek utility. */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-youth);
+/* t54 brand fonts by role — headings, buttons, and CTA anchors use Youth Trial;
+   body stays Poppins (--font-sans); labels/numbering use Foundry Plek (font-plek).
+   Kept in @layer base so an explicit font utility (font-plek / font-mono) on an
+   individual element still wins (e.g. a font-plek <h3> instrument label). */
+@layer base {
+  h1, h2, h3, h4, h5, h6,
+  button,
+  a.ui-control {
+    font-family: var(--font-youth);
+  }
 }
 
 main,

@@ -17,7 +17,7 @@ export function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <div className="hidden lg:flex h-full items-center gap-1.5 xl:gap-2 text-[12px] xl:text-[13px] font-medium whitespace-nowrap">
+    <div className="hidden lg:flex h-full items-center gap-1.5 xl:gap-2 text-[12px] xl:text-[13px] font-medium font-youth whitespace-nowrap">
       {links.map(({ href, label }) => {
         const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
         const isRegister = label === "Partner with us";
