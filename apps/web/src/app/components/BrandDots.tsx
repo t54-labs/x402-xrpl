@@ -279,7 +279,7 @@ export function SvgDotMark({
       const iy = Math.round(y);
       const coral = t > 0.45 && (ix * 7 + iy * 13) % 41 === 0;
       const dist = Math.hypot(x - cx, y - cy);
-      const delay = -((dist / maxR) * 2.1 + ((ix + iy) % 5) * 0.12).toFixed(2);
+      const delay = -((dist / maxR) * 3.2 + ((ix + iy) % 5) * 0.18).toFixed(2);
       dots.push(
         <circle
           key={k}

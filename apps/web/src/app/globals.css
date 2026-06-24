@@ -48,7 +48,7 @@
 .dot-throb {
   transform-box: fill-box;
   transform-origin: center;
-  animation: dot-throb 3s ease-in-out infinite;
+  animation: dot-throb 4.6s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .dot-throb { animation: none; }
