@@ -194,7 +194,7 @@ function Hero() {
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
         </div>
       </div>
-      <div className="dashboard-panel relative z-10 bg-[rgba(255,255,255,0.03)] border border-[var(--border)] overflow-hidden">
+      <div className="dashboard-panel relative z-10 border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)]" />

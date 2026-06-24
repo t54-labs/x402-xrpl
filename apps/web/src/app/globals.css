@@ -39,6 +39,19 @@
 @media (prefers-reduced-motion: reduce) {
   .ht-dot { animation: none; }
 }
+/* Coral light band sweeping down a dot mark (SvgDotMark). Values are user units
+   in the mark's own viewBox, so the band travels from above to below the art. */
+@keyframes xrp-sweep {
+  0%        { transform: translateY(-200px); opacity: 0; }
+  12%, 88%  { opacity: 1; }
+  100%      { transform: translateY(440px);  opacity: 0; }
+}
+.xrp-sweep {
+  animation: xrp-sweep 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .xrp-sweep { animation: none; opacity: 0; }
+}
 
 /* --- t54 brand fonts (self-hosted from public/fonts) --- */
 @font-face {

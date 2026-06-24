@@ -81,141 +81,41 @@ export function Halftone({
   );
 }
 
-// --- XRP Ledger "X" mark, reconstructed from the official logo outline ---
-// (viewBox 0 0 512 424). The mark is two horizontally-ended curved bands: a top
-// valley that dips to the center and a bottom caret that rises to it. We sample
-// the exact bezier/arc outline into polygons so the dot fill lands precisely
-// inside the real silhouette — horizontal tips and all.
-type Pt = [number, number];
-
-function cubicPts(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: number): Pt[] {
-  const out: Pt[] = [];
-  for (let i = 1; i <= n; i++) {
-    const t = i / n;
-    const mt = 1 - t;
-    out.push([
-      mt * mt * mt * p0[0] + 3 * mt * mt * t * p1[0] + 3 * mt * t * t * p2[0] + t * t * t * p3[0],
-      mt * mt * mt * p0[1] + 3 * mt * mt * t * p1[1] + 3 * mt * t * t * p2[1] + t * t * t * p3[1],
-    ]);
-  }
-  return out;
-}
-
-// SVG elliptical-arc (endpoint param) → sampled points, per the W3C conversion.
-function arcPts(x1: number, y1: number, rx: number, ry: number, sweep: number, x2: number, y2: number, n: number): Pt[] {
-  const dx = (x1 - x2) / 2;
-  const dy = (y1 - y2) / 2;
-  const x1p = dx;
-  const y1p = dy;
-  let rx2 = rx * rx;
-  let ry2 = ry * ry;
-  const x1p2 = x1p * x1p;
-  const y1p2 = y1p * y1p;
-  const lam = x1p2 / rx2 + y1p2 / ry2;
-  if (lam > 1) {
-    const s = Math.sqrt(lam);
-    rx *= s;
-    ry *= s;
-    rx2 = rx * rx;
-    ry2 = ry * ry;
-  }
-  let num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2;
-  if (num < 0) num = 0;
-  const co = (0 !== sweep ? -1 : 1) * Math.sqrt(num / (rx2 * y1p2 + ry2 * x1p2));
-  const cxp = (co * rx * y1p) / ry;
-  const cyp = (-co * ry * x1p) / rx;
-  const cx = cxp + (x1 + x2) / 2;
-  const cy = cyp + (y1 + y2) / 2;
-  const ang = (ux: number, uy: number, vx: number, vy: number) => {
-    const d = ux * vx + uy * vy;
-    const l = Math.hypot(ux, uy) * Math.hypot(vx, vy);
-    let a = Math.acos(Math.max(-1, Math.min(1, d / l)));
-    if (ux * vy - uy * vx < 0) a = -a;
-    return a;
-  };
-  const ux = (x1p - cxp) / rx;
-  const uy = (y1p - cyp) / ry;
-  const th1 = ang(1, 0, ux, uy);
-  let dth = ang(ux, uy, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
-  if (!sweep && dth > 0) dth -= 2 * Math.PI;
-  if (sweep && dth < 0) dth += 2 * Math.PI;
-  const out: Pt[] = [];
-  for (let i = 1; i <= n; i++) {
-    const t = th1 + dth * (i / n);
-    out.push([rx * Math.cos(t) + cx, ry * Math.sin(t) + cy]);
-  }
-  return out;
-}
-
-const XRP_TOP: Pt[] = [
-  [437, 0], [511, 0], [357, 152.48],
-  ...cubicPts([357, 152.48], [301.23, 207.67], [210.81, 207.67], [155, 152.48], 16),
-  [0.94, 0], [75, 0], [192, 115.83],
-  ...arcPts(192, 115.83, 91.11, 91.11, 0, 319.91, 115.83, 16),
-];
-const XRP_BOTTOM: Pt[] = [
-  [74.05, 424], [0, 424], [155, 270.58],
-  ...cubicPts([155, 270.58], [210.77, 215.39], [301.19, 215.39], [357, 270.58], 16),
-  [512, 424], [438, 424], [320, 307.23],
-  ...arcPts(320, 307.23, 91.11, 91.11, 0, 192.09, 307.23, 16),
-];
-
-function inPoly(x: number, y: number, poly: Pt[]): boolean {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-function edgeDist(x: number, y: number, poly: Pt[]): number {
-  let md = Infinity;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const x1 = poly[j][0], y1 = poly[j][1], x2 = poly[i][0], y2 = poly[i][1];
-    const ax = x2 - x1, ay = y2 - y1;
-    const l2 = ax * ax + ay * ay;
-    let t = l2 ? ((x - x1) * ax + (y - y1) * ay) / l2 : 0;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    const d = Math.hypot(x - (x1 + t * ax), y - (y1 + t * ay));
-    if (d < md) md = d;
-  }
-  return md;
-}
-
-// XRPL × t54 — the official XRP "X" silhouette rendered as a t54 dot field:
-// halftone (dots grow toward each band's spine), sparse coral accents, and a
-// pulse rippling out from the center waist. Deterministic (SSR-safe).
-export function XrplDotMark({
+// --- t54 dot mark from any SVG path ---------------------------------------
+// SvgDotMark fills an SVG silhouette with a t54 dot field by CLIPPING a dot grid
+// to the path(s) — the browser does the exact point-in-path test, so the dots
+// always match the artwork precisely (no hand-sampled geometry to drift). Drop
+// in any path data + viewBox to retheme it. A soft coral band sweeps the mark
+// to carry the motion.
+export function SvgDotMark({
+  paths,
+  viewBox = [0, 0, 512, 424],
   className = "",
-  size = 720,
-  gap = 13,
+  size = 760,
+  gap = 16,
+  dotR = 2.6,
   animated = true,
+  clipId = "svg-dot-clip",
 }: {
+  paths: string[];
+  viewBox?: number[];
   className?: string;
   size?: number;
   gap?: number;
+  dotR?: number;
   animated?: boolean;
+  clipId?: string;
 }) {
-  const W = 512;
-  const H = 424;
-  const cx = 256;
-  const cy = 212;
-  const maxR = Math.hypot(cx, cy);
+  const [vx, vy, W, H] = viewBox;
   const dots: React.ReactElement[] = [];
   let k = 0;
-  for (let y = gap / 2; y < H; y += gap) {
-    for (let x = gap / 2; x < W; x += gap) {
-      const top = inPoly(x, y, XRP_TOP);
-      const inside = top || inPoly(x, y, XRP_BOTTOM);
-      if (!inside) continue;
-      const ed = edgeDist(x, y, top ? XRP_TOP : XRP_BOTTOM);
-      const t = Math.min(ed / 24, 1); // 0 at the band edge → 1 deep on the spine
-      const r = (1.7 + t * 2.6).toFixed(2);
+  for (let y = vy + gap / 2; y < vy + H; y += gap) {
+    for (let x = vx + gap / 2; x < vx + W; x += gap) {
       const ix = Math.round(x);
       const iy = Math.round(y);
-      const coral = ed > 11 && (ix * 7 + iy * 13) % 31 === 0;
-      const dist = Math.hypot(x - cx, y - cy);
-      const delay = -((dist / maxR) * 2.0 + ((ix + iy) % 5) * 0.12).toFixed(2);
+      // sparse, deterministic coral accents + a little size texture (SSR-safe)
+      const coral = (ix * 7 + iy * 13) % 37 === 0;
+      const r = (dotR + ((ix * 31 + iy * 17) % 3) * 0.4).toFixed(2);
       dots.push(
         <circle
           key={k}
@@ -223,8 +123,6 @@ export function XrplDotMark({
           cy={y.toFixed(1)}
           r={r}
           fill={coral ? "var(--t54-coral)" : "currentColor"}
-          className={animated ? "ht-dot" : undefined}
-          style={animated ? { animationDelay: `${delay}s` } : undefined}
         />,
       );
       k++;
@@ -234,14 +132,57 @@ export function XrplDotMark({
     <svg
       width={size}
       height={Math.round((size * H) / W)}
-      viewBox={`0 0 ${W} ${H}`}
+      viewBox={`${vx} ${vy} ${W} ${H}`}
       fill="none"
       aria-hidden
       className={className}
     >
-      {dots}
+      <defs>
+        <clipPath id={clipId}>
+          {paths.map((d, i) => (
+            <path key={i} d={d} />
+          ))}
+        </clipPath>
+        <linearGradient id={`${clipId}-glow`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--t54-coral)" stopOpacity="0" />
+          <stop offset="50%" stopColor="var(--t54-coral)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--t54-coral)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <g clipPath={`url(#${clipId})`}>
+        {dots}
+        {animated && (
+          <rect
+            className="xrp-sweep"
+            x={vx}
+            y={vy}
+            width={W}
+            height={H * 0.42}
+            fill={`url(#${clipId}-glow)`}
+            style={{ mixBlendMode: "screen" }}
+          />
+        )}
+      </g>
     </svg>
   );
+}
+
+// The official XRP Ledger "X" mark (two horizontally-ended curved bands), as a
+// t54 dot field. Paths copied verbatim from the official logo SVG (viewBox
+// 0 0 512 424) so the silhouette is exact.
+const XRP_MARK_PATHS = [
+  "M437,0h74L357,152.48c-55.77,55.19-146.19,55.19-202,0L.94,0H75L192,115.83a91.11,91.11,0,0,0,127.91,0Z",
+  "M74.05,424H0L155,270.58c55.77-55.19,146.19-55.19,202,0L512,424H438L320,307.23a91.11,91.11,0,0,0-127.91,0Z",
+];
+
+export function XrplDotMark(props: {
+  className?: string;
+  size?: number;
+  gap?: number;
+  dotR?: number;
+  animated?: boolean;
+}) {
+  return <SvgDotMark paths={XRP_MARK_PATHS} viewBox={[0, 0, 512, 424]} clipId="xrpl-mark-clip" {...props} />;
 }
 
 // Standard page-header accent — a faint halftone aperture in the top-right,
