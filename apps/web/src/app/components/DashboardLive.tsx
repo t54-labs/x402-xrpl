@@ -8,6 +8,7 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
+import { BrandDots, DotField } from "./BrandDots";
 import { formatCurrency } from "../utils/currency";
 
 const REFRESH_INTERVAL_MS = 8000;
@@ -178,8 +179,8 @@ function Hero() {
   return (
     <div className="animate-fade-up grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
       <div>
-        <span className="inline-flex items-center gap-2 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--t54-coral)]" /> institution-grade rails for agentic commerce
+        <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
+          <BrandDots count={3} className="shrink-0" /> institution-grade rails for agentic commerce
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
           The live ledger of the <span className="text-[var(--t54-coral)]">agentic</span> economy on XRPL.
@@ -301,8 +302,9 @@ function AgoraPanel({ resources }: { resources: DashboardData["recentResources"]
 
 function RecentTransactionsPanel({ transactions }: { transactions: TransactionRow[] }) {
   return (
-    <div className="dashboard-panel order-1 bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+    <div className="dashboard-panel order-1 relative bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+      <DotField className="pointer-events-none absolute top-2 right-4 z-0 text-[var(--paper-faint)] opacity-[0.12]" cols={12} rows={3} />
+      <div className="relative z-10 flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)] animate-[pulse_2s_infinite] shrink-0" />
