@@ -87,10 +87,12 @@ export default function ResourcesPage() {
                 href={r.href}
                 target="_blank"
                 rel="noreferrer"
-                className="group block dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-all duration-200"
+                className="group relative block rounded-[16px] bg-[var(--bg-surface)] border border-[var(--border)] p-5 transition duration-200 ease-out hover:-translate-y-1 hover:bg-[var(--ink-raised)] hover:border-[rgba(201,70,46,0.5)] hover:[filter:drop-shadow(0_10px_22px_rgba(0,0,0,0.45))_drop-shadow(0_6px_18px_rgba(201,70,46,0.16))]"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <ResourceLogo href={r.href} name={r.name} />
+                  <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.06]">
+                    <ResourceLogo href={r.href} name={r.name} />
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]">
                       {r.tag}
@@ -98,7 +100,10 @@ export default function ResourcesPage() {
                     <MaturityBadge maturity={r.maturity} />
                   </div>
                 </div>
-                <h3 className="text-sm font-semibold text-[var(--text-primary)]">{r.name}</h3>
+                <h3 className="flex items-start gap-1.5 text-sm font-semibold text-[var(--text-primary)]">
+                  <span className="min-w-0">{r.name}</span>
+                  <span aria-hidden="true" className="mt-px shrink-0 text-[var(--t54-coral)] opacity-0 -translate-x-1 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">&#8599;</span>
+                </h3>
                 <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-2">{r.description}</p>
                 {r.install ? (
                   <code className="mt-3 inline-block !rounded-md text-[11px] font-mono text-[var(--text-secondary)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 border border-[var(--border)]">
