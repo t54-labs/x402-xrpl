@@ -83,15 +83,19 @@ const GROUPS: Group[] = [
   },
 ];
 
+// t54 dot divider — solid dots in a deliberate rhythm (two tight pairs flanking a
+// coral center), no connecting lines. Matches the home page's dot language.
 function ChainRule() {
   return (
-    <svg width="200" height="20" viewBox="0 0 200 20" fill="none" aria-hidden="true" className="my-16 sm:my-20 opacity-80">
-      <line x1="16" y1="10" x2="84" y2="10" stroke="var(--rule)" strokeWidth="1.5" />
-      <line x1="116" y1="10" x2="184" y2="10" stroke="var(--rule)" strokeWidth="1.5" />
-      <circle cx="8" cy="10" r="4" fill="none" stroke="var(--brand-blue)" strokeWidth="1.5" />
-      <circle cx="100" cy="10" r="4" fill="none" stroke="var(--brand-blue)" strokeWidth="1.5" />
-      <circle cx="192" cy="10" r="4" fill="none" stroke="var(--brand-blue)" strokeWidth="1.5" />
-    </svg>
+    <div className="my-16 sm:my-20 flex justify-center" aria-hidden="true">
+      <svg width="72" height="8" viewBox="0 0 72 8" fill="none">
+        <circle cx="14" cy="4" r="2.4" fill="var(--paper-mute)" />
+        <circle cx="23" cy="4" r="2.4" fill="var(--paper-mute)" />
+        <circle cx="36" cy="4" r="2.9" fill="var(--t54-coral)" />
+        <circle cx="49" cy="4" r="2.4" fill="var(--paper-mute)" />
+        <circle cx="58" cy="4" r="2.4" fill="var(--paper-mute)" />
+      </svg>
+    </div>
   );
 }
 
