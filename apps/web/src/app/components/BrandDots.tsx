@@ -31,10 +31,12 @@ export function Halftone({
   className = "",
   size = 360,
   cell = 12,
+  animated = false,
 }: {
   className?: string;
   size?: number;
   cell?: number;
+  animated?: boolean;
 }) {
   const n = Math.floor(size / cell);
   const center = (n - 1) / 2;
@@ -61,6 +63,12 @@ export function Halftone({
           cy={row * cell + cell / 2}
           r={r}
           fill={coral ? "var(--t54-coral)" : "currentColor"}
+          className={animated ? "ht-dot" : undefined}
+          style={
+            animated
+              ? { animationDelay: `${(-(dist * 2 + ((row * 7 + col * 13) % 5) * 0.12)).toFixed(2)}s` }
+              : undefined
+          }
         />,
       );
       k++;

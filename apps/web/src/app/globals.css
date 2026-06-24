@@ -25,6 +25,21 @@
   display: none;
 }
 
+/* Animated t54 halftone aperture — each dot pulses in size + opacity; a per-dot
+   animation-delay keyed to radial distance makes the ripple breathe outward. */
+@keyframes ht-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.7); }
+  50%      { opacity: 1;   transform: scale(1.16); }
+}
+.ht-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ht-pulse 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ht-dot { animation: none; }
+}
+
 /* --- t54 brand fonts (self-hosted from public/fonts) --- */
 @font-face {
   font-family: "Youth Trial";

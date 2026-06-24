@@ -8,8 +8,7 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
-import { BrandDots, DotField } from "./BrandDots";
-import { HalftoneCanvas } from "./HalftoneCanvas";
+import { BrandDots, DotField, Halftone } from "./BrandDots";
 import { formatCurrency } from "../utils/currency";
 
 const REFRESH_INTERVAL_MS = 8000;
@@ -179,7 +178,7 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
 function Hero() {
   return (
     <div className="animate-fade-up relative grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
-      <HalftoneCanvas className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 z-0 hidden lg:block opacity-[0.6]" size={480} />
+      <Halftone animated size={480} cell={16} className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.6]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
           <BrandDots count={3} className="shrink-0" /> institution-grade rails for agentic commerce
