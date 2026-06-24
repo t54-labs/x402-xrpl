@@ -23,7 +23,7 @@ export default function MerchantPage() {
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Merchant</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
-          Real brands,<br />reachable by agents.
+          Real brands,<br />reachable by agents
         </h1>
         <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
           We bring established merchants onto RLUSD and XRP settlement on XRPL through merchant-network partners.

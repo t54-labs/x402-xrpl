@@ -22,7 +22,7 @@ export default async function DirectoryPage() {
         <div className="max-w-2xl">
           <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Directory</span>
           <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
-            Who&rsquo;s building<br />on the rail.
+            Who&rsquo;s building<br />on the rail
           </h1>
           <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
             AI services, agents, and tools — available on XRPL via x402, in RLUSD and XRP.

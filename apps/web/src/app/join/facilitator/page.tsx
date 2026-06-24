@@ -45,7 +45,7 @@ export default function JoinFacilitatorPage() {
 
       <header className="mb-10 animate-fade-up">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Join · Facilitator</span>
-        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">Register your<br />facilitator.</h1>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">Register your<br />facilitator</h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-5 max-w-lg leading-relaxed">
           Submit your facilitator and its SourceTag. We index every XRPL Payment carrying that tag, so your settled volume appears on the Index. No ownership proof required.
         </p>

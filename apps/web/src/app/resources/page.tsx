@@ -63,7 +63,7 @@ export default function ResourcesPage() {
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Resources</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
-          The toolkit for<br />building on XRPL.
+          The toolkit for<br />building on XRPL
         </h1>
         <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
           What developers build with, and what helps you ship. Looking for live services agents can consume? See the{" "}

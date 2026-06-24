@@ -170,7 +170,7 @@ export default function JoinServicePage() {
       <header className="mb-10 animate-fade-up">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Get listed</span>
         <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
-          Put your service<br />on the rail.
+          Put your service<br />on the rail
         </h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-5 max-w-lg leading-relaxed">
           Register a live x402 endpoint and it appears on the Index automatically — we verify your HTTP&nbsp;402 and XRPL config on the spot. No endpoint yet? Email us for a manual Directory listing.

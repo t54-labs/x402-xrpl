@@ -106,7 +106,7 @@ export default function BuildPage() {
       <header className="animate-fade-up max-w-3xl">
         <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Build · x402 on XRPL</span>
         <h1 className="mt-6 text-5xl sm:text-6xl font-medium tracking-[-0.03em] leading-[1.0] text-[var(--paper)]">
-          Build the agentic<br />economy on XRPL.
+          Build the agentic<br />economy on XRPL
         </h1>
         <p className="mt-6 text-[16px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           x402 makes HTTP&nbsp;402 real: your server answers a request with a price, the agent signs an XRPL Payment,
@@ -119,7 +119,7 @@ export default function BuildPage() {
       <section className="mt-20 animate-fade-up" style={{ animationDelay: "60ms" }}>
         <PartLabel n="01" total="04" title="Why XRPL" />
         <h2 className="mt-7 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] max-w-2xl">
-          What general-purpose chains can&rsquo;t give an agent — built into the protocol.
+          What general-purpose chains can&rsquo;t give an agent — built into the protocol
         </h2>
         <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           &ldquo;Fast and cheap&rdquo; is table stakes. XRPL&rsquo;s edge for agent commerce is institutional and
@@ -142,7 +142,7 @@ export default function BuildPage() {
       <section className="mt-20 animate-fade-up" style={{ animationDelay: "60ms" }}>
         <PartLabel n="02" total="04" title="How it works" />
         <h2 className="mt-7 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] max-w-2xl">
-          One request, one signed Payment, one settlement.
+          One request, one signed Payment, one settlement
         </h2>
         <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           x402 is an HTTP-native payment handshake. Four steps, every one of them inspectable on the wire and on-ledger.
@@ -169,7 +169,7 @@ export default function BuildPage() {
       <section className="mt-20 animate-fade-up" style={{ animationDelay: "60ms" }}>
         <PartLabel n="03" total="04" title="Build it" />
         <h2 className="mt-7 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] max-w-2xl">
-          From zero to a paid endpoint — both sides of the call.
+          From zero to a paid endpoint — both sides of the call
         </h2>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-10 items-start">
@@ -205,7 +205,7 @@ export default function BuildPage() {
       <section className="mt-20 animate-fade-up" style={{ animationDelay: "60ms" }}>
         <PartLabel n="04" total="04" title="Reference" />
         <h2 className="mt-7 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)] max-w-2xl">
-          Endpoints, assets, and where to go deeper.
+          Endpoints, assets, and where to go deeper
         </h2>
 
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
