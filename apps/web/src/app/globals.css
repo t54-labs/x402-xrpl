@@ -200,14 +200,20 @@ footer {
   to { opacity: 1; }
 }
 
-/* Cookie banner — slides up from the bottom edge so it's clearly noticed. */
+/* Cookie banner — slides up on enter, slides back down on dismiss. */
 @keyframes cookie-rise {
   from { opacity: 0; transform: translateY(100%); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes cookie-fall {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(100%); }
+}
 .cookie-rise { animation: cookie-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.cookie-fall { animation: cookie-fall 0.34s cubic-bezier(0.4, 0, 1, 1) both; }
 @media (prefers-reduced-motion: reduce) {
-  .cookie-rise { animation: fade-in 0.3s ease both; }
+  .cookie-rise { animation: fade-in 0.25s ease both; }
+  .cookie-fall { animation: fade-in 0.25s ease reverse both; }
 }
 
 @keyframes slide-down {

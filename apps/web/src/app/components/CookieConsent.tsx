@@ -9,12 +9,16 @@ declare global {
   }
 }
 
+const REOPEN_EVENT = "cookie-consent:open";
+
 // Cookie consent banner wired to Google Consent Mode v2. Analytics storage is
 // defaulted to "denied" in layout.tsx before gtag loads; this banner records the
-// visitor's choice in localStorage and flips analytics_storage to "granted" only
-// on Accept. No advertising signals are ever requested.
+// visitor's choice in localStorage and updates analytics_storage accordingly.
+// It slides up on entry, slides back down on dismiss, and can be reopened later
+// from the footer "Cookie settings" link so consent is genuinely changeable.
 export function CookieConsent() {
   const [show, setShow] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     try {
@@ -22,24 +26,38 @@ export function CookieConsent() {
     } catch {
       /* localStorage blocked — leave analytics denied, don't show the banner */
     }
+    const onOpen = () => {
+      setLeaving(false);
+      setShow(true);
+    };
+    window.addEventListener(REOPEN_EVENT, onOpen);
+    return () => window.removeEventListener(REOPEN_EVENT, onOpen);
   }, []);
 
   const choose = (granted: boolean) => {
+    if (leaving) return;
     try {
       localStorage.setItem("cookie-consent", granted ? "granted" : "denied");
     } catch {
       /* ignore */
     }
-    if (granted) {
-      window.gtag?.("consent", "update", { analytics_storage: "granted" });
-    }
-    setShow(false);
+    window.gtag?.("consent", "update", { analytics_storage: granted ? "granted" : "denied" });
+    // play the slide-down, then unmount
+    setLeaving(true);
+    window.setTimeout(() => {
+      setShow(false);
+      setLeaving(false);
+    }, 360);
   };
 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--t54-coral)] bg-[rgba(10,8,6,0.98)] backdrop-blur-[16px] cookie-rise">
+    <div
+      className={`fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--t54-coral)] bg-[rgba(10,8,6,0.98)] backdrop-blur-[16px] ${
+        leaving ? "cookie-fall" : "cookie-rise"
+      }`}
+    >
       <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 sm:py-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
         <div className="flex-1 min-w-0">
           <p className="flex items-center gap-2 text-[15px] font-semibold text-[var(--paper)]">
@@ -49,7 +67,8 @@ export function CookieConsent() {
           <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)] max-w-2xl">
             We use Google Analytics to understand how the hub is used so we can improve it. It&rsquo;s
             anonymous, there is no advertising, and we never sell or share your data. Accept to help us, or
-            decline to keep analytics off — you can change your choice anytime. See our{" "}
+            decline to keep analytics off — you can change your choice anytime under{" "}
+            <span className="text-[var(--text-primary)]">Cookie settings</span> in the footer. See our{" "}
             <Link
               href="/privacy"
               className="text-[var(--paper)] underline underline-offset-2 hover:text-[var(--brand-blue)] transition-colors"
@@ -75,5 +94,18 @@ export function CookieConsent() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Footer affordance to reopen the banner and change a saved choice.
+export function CookieSettingsLink({ className = "" }: { className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(REOPEN_EVENT))}
+      className={className}
+    >
+      Cookie settings
+    </button>
   );
 }

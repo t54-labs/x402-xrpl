@@ -7,7 +7,7 @@ import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
 import { NavLinks } from "./components/NavLinks";
 import { GoogleAnalyticsPageView } from "./components/GoogleAnalyticsPageView";
-import { CookieConsent } from "./components/CookieConsent";
+import { CookieConsent, CookieSettingsLink } from "./components/CookieConsent";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-1D7VRX7WY2";
@@ -92,6 +92,7 @@ export default function RootLayout({
             <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
               <Link href="/terms" className="hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
               <Link href="/privacy" className="hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
+              <CookieSettingsLink className="hover:text-[var(--text-secondary)] transition-colors" />
               <a href="https://x402.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
               <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
               <a href="https://x.com/t54ai" target="_blank" rel="noreferrer" aria-label="t54 on X" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
