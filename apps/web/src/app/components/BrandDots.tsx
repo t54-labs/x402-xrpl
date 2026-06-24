@@ -82,40 +82,204 @@ export function Halftone({
 }
 
 // --- t54 dot mark from any SVG path ---------------------------------------
-// SvgDotMark fills an SVG silhouette with a t54 dot field by CLIPPING a dot grid
-// to the path(s) — the browser does the exact point-in-path test, so the dots
-// always match the artwork precisely (no hand-sampled geometry to drift). Drop
-// in any path data + viewBox to retheme it. A soft coral band sweeps the mark
-// to carry the motion.
+// SvgDotMark fills an SVG silhouette with a t54 dot field. It parses the path
+// data into polygons (flattening curves/arcs), keeps every dot whose center
+// lands inside — so the edge is a clean ring of whole dots — and grows each dot
+// toward the shape's spine (distance to the nearest edge) for a halftone
+// gradient. Per-dot size pulses ripple out from the center as a sine wave. Drop
+// in any path(s) + viewBox to retheme it; the silhouette follows the artwork.
+type Pt = [number, number];
+
+function cubicPts(p0: Pt, p1: Pt, p2: Pt, p3: Pt, n: number): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    const m = 1 - t;
+    out.push([
+      m * m * m * p0[0] + 3 * m * m * t * p1[0] + 3 * m * t * t * p2[0] + t * t * t * p3[0],
+      m * m * m * p0[1] + 3 * m * m * t * p1[1] + 3 * m * t * t * p2[1] + t * t * t * p3[1],
+    ]);
+  }
+  return out;
+}
+
+// SVG elliptical arc → points, via the W3C endpoint-to-center conversion.
+function arcPts(x1: number, y1: number, rx: number, ry: number, rotDeg: number, laf: number, sf: number, x2: number, y2: number, n: number): Pt[] {
+  if (rx === 0 || ry === 0) return [[x2, y2]];
+  const phi = (rotDeg * Math.PI) / 180;
+  const cp = Math.cos(phi);
+  const sp = Math.sin(phi);
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const x1p = cp * dx + sp * dy;
+  const y1p = -sp * dx + cp * dy;
+  rx = Math.abs(rx);
+  ry = Math.abs(ry);
+  let rx2 = rx * rx;
+  let ry2 = ry * ry;
+  const x1p2 = x1p * x1p;
+  const y1p2 = y1p * y1p;
+  const lam = x1p2 / rx2 + y1p2 / ry2;
+  if (lam > 1) {
+    const s = Math.sqrt(lam);
+    rx *= s;
+    ry *= s;
+    rx2 = rx * rx;
+    ry2 = ry * ry;
+  }
+  let num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2;
+  if (num < 0) num = 0;
+  const sign = laf !== sf ? 1 : -1; // W3C: +1 when largeArc != sweep
+  const co = sign * Math.sqrt(num / (rx2 * y1p2 + ry2 * x1p2));
+  const cxp = co * ((rx * y1p) / ry);
+  const cyp = co * (-((ry * x1p) / rx));
+  const cx = cp * cxp - sp * cyp + (x1 + x2) / 2;
+  const cy = sp * cxp + cp * cyp + (y1 + y2) / 2;
+  const ang = (ux: number, uy: number, vx: number, vy: number) => {
+    let a = Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy)))));
+    if (ux * vy - uy * vx < 0) a = -a;
+    return a;
+  };
+  const ux = (x1p - cxp) / rx;
+  const uy = (y1p - cyp) / ry;
+  const th1 = ang(1, 0, ux, uy);
+  let dth = ang(ux, uy, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+  if (!sf && dth > 0) dth -= 2 * Math.PI;
+  if (sf && dth < 0) dth += 2 * Math.PI;
+  const out: Pt[] = [];
+  for (let i = 1; i <= n; i++) {
+    const t = th1 + dth * (i / n);
+    const ex = Math.cos(t) * rx;
+    const ey = Math.sin(t) * ry;
+    out.push([cp * ex - sp * ey + cx, sp * ex + cp * ey + cy]);
+  }
+  return out;
+}
+
+// Minimal path-data → polygons (M/L/H/V/C/A/Z, absolute + relative). Curves are
+// flattened; the result feeds point-in-polygon + edge-distance, not rendering.
+function pathToPolys(d: string): Pt[][] {
+  const toks = d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e-?\d+)?/g);
+  if (!toks) return [];
+  let i = 0;
+  const num = () => parseFloat(toks[i++]);
+  const polys: Pt[][] = [];
+  let cur: Pt[] = [];
+  let x = 0;
+  let y = 0;
+  let sx = 0;
+  let sy = 0;
+  let cmd = "";
+  while (i < toks.length) {
+    if (/[a-zA-Z]/.test(toks[i])) cmd = toks[i++];
+    const rel = cmd >= "a";
+    const C = cmd.toUpperCase();
+    if (C === "M") {
+      let px = num();
+      let py = num();
+      if (rel) { px += x; py += y; }
+      if (cur.length) polys.push(cur);
+      cur = [[px, py]];
+      x = px; y = py; sx = px; sy = py;
+      cmd = rel ? "l" : "L";
+    } else if (C === "L") {
+      let px = num();
+      let py = num();
+      if (rel) { px += x; py += y; }
+      cur.push([px, py]); x = px; y = py;
+    } else if (C === "H") {
+      let px = num();
+      if (rel) px += x;
+      cur.push([px, y]); x = px;
+    } else if (C === "V") {
+      let py = num();
+      if (rel) py += y;
+      cur.push([x, py]); y = py;
+    } else if (C === "C") {
+      let a1 = num(), b1 = num(), a2 = num(), b2 = num(), px = num(), py = num();
+      if (rel) { a1 += x; b1 += y; a2 += x; b2 += y; px += x; py += y; }
+      for (const pt of cubicPts([x, y], [a1, b1], [a2, b2], [px, py], 20)) cur.push(pt);
+      x = px; y = py;
+    } else if (C === "A") {
+      const rx = num(), ry = num(), rot = num(), laf = num(), sf = num();
+      let px = num(), py = num();
+      if (rel) { px += x; py += y; }
+      for (const pt of arcPts(x, y, rx, ry, rot, laf, sf, px, py, 22)) cur.push(pt);
+      x = px; y = py;
+    } else if (C === "Z") {
+      cur.push([sx, sy]); polys.push(cur); cur = []; x = sx; y = sy;
+    } else {
+      i++;
+    }
+  }
+  if (cur.length) polys.push(cur);
+  return polys;
+}
+
+function ptInPolys(x: number, y: number, polys: Pt[][]): boolean {
+  let inside = false;
+  for (const poly of polys) {
+    for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) {
+      const xi = poly[a][0], yi = poly[a][1], xj = poly[b][0], yj = poly[b][1];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function distToEdges(x: number, y: number, segs: number[][]): number {
+  let md = Infinity;
+  for (const s of segs) {
+    const ax = s[2] - s[0];
+    const ay = s[3] - s[1];
+    const l2 = ax * ax + ay * ay;
+    let t = l2 ? ((x - s[0]) * ax + (y - s[1]) * ay) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const d = Math.hypot(x - (s[0] + t * ax), y - (s[1] + t * ay));
+    if (d < md) md = d;
+  }
+  return md;
+}
+
 export function SvgDotMark({
   paths,
   viewBox = [0, 0, 512, 424],
   className = "",
   size = 760,
-  gap = 16,
-  dotR = 2.6,
+  gap = 11,
   animated = true,
-  clipId = "svg-dot-clip",
+  spine = 18,
 }: {
   paths: string[];
   viewBox?: number[];
   className?: string;
   size?: number;
   gap?: number;
-  dotR?: number;
   animated?: boolean;
-  clipId?: string;
+  spine?: number;
 }) {
   const [vx, vy, W, H] = viewBox;
+  const polys = paths.flatMap((d) => pathToPolys(d));
+  const segs: number[][] = [];
+  for (const poly of polys) {
+    for (let a = 0; a < poly.length - 1; a++) segs.push([poly[a][0], poly[a][1], poly[a + 1][0], poly[a + 1][1]]);
+  }
+  const cx = vx + W / 2;
+  const cy = vy + H / 2;
+  const maxR = Math.hypot(W / 2, H / 2);
   const dots: React.ReactElement[] = [];
   let k = 0;
   for (let y = vy + gap / 2; y < vy + H; y += gap) {
     for (let x = vx + gap / 2; x < vx + W; x += gap) {
+      if (!ptInPolys(x, y, polys)) continue;
+      const ed = distToEdges(x, y, segs);
+      const t = Math.min(ed / spine, 1); // 0 at the edge -> 1 on the spine
+      const r = (1.15 + t * 2.05).toFixed(2);
       const ix = Math.round(x);
       const iy = Math.round(y);
-      // sparse, deterministic coral accents + a little size texture (SSR-safe)
-      const coral = (ix * 7 + iy * 13) % 37 === 0;
-      const r = (dotR + ((ix * 31 + iy * 17) % 3) * 0.4).toFixed(2);
+      const coral = t > 0.45 && (ix * 7 + iy * 13) % 41 === 0;
+      const dist = Math.hypot(x - cx, y - cy);
+      const delay = -((dist / maxR) * 2.1 + ((ix + iy) % 5) * 0.12).toFixed(2);
       dots.push(
         <circle
           key={k}
@@ -123,6 +287,8 @@ export function SvgDotMark({
           cy={y.toFixed(1)}
           r={r}
           fill={coral ? "var(--t54-coral)" : "currentColor"}
+          className={animated ? "ht-dot" : undefined}
+          style={animated ? { animationDelay: `${delay}s` } : undefined}
         />,
       );
       k++;
@@ -137,32 +303,7 @@ export function SvgDotMark({
       aria-hidden
       className={className}
     >
-      <defs>
-        <clipPath id={clipId}>
-          {paths.map((d, i) => (
-            <path key={i} d={d} />
-          ))}
-        </clipPath>
-        <linearGradient id={`${clipId}-glow`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--t54-coral)" stopOpacity="0" />
-          <stop offset="50%" stopColor="var(--t54-coral)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="var(--t54-coral)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <g clipPath={`url(#${clipId})`}>
-        {dots}
-        {animated && (
-          <rect
-            className="xrp-sweep"
-            x={vx}
-            y={vy}
-            width={W}
-            height={H * 0.42}
-            fill={`url(#${clipId}-glow)`}
-            style={{ mixBlendMode: "screen" }}
-          />
-        )}
-      </g>
+      {dots}
     </svg>
   );
 }
@@ -179,10 +320,9 @@ export function XrplDotMark(props: {
   className?: string;
   size?: number;
   gap?: number;
-  dotR?: number;
   animated?: boolean;
 }) {
-  return <SvgDotMark paths={XRP_MARK_PATHS} viewBox={[0, 0, 512, 424]} clipId="xrpl-mark-clip" {...props} />;
+  return <SvgDotMark paths={XRP_MARK_PATHS} viewBox={[0, 0, 512, 424]} {...props} />;
 }
 
 // Standard page-header accent — a faint halftone aperture in the top-right,
