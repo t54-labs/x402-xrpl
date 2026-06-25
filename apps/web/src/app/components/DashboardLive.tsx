@@ -189,16 +189,17 @@ function Hero() {
       <XrplDotMark animated size={760} className="pointer-events-none absolute right-[-50px] top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.72]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
-          <BrandDots count={3} className="shrink-0" /> XRPL · the AI ecosystem hub
+          <BrandDots count={3} className="shrink-0" /> XRPL · AI community
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
-          The trusted home for AI on <span className="text-[var(--t54-coral)]">XRPL</span>
+          Build the agent economy on XRP Ledger <span className="text-[var(--t54-coral)]">together</span>
         </h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-lg leading-relaxed">
-          Every agent, service, and tool of the XRP Ledger&rsquo;s AI ecosystem, in one place — with risk control built into every payment. The on-ramp institutions choose for agent commerce.
+          An open community of builders, agents, and services growing on the XRP Ledger — where calls are paid in XRP/RLUSD.
         </p>
-        <div className="flex items-center gap-2.5 mt-5">
-          <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Start building</Link>
+        <div className="flex flex-wrap items-center gap-2.5 mt-5">
+          <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Join the community</Link>
+          <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Explore the map</Link>
         </div>
       </div>
       <div className="dashboard-panel relative z-10 border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
