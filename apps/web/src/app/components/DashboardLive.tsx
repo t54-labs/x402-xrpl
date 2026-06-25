@@ -70,7 +70,7 @@ export type DirectoryService = {
   merchant?: { name: string | null; logoUrl?: string | null } | null;
 };
 
-export function DashboardLive({ initialData, services }: { initialData: DashboardData; services: DirectoryService[] }) {
+export function DashboardLive({ initialData, services, servicesTotal }: { initialData: DashboardData; services: DirectoryService[]; servicesTotal: number }) {
   const [data, setData] = useState(initialData);
   const [range, setRange] = useState<"7d" | "30d" | "all">("all");
 
@@ -176,7 +176,7 @@ export function DashboardLive({ initialData, services }: { initialData: Dashboar
         </div>
 
         <FacilitatorPanel />
-        <ServiceMarquee services={services} />
+        <ServiceMarquee services={services} total={servicesTotal} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
     </div>
@@ -288,8 +288,11 @@ function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
   );
 }
 
-function ServiceMarquee({ services }: { services: DirectoryService[] }) {
+function ServiceMarquee({ services, total }: { services: DirectoryService[]; total: number }) {
   const base = services;
+  // Label shows the FULL indexed count (not the rendered slice); never less
+  // than what's on screen if the total somehow comes back short.
+  const count = Math.max(total, base.length);
 
   if (base.length === 0) {
     return (
@@ -323,7 +326,7 @@ function ServiceMarquee({ services }: { services: DirectoryService[] }) {
             <span className="ml-1 h-1 w-1 rounded-full bg-[var(--t54-coral)]" aria-hidden />
           </div>
           <p className="mt-1 font-plek text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            {base.length} live x402 services &middot; pay per call in RLUSD or XRP
+            {count} live x402 services &middot; pay per call in RLUSD or XRP
           </p>
         </div>
         <Link href="/directory" className="shrink-0 text-xs font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--brand-blue)]">
