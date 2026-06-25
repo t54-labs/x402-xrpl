@@ -247,6 +247,71 @@ footer {
 .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 300ms; }
 
+/* ════════════════════════════════════════════════════════════════
+   GLASS RIVER — full-bleed services marquee (home Directory).
+   Seam math: shift = N*(cardW+gap). N=20, cardW=300, gap=16 → 6320px.
+   --card-count is set inline from services.length so the shift is exact
+   even when sparse data repeats the base set (shift is ONE base set wide).
+   ════════════════════════════════════════════════════════════════ */
+@keyframes marquee-rtl {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(-1 * var(--loop-shift)), 0, 0); }
+}
+
+.marquee-track {
+  --card-w: 300px;
+  --card-gap: 16px;
+  --card-count: 20; /* overridden inline; = ONE base set's length */
+  --loop-shift: calc(var(--card-count) * (var(--card-w) + var(--card-gap))); /* 6320px @ 20 */
+  --marquee-dur: 70s; /* 6320/70 ≈ 90px/s — slow, dignified */
+  position: relative;
+  z-index: 1; /* cards above the glow */
+  animation: marquee-rtl var(--marquee-dur) linear infinite;
+  will-change: transform; /* on the track ONLY, never per card */
+}
+
+/* Pause on hover OR keyboard focus anywhere in the band; resumes from the
+   current transform (no snap-back) because the transform is never reset. */
+.marquee-mask:hover .marquee-track,
+.marquee-mask:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Edge-fade mask — the hero. Symmetric dissolve into the surface on both sides.
+   Also hides the loop wrap point + any sub-pixel tail past the viewport, so NO
+   overflow-hidden is needed (which would re-clip the full-bleed breakout). */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+
+/* Center spotlight glow — one calm focal point. Behind the cards (z 0), additive,
+   NOT mix-blend-mode (avoids Safari banding over BrandLogo's baked-black tiles). */
+.marquee-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 70% at 50% 50%, var(--blue-16), transparent 72%),
+    radial-gradient(46% 130% at 50% 50%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+}
+
+/* Hover/focus lift — elevation via drop-shadow (box-shadow is globally killed). */
+.marquee-card:hover,
+.marquee-card:focus-visible {
+  transform: translateY(-3px);
+  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 0.5px var(--blue-16));
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* kill the drift; let the user hand-scroll the same band */
+  .marquee-track { animation: none; transform: none; }
+  .marquee-mask { overflow-x: auto; scrollbar-width: none; }
+  .marquee-mask::-webkit-scrollbar { display: none; }
+}
+
 /* --- Panels & cards --- */
 .dashboard-panel {
   border-radius: var(--radius-shell) !important;

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
@@ -176,7 +176,7 @@ export function DashboardLive({ initialData, services }: { initialData: Dashboar
         </div>
 
         <FacilitatorPanel />
-        <DirectoryPanel services={services} />
+        <ServiceMarquee services={services} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
     </div>
@@ -255,57 +255,96 @@ function FacilitatorPanel() {
   );
 }
 
-function DirectoryPanel({ services }: { services: DirectoryService[] }) {
-  const hostOf = (u: string) => {
-    try {
-      return new URL(u).hostname.replace(/^www\./, "");
-    } catch {
-      return u;
-    }
-  };
+const hostOf = (u: string) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
+};
+
+function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
   return (
-    <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
-        <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Directory</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Live x402 services agents can pay to use on XRPL.</p>
+    <Link
+      href={`/address/${s.merchantAddr}`}
+      className="marquee-card group relative flex h-[116px] w-[300px] shrink-0 flex-col justify-between !rounded-[14px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition-[border-color,transform] duration-200 hover:border-[var(--border-hover)]"
+    >
+      <div className="flex items-start gap-3">
+        <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} className="h-9 w-9" />
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">{s.name || "API resource"}</h3>
+          <p className="mt-0.5 truncate font-mono text-[11px] text-[var(--text-muted)]">{hostOf(s.url)}</p>
         </div>
-        <Link href="/directory" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors shrink-0">
+      </div>
+      <div className="flex items-end justify-between">
+        <span className="!rounded-md border border-[rgba(0,140,255,0.12)] bg-[rgba(0,140,255,0.06)] px-2 py-0.5 font-mono text-[11px] tabular-nums text-[var(--brand-blue)]">
+          {s.priceAmount} {formatCurrency(s.priceAsset)}
+        </span>
+        <span className="font-plek text-[8.5px] uppercase tracking-[0.2em] text-[var(--paper-faint)] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          Per call &rarr;
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function ServiceMarquee({ services }: { services: DirectoryService[] }) {
+  const base = services;
+
+  if (base.length === 0) {
+    return (
+      <div className="dashboard-panel flex flex-col items-center gap-3 border border-[var(--border)] bg-[var(--bg-surface)] py-12 text-center">
+        <p className="text-sm text-[var(--text-muted)]">No services indexed yet.</p>
+        <Link href="/join/service" className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--brand-blue)]">
+          List the first one &rarr;
+        </Link>
+      </div>
+    );
+  }
+
+  // Repeat the base set so the tape always fills a wide viewport (>=2 copies).
+  // The loop shift is exactly ONE base set wide, so the seam stays pixel-exact
+  // regardless of how many copies we render. --card-count = base.length.
+  const reps = Math.max(2, Math.ceil(16 / base.length));
+  const loop = Array.from({ length: reps }, () => base).flat();
+
+  return (
+    <div className="relative">
+      {/* in-column header (stays inside the max-w-7xl flow) */}
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full bg-[var(--brand-blue)] opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--brand-blue)]" />
+            </span>
+            <h2 className="text-base font-medium text-[var(--text-primary)]">Directory</h2>
+            {/* single coral motif dot — used once, deliberate */}
+            <span className="ml-1 h-1 w-1 rounded-full bg-[var(--t54-coral)]" aria-hidden />
+          </div>
+          <p className="mt-1 font-plek text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
+            {base.length} live x402 services &middot; pay per call in RLUSD or XRP
+          </p>
+        </div>
+        <Link href="/directory" className="shrink-0 text-xs font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--brand-blue)]">
           Browse all &rarr;
         </Link>
       </div>
 
-      {services.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
-          {services.map((s) => (
-            <Link
-              key={s.id}
-              href={`/address/${s.merchantAddr}`}
-              className="agora-resource-card block h-full p-4 bg-[rgba(255,255,255,0.02)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200"
-            >
-              <div className="flex items-start gap-3">
-                <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} className="h-8 w-8" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-medium text-[var(--text-primary)] leading-snug line-clamp-2">{s.name || "API resource"}</h3>
-                  <p className="mt-0.5 text-[11px] font-mono text-[var(--text-muted)] truncate">{hostOf(s.url)}</p>
-                </div>
+      {/* full-bleed band — breaks the max-w column; <main> is overflow-x-clip so no scrollbar */}
+      <div className="marquee-bleed relative left-1/2 -ml-[50vw] w-screen">
+        <div className="marquee-mask relative py-2">
+          {/* center spotlight glow — sits behind the cards */}
+          <div className="marquee-glow" aria-hidden />
+          <div className="marquee-track flex w-max gap-4" style={{ "--card-count": base.length } as CSSProperties}>
+            {loop.map((s, i) => (
+              <div key={`${s.id}-${i}`} aria-hidden={i >= base.length}>
+                <ServiceMarqueeCard s={s} />
               </div>
-              <div className="mt-3">
-                <span className="!rounded-md text-[11px] font-mono bg-[rgba(0,140,255,0.06)] text-[var(--brand-blue)] px-2 py-0.5 border border-[rgba(0,140,255,0.12)]">
-                  {s.priceAmount} {formatCurrency(s.priceAsset)}
-                </span>
-              </div>
-            </Link>
-          ))}
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="flex flex-col items-center text-center py-12 gap-3">
-          <p className="text-[var(--text-muted)] text-sm">No services indexed yet.</p>
-          <Link href="/join/service" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors">
-            List the first one &rarr;
-          </Link>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

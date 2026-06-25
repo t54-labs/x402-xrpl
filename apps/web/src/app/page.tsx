@@ -15,8 +15,8 @@ const EMPTY_DASHBOARD: DashboardData = {
   facilitators: [],
 };
 
-// A small, representative slice of the Directory's services for the home panel:
-// distinct providers first (so it isn't all one provider's many endpoints).
+// The first 20 Directory services for the home marquee: distinct providers
+// first (so it isn't all one provider's many endpoints), then Heurist's.
 async function getDirectoryServices(): Promise<DirectoryService[]> {
   try {
     const r = await apiFetch<{ items: DirectoryService[] }>("/resources?limit=100");
@@ -28,7 +28,7 @@ async function getDirectoryServices(): Promise<DirectoryService[]> {
       return true;
     });
     uniq.sort((a, b) => (/heurist/i.test(a.url) ? 1 : 0) - (/heurist/i.test(b.url) ? 1 : 0));
-    return uniq.slice(0, 6);
+    return uniq.slice(0, 20);
   } catch {
     return [];
   }

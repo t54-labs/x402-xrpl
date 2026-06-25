@@ -14,7 +14,7 @@ export function BrandLogo({
     return (
       <span className={`flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-black`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+        <img src={logoUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
       </span>
     );
   }
