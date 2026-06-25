@@ -54,7 +54,6 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--brand-blue)]" />
           </span>
           <h2 className="text-base font-medium text-[var(--text-primary)]">Total settled</h2>
-          <span className="font-mono tabular-nums text-base text-[var(--paper-mute)]">{fmtNum(total)}</span>
         </div>
         <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
           {opts.map((k) => (
