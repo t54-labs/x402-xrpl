@@ -93,6 +93,7 @@ export default function RootLayout({
               <Link href="/terms" className="hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
               <Link href="/privacy" className="hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
               <CookieSettingsLink className="hover:text-[var(--text-secondary)] transition-colors" />
+              <a href="https://t54.ai" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">t54.ai</a>
               <a href="https://x402.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
               <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
               <a href="https://x.com/t54ai" target="_blank" rel="noreferrer" aria-label="t54 on X" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
