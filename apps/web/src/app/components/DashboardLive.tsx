@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip, type TimeBucket } from "./DashboardStats";
-import { CumulativeVolumeChart, SettlementMixDonut } from "./HomeCharts";
+import { CumulativeVolumeChart } from "./HomeCharts";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
 import { BrandLogo } from "./BrandLogo";
@@ -184,12 +184,7 @@ export function DashboardLive({ initialData, services, servicesTotal }: { initia
 
         <FacilitatorPanel />
         <ServiceMarquee services={services} total={servicesTotal} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <TopMerchantsPanel merchants={data.topMerchants} />
-          </div>
-          <SettlementMixDonut volumes={data.volumeByAsset} />
-        </div>
+        <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
     </div>
   );

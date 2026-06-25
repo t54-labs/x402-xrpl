@@ -312,6 +312,16 @@ footer {
   .marquee-mask::-webkit-scrollbar { display: none; }
 }
 
+/* Left-to-right "draw" reveal for the home settled chart — replays on toggle. */
+@keyframes chart-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.chart-draw { animation: chart-wipe 1.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .chart-draw { animation: none; }
+}
+
 /* --- Panels & cards --- */
 .dashboard-panel {
   border-radius: var(--radius-shell) !important;
