@@ -216,7 +216,7 @@ export default function JoinServicePage() {
             {result.success ? (
               <div className="p-4 rounded-lg text-sm border bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)]">
                 <p className="font-medium">
-                  Successfully registered {result.registeredCount} resource{result.registeredCount !== 1 ? "s" : ""} on the XRPL x402 Network!
+                  Successfully registered {result.registeredCount} resource{result.registeredCount !== 1 ? "s" : ""} on the XRPL x402 network!
                 </p>
                 {result.discoveryChecked && (
                   <p className="text-xs mt-1 opacity-80">
