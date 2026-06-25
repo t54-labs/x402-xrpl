@@ -5,7 +5,7 @@ import { Area, AreaChart, ResponsiveContainer, YAxis } from "recharts";
 // Compact filled area sparkline of a merchant's transaction count over time.
 // Smooth (monotone) curve, gradient fill, no dots — fills the empty right side
 // of the merchant header. Daily, 0-filled buckets keep the time axis linear.
-export function MerchantTxChart({ series }: { series: { date: string; count: number }[] }) {
+export function MerchantTxChart({ series }: { series: { t: string; count: number }[] }) {
   if (!series || series.length < 2) return null;
   return (
     <ResponsiveContainer width="100%" height="100%">
