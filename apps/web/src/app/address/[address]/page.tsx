@@ -88,9 +88,9 @@ function StatCell({ label, children }: { label: string; children: React.ReactNod
 function Avatar({ logoUrl, name, accent }: { logoUrl?: string | null; name?: string | null; accent: "blue" | "coral" }) {
   if (logoUrl) {
     return (
-      <span className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[rgba(0,0,0,0.08)] bg-white">
+      <span className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--border)] bg-black">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoUrl} alt={name || ""} className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+        <img src={logoUrl} alt={name || ""} className="h-full w-full object-cover" />
       </span>
     );
   }

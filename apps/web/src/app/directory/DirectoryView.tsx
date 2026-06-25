@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ResourceLogo } from "../components/ResourceLogo";
 import { formatCurrency } from "../utils/currency";
 
 export type Service = {
@@ -14,8 +13,28 @@ export type Service = {
   priceAsset: string;
   network?: string | null;
   isDiscovered?: boolean;
+  merchant?: { name: string | null; logoUrl?: string | null } | null;
   _count?: { transactions: number };
 };
+
+// Merchant brand logos are app-icon style and built for dark — black bg so the
+// baked-in dark backgrounds (Heurist, Lucy) blend and transparent/white marks
+// (NOFA, AskSurf) pop. Falls back to a monogram tile when there's no logo.
+function BrandLogo({ logoUrl, name, className = "h-9 w-9" }: { logoUrl?: string | null; name?: string | null; className?: string }) {
+  if (logoUrl) {
+    return (
+      <span className={`flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-black`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
+  return (
+    <span className={`flex ${className} shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.04)] font-plek text-[12px] text-[var(--paper-mute)]`}>
+      {(name?.match(/[A-Za-z0-9]/)?.[0] ?? "·").toUpperCase()}
+    </span>
+  );
+}
 
 export type Merchant = {
   address: string;
@@ -74,7 +93,7 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
               <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={cardHover}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.06]">
-                    <ResourceLogo href={s.url} name={s.name || hostOf(s.url)} />
+                    <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} />
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border ${
@@ -125,16 +144,7 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
                     className="group flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 transition-colors hover:bg-[rgba(255,255,255,0.03)]"
                   >
                     <span className="w-6 shrink-0 text-right font-mono text-[12px] text-[var(--paper-faint)]">{rank}</span>
-                    {m.logoUrl ? (
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[rgba(0,0,0,0.08)] bg-white">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.logoUrl} alt="" className="h-5 w-5 object-contain" />
-                      </span>
-                    ) : (
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[rgba(255,255,255,0.03)]">
-                        <span className="h-1 w-1 rounded-full bg-[var(--paper-faint)]" />
-                      </span>
-                    )}
+                    <BrandLogo logoUrl={m.logoUrl} name={m.name} className="h-8 w-8" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--paper)]">
                         {m.name || shortAddr(m.address)}

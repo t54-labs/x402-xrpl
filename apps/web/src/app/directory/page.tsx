@@ -7,7 +7,15 @@ export const dynamic = "force-dynamic";
 async function getServices(): Promise<Service[]> {
   try {
     const r = await apiFetch<{ items: Service[] }>("/resources?limit=48");
-    return r.items ?? [];
+    // Collapse duplicate endpoints of the same service (e.g. NOFA registers a
+    // backtest + dry-run endpoint under one name) to one card per provider+name.
+    const seen = new Set<string>();
+    return (r.items ?? []).filter((s) => {
+      const key = `${s.merchantAddr}|${(s.name ?? "").toLowerCase().trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   } catch {
     return [];
   }
