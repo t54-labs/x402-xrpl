@@ -52,7 +52,25 @@ const hostOf = (u: string) => {
   }
 };
 
+const SERVICES_PER_PAGE = 9;
 const MERCHANTS_PER_PAGE = 15;
+
+function Pager({ page, pages, setPage, label }: { page: number; pages: number; setPage: (p: number) => void; label: string }) {
+  if (pages <= 1) return null;
+  const btn =
+    "ui-control px-3 py-1.5 text-[12px] font-medium border border-[var(--border)] text-[var(--text-secondary)] enabled:hover:text-[var(--text-primary)] enabled:hover:bg-[rgba(255,255,255,0.04)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors";
+  return (
+    <div className="flex items-center justify-between pt-1">
+      <span className="text-[11px] text-[var(--text-muted)]">
+        Page {page} of {pages} · {label}
+      </span>
+      <div className="flex items-center gap-2">
+        <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className={btn}>Prev</button>
+        <button onClick={() => setPage(Math.min(pages, page + 1))} disabled={page === pages} className={btn}>Next</button>
+      </div>
+    </div>
+  );
+}
 
 const cardHover =
   "group relative block rounded-[16px] bg-[var(--bg-surface)] border border-[var(--border)] p-5 transition duration-200 ease-out hover:-translate-y-1 hover:bg-[var(--ink-raised)] hover:border-[rgba(201,70,46,0.5)] hover:[filter:drop-shadow(0_10px_22px_rgba(0,0,0,0.45))_drop-shadow(0_6px_18px_rgba(201,70,46,0.16))]";
@@ -71,6 +89,16 @@ function SectionHead({ n, title, count, sub }: { n: string; title: string; count
 }
 
 export function DirectoryView({ services, merchants }: { services: Service[]; merchants: Merchant[] }) {
+  // Services: put the distinct non-Heurist providers first, then Heurist's many
+  // tool endpoints; paginate 9 to a page.
+  const sortedServices = useMemo(() => {
+    const heuristLast = (s: Service) => (/heurist/i.test(s.url) ? 1 : 0);
+    return [...services].sort((a, b) => heuristLast(a) - heuristLast(b));
+  }, [services]);
+  const [svcPage, setSvcPage] = useState(1);
+  const svcPages = Math.max(1, Math.ceil(sortedServices.length / SERVICES_PER_PAGE));
+  const svcSlice = sortedServices.slice((svcPage - 1) * SERVICES_PER_PAGE, svcPage * SERVICES_PER_PAGE);
+
   const sorted = useMemo(
     () => [...merchants].sort((a, b) => (b._count?.transactions ?? 0) - (a._count?.transactions ?? 0)),
     [merchants],
@@ -88,8 +116,9 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
         {services.length === 0 ? (
           <Empty label="No services indexed yet." />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {services.map((s) => (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {svcSlice.map((s) => (
               <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={cardHover}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.06]">
@@ -122,8 +151,10 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
                   {s._count ? <span className="text-[var(--text-muted)]">{s._count.transactions.toLocaleString()} txns</span> : null}
                 </div>
               </a>
-            ))}
-          </div>
+              ))}
+            </div>
+            <Pager page={svcPage} pages={svcPages} setPage={setSvcPage} label={`${sortedServices.length} services`} />
+          </>
         )}
       </section>
 
