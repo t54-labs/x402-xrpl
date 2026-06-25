@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { BrandLogo } from "../components/BrandLogo";
 import { formatCurrency } from "../utils/currency";
 
 export type Service = {
@@ -16,25 +17,6 @@ export type Service = {
   merchant?: { name: string | null; logoUrl?: string | null } | null;
   _count?: { transactions: number };
 };
-
-// Merchant brand logos are app-icon style and built for dark — black bg so the
-// baked-in dark backgrounds (Heurist, Lucy) blend and transparent/white marks
-// (NOFA, AskSurf) pop. Falls back to a monogram tile when there's no logo.
-function BrandLogo({ logoUrl, name, className = "h-9 w-9" }: { logoUrl?: string | null; name?: string | null; className?: string }) {
-  if (logoUrl) {
-    return (
-      <span className={`flex ${className} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-black`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoUrl} alt="" className="h-full w-full object-cover" />
-      </span>
-    );
-  }
-  return (
-    <span className={`flex ${className} shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.04)] font-plek text-[12px] text-[var(--paper-mute)]`}>
-      {(name?.match(/[A-Za-z0-9]/)?.[0] ?? "·").toUpperCase()}
-    </span>
-  );
-}
 
 export type Merchant = {
   address: string;

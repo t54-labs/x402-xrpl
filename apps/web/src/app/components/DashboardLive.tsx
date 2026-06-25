@@ -9,6 +9,7 @@ import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip } from "./DashboardStats";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
+import { BrandLogo } from "./BrandLogo";
 import { formatCurrency } from "../utils/currency";
 
 const REFRESH_INTERVAL_MS = 8000;
@@ -59,7 +60,17 @@ export type DashboardData = {
   }>;
 };
 
-export function DashboardLive({ initialData }: { initialData: DashboardData }) {
+export type DirectoryService = {
+  id: string;
+  merchantAddr: string;
+  url: string;
+  name: string | null;
+  priceAmount: string;
+  priceAsset: string;
+  merchant?: { name: string | null; logoUrl?: string | null } | null;
+};
+
+export function DashboardLive({ initialData, services }: { initialData: DashboardData; services: DirectoryService[] }) {
   const [data, setData] = useState(initialData);
   const [range, setRange] = useState<"7d" | "30d" | "all">("all");
 
@@ -82,8 +93,6 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
       window.clearInterval(interval);
     };
   }, [range]);
-
-  const registeredResources = data.recentResources;
 
   // ── Debug toolbar (only when ?debug is in the URL) — inject synthetic
   // settlements so the live-feed entrance/seal animation can be demoed on staging.
@@ -167,7 +176,7 @@ export function DashboardLive({ initialData }: { initialData: DashboardData }) {
         </div>
 
         <FacilitatorPanel />
-        <AgoraPanel resources={registeredResources} />
+        <DirectoryPanel services={services} />
         <TopMerchantsPanel merchants={data.topMerchants} />
       </div>
     </div>
@@ -246,52 +255,54 @@ function FacilitatorPanel() {
   );
 }
 
-function AgoraPanel({ resources }: { resources: DashboardData["recentResources"] }) {
+function DirectoryPanel({ services }: { services: DirectoryService[] }) {
+  const hostOf = (u: string) => {
+    try {
+      return new URL(u).hostname.replace(/^www\./, "");
+    } catch {
+      return u;
+    }
+  };
   return (
     <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Agora</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Pay-per-use APIs and resources in the x402 ecosystem.</p>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Directory</h2>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Live x402 services agents can pay to use on XRPL.</p>
         </div>
-        <Link href="/agora" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors shrink-0">
-          Browse All &rarr;
+        <Link href="/directory" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors shrink-0">
+          Browse all &rarr;
         </Link>
       </div>
 
-      {resources.length > 0 ? (
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
-          <AnimatePresence initial={false}>
-            {resources.map((res) => (
-              <motion.div
-                key={res.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <Link href={`/address/${res.merchantAddr}`} className="block h-full">
-                  <div className="agora-resource-card p-4 bg-[rgba(255,255,255,0.02)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200 group h-full">
-                    <h3 className="text-sm font-medium text-[var(--text-primary)] truncate">{res.name || "API Resource"}</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-1 truncate font-mono">{res.url}</p>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="!rounded-md text-[11px] font-mono bg-[rgba(0,140,255,0.06)] text-[var(--brand-blue)] px-2 py-0.5 border border-[rgba(0,140,255,0.12)]">
-                        <AnimatedAmount amount={res.priceAmount} /> {formatCurrency(res.priceAsset)}
-                      </span>
-                      <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{res.network}</span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+      {services.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
+          {services.map((s) => (
+            <Link
+              key={s.id}
+              href={`/address/${s.merchantAddr}`}
+              className="agora-resource-card block h-full p-4 bg-[rgba(255,255,255,0.02)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200"
+            >
+              <div className="flex items-start gap-3">
+                <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} className="h-8 w-8" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-medium text-[var(--text-primary)] leading-snug line-clamp-2">{s.name || "API resource"}</h3>
+                  <p className="mt-0.5 text-[11px] font-mono text-[var(--text-muted)] truncate">{hostOf(s.url)}</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <span className="!rounded-md text-[11px] font-mono bg-[rgba(0,140,255,0.06)] text-[var(--brand-blue)] px-2 py-0.5 border border-[rgba(0,140,255,0.12)]">
+                  {s.priceAmount} {formatCurrency(s.priceAsset)}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col items-center text-center py-12 gap-3">
-          <p className="text-[var(--text-muted)] text-sm">No resources registered yet.</p>
+          <p className="text-[var(--text-muted)] text-sm">No services indexed yet.</p>
           <Link href="/join/service" className="text-xs text-[var(--text-muted)] hover:text-[var(--brand-blue)] transition-colors">
-            Register the first one &rarr;
+            List the first one &rarr;
           </Link>
         </div>
       )}
