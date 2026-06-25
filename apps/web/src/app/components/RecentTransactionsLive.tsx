@@ -107,7 +107,7 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
       }}
       exit={{ opacity: 0, x: 16, transition: { duration: 0.22 } }}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="relative shrink-0 w-[236px] rounded-[14px] border overflow-hidden"
+      className="group relative shrink-0 w-[236px] rounded-[14px] border overflow-hidden cursor-pointer"
       style={{
         background: sealed ? "linear-gradient(180deg, var(--blue-08), rgba(0,0,0,0))" : "var(--ink-surface)",
         borderColor: sealed ? "var(--blue-28)" : "var(--rule)",
@@ -115,14 +115,17 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
     >
       {/* fixed-blue hash stripe along the top */}
       <span className="absolute left-0 right-0 top-0 h-[2px]" style={{ background: "var(--brand-blue)" }} />
+      {/* whole card is clickable → tx detail */}
+      <span className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ background: "rgba(255,255,255,0.03)" }} />
+      <Link href={`/tx/${tx.hash}`} aria-label="View transaction details" className="absolute inset-0 z-20" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <Link href={`/tx/${tx.hash}`} className="flex items-baseline gap-1 min-w-0 hover:opacity-80 transition-opacity">
+          <div className="flex items-baseline gap-1 min-w-0">
             <span className="font-mono tabular-nums text-[20px] leading-none text-[var(--paper)]">
               <AnimatedTransactionAmount amount={tx.amount} />
             </span>
             <span className="text-[9px] uppercase tracking-[0.2em] font-plek text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
-          </Link>
+          </div>
           <span className="text-[10px] font-mono text-[var(--t54-coral)] truncate max-w-[72px] text-right">{merchantName}</span>
         </div>
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
+import { formatCurrency } from "../../utils/currency";
 import { apiFetch } from "../../lib/api";
 
 interface PageProps {
@@ -18,6 +19,20 @@ type TxDetail = {
   resource?: { url: string; name: string | null } | null;
 };
 
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-4 px-5 sm:px-6 py-4">
+      <div className="sm:w-52 shrink-0">
+        <span className="text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">{label}</span>
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">{children}</div>
+    </div>
+  );
+}
+
+const mono = "font-mono text-[13px] text-[var(--brand-blue)] break-all";
+const linkMono = "font-mono text-[13px] text-[var(--brand-blue)] break-all hover:underline";
+
 export default async function TransactionDetailPage({ params }: PageProps) {
   const { hash } = await params;
 
@@ -28,146 +43,76 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  type Field = { label: string; value: string; mono?: boolean; copyable?: boolean; relative?: string; highlight?: boolean };
-
-  const fields: Field[] = [
-    { label: "Transaction Hash", value: tx.hash, mono: true, copyable: true },
-    { label: "Ledger Index", value: tx.ledgerIndex.toLocaleString() },
-    { label: "Timestamp", value: new Date(tx.timestamp).toLocaleString(), relative: tx.timestamp },
-    { label: "Amount", value: `${tx.amount} ${tx.asset}`, highlight: true },
-  ];
-
-  if (tx.assetIssuer) {
-    fields.push({ label: "Asset Issuer", value: tx.assetIssuer, mono: true, copyable: true });
-  }
-
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <div className="flex items-center gap-3 mb-2">
-        <Link href="/transactions" className="text-gray-500 hover:text-gray-300 transition-colors text-sm">&larr; All Transactions</Link>
-      </div>
+      <header className="animate-fade-up">
+        <Link href="/transactions" className="text-[13px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
+          &larr; All transactions
+        </Link>
+        <span className="mt-6 block text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Transaction</span>
+        <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">Transaction details</h1>
+        <p className="mt-2 font-mono text-[13px] text-[var(--text-muted)] break-all">{hash}</p>
+      </header>
 
-      <div className="flex items-center gap-4">
-        <div className="ui-card w-12 h-12 rounded-xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center shrink-0">
-          <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="7" cy="7" r="1.1" fill="currentColor" stroke="none" />
-            <circle cx="7" cy="12" r="1.1" fill="currentColor" stroke="none" />
-            <circle cx="7" cy="17" r="1.1" fill="currentColor" stroke="none" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10 7h7M10 12h7M10 17h7" />
-          </svg>
-        </div>
-        <div>
-          <h1 className="text-3xl font-light text-white tracking-tight">Transaction Details</h1>
-          <p className="text-sm text-gray-500 font-mono mt-1">{hash.substring(0, 20)}...</p>
-        </div>
-      </div>
-
-      <div className="ui-card bg-[#131518] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
-        <div className="divide-y divide-white/5">
-          {fields.map((f) => (
-            <div key={f.label} className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">{f.label}</span>
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className={`text-sm break-all ${f.mono ? "font-mono text-cyan-400" : ""} ${f.highlight ? "font-medium text-white text-lg" : "text-gray-300"}`}>
-                  {f.value}
-                </span>
-                {f.copyable && <CopyButton text={f.value as string} />}
-                {f.relative && (
-                  <span className="text-xs text-gray-500">
-                    (<RelativeTime date={f.relative} />)
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-
-          <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-            <div className="sm:w-48 shrink-0">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Buyer</span>
-            </div>
-            <div className="flex items-center gap-2 min-w-0">
-              <Link href={`/address/${tx.buyerAddress}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors break-all">
-                {tx.buyerAddress}
-              </Link>
-              <CopyButton text={tx.buyerAddress} />
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-            <div className="sm:w-48 shrink-0">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Merchant</span>
-            </div>
-            <div className="flex items-center gap-2 min-w-0">
-              <Link href={`/address/${tx.merchantAddr}`} className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors break-all">
-                {tx.merchant?.name || tx.merchantAddr}
-              </Link>
-              <CopyButton text={tx.merchantAddr} />
-            </div>
-          </div>
-
-          {tx.resource && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Resource</span>
-              </div>
+      <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
+        <div className="divide-y divide-[var(--border)]">
+          <Row label="Amount">
+            <span className="font-mono tabular-nums text-lg text-[var(--paper)]">{tx.amount}</span>
+            <span className="text-[11px] font-plek uppercase tracking-[0.16em] text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
+          </Row>
+          <Row label="Transaction hash">
+            <span className={mono}>{tx.hash}</span>
+            <CopyButton text={tx.hash} />
+          </Row>
+          <Row label="Ledger index">
+            <span className="font-mono tabular-nums text-[13px] text-[var(--text-secondary)]">{tx.ledgerIndex.toLocaleString()}</span>
+          </Row>
+          <Row label="Timestamp">
+            <span className="text-[14px] text-[var(--text-secondary)]">{new Date(tx.timestamp).toLocaleString()}</span>
+            <span className="text-[12px] text-[var(--text-muted)]">(<RelativeTime date={tx.timestamp} />)</span>
+          </Row>
+          {tx.assetIssuer ? (
+            <Row label="Asset issuer">
+              <span className={mono}>{tx.assetIssuer}</span>
+              <CopyButton text={tx.assetIssuer} />
+            </Row>
+          ) : null}
+          <Row label="Buyer">
+            <Link href={`/address/${tx.buyerAddress}`} className={linkMono}>{tx.buyerAddress}</Link>
+            <CopyButton text={tx.buyerAddress} />
+          </Row>
+          <Row label="Merchant">
+            <Link href={`/address/${tx.merchantAddr}`} className={linkMono}>{tx.merchant?.name || tx.merchantAddr}</Link>
+            <CopyButton text={tx.merchantAddr} />
+          </Row>
+          {tx.resource ? (
+            <Row label="Resource">
               <div className="min-w-0">
-                <p className="text-sm text-gray-300">{tx.resource.name || "Unnamed Resource"}</p>
-                <p className="text-xs text-gray-500 font-mono mt-1 break-all">{tx.resource.url}</p>
+                <p className="text-[14px] text-[var(--text-secondary)]">{tx.resource.name || "Unnamed resource"}</p>
+                <p className="mt-0.5 font-mono text-[12px] text-[var(--text-muted)] break-all">{tx.resource.url}</p>
               </div>
-            </div>
-          )}
-
-          {tx.destinationTag !== null && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Destination Tag</span>
-              </div>
-              <span className="text-sm text-gray-300 font-mono">{tx.destinationTag}</span>
-            </div>
-          )}
-
-          {tx.sourceTag !== null && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Source Tag</span>
-              </div>
-              <span className="text-sm text-gray-300 font-mono">{tx.sourceTag}</span>
-            </div>
-          )}
-
-          {tx.invoiceId && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Invoice ID</span>
-              </div>
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-sm text-gray-300 font-mono break-all">{tx.invoiceId}</span>
-                <CopyButton text={tx.invoiceId} />
-              </div>
-            </div>
-          )}
-
-          {tx.rawMemo && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Raw Memo</span>
-              </div>
-              <div className="min-w-0">
-                <pre className="ui-card text-xs text-gray-400 font-mono bg-[#0b0d10] rounded-lg p-3 overflow-x-auto break-all whitespace-pre-wrap">{tx.rawMemo}</pre>
-              </div>
-            </div>
-          )}
-
-          {tx.facilitator && (
-            <div className="flex flex-col sm:flex-row px-6 py-4 gap-2">
-              <div className="sm:w-48 shrink-0">
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Facilitator</span>
-              </div>
-              <span className="text-sm text-gray-300 font-mono">{tx.facilitator}</span>
-            </div>
-          )}
+            </Row>
+          ) : null}
+          {tx.destinationTag !== null ? (
+            <Row label="Destination tag"><span className="font-mono text-[13px] text-[var(--text-secondary)]">{tx.destinationTag}</span></Row>
+          ) : null}
+          {tx.sourceTag !== null ? (
+            <Row label="Source tag"><span className="font-mono text-[13px] text-[var(--text-secondary)]">{tx.sourceTag}</span></Row>
+          ) : null}
+          {tx.invoiceId ? (
+            <Row label="Invoice ID">
+              <span className="font-mono text-[13px] text-[var(--text-secondary)] break-all">{tx.invoiceId}</span>
+              <CopyButton text={tx.invoiceId} />
+            </Row>
+          ) : null}
+          {tx.facilitator ? (
+            <Row label="Facilitator"><span className="font-mono text-[13px] text-[var(--text-secondary)] break-all">{tx.facilitator}</span></Row>
+          ) : null}
+          {tx.rawMemo ? (
+            <Row label="Raw memo">
+              <pre className="w-full !rounded-lg border border-[var(--border)] bg-[var(--ink-surface)] p-3 font-mono text-[12px] text-[var(--text-muted)] overflow-x-auto whitespace-pre-wrap break-all">{tx.rawMemo}</pre>
+            </Row>
+          ) : null}
         </div>
       </div>
 
@@ -176,12 +121,10 @@ export default async function TransactionDetailPage({ params }: PageProps) {
           href={`${getExplorerUrl()}/transactions/${hash}`}
           target="_blank"
           rel="noreferrer"
-          className="ui-control inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
+          className="ui-control inline-flex items-center gap-2 px-4 py-2 text-[13px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
         >
           View on XRPL Explorer
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
+          <span aria-hidden="true">&#8599;</span>
         </a>
       </div>
     </div>
