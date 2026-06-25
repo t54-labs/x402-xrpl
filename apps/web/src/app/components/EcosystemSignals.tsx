@@ -111,7 +111,7 @@ export function EcosystemSignals({ signals }: { signals: Signal[] }) {
         <a href={feat.url} target="_blank" rel="noreferrer" className="group block">
           <div key={feat.id} className="animate-fade-in flex min-h-[66px] items-center justify-center">
             <p className="mx-auto max-w-3xl text-[20px] sm:text-[26px] font-medium leading-tight tracking-[-0.01em] text-[var(--paper)] transition-colors group-hover:text-white">
-              {feat.headline}
+              「{feat.headline}」
             </p>
           </div>
           <div className="mt-3.5 inline-flex flex-wrap items-center justify-center gap-2.5">
