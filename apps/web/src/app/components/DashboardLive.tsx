@@ -11,7 +11,7 @@ import { CumulativeVolumeChart } from "./HomeCharts";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
 import { BrandLogo } from "./BrandLogo";
-import { EcosystemSignals } from "./EcosystemSignals";
+import { NewsRail } from "./NewsRail";
 import type { Signal } from "../lib/signals";
 import { formatCurrency } from "../utils/currency";
 
@@ -173,7 +173,7 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
       <div className="flex flex-col gap-6 stagger-children">
         <RecentTransactionsPanel transactions={feed} />
 
-        <EcosystemSignals signals={signals} />
+        <NewsRail signals={signals} />
 
         {/* Mastercard Verifiable Intent — the agent-authority layer integrated across the hub */}
         <div className="flex items-start sm:items-center gap-4 dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] px-5 py-4">
@@ -200,7 +200,7 @@ function Hero() {
       <XrplDotMark animated size={760} className="pointer-events-none absolute right-[-50px] top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.72]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
-          <BrandDots count={3} className="shrink-0" /> XRPL · AI community
+          <BrandDots count={3} className="shrink-0" /> XRPL · AI hub
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
           Build the agent economy on XRP Ledger <span className="text-[var(--t54-coral)]">together</span>

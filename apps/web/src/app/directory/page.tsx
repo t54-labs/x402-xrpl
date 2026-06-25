@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
+import { ParticleField } from "../components/ParticleField";
 import { DirectoryView, type Service, type Merchant } from "./DirectoryView";
 
 export const dynamic = "force-dynamic";
@@ -40,19 +41,24 @@ export default async function DirectoryPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      <header className="animate-fade-up flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div className="max-w-2xl">
-          <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Directory</span>
-          <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
-            Who&rsquo;s building<br />on the rail
-          </h1>
-          <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
-            Live x402 services and the merchants settling on XRPL — indexed from mainnet, in RLUSD and XRP.
-          </p>
+      <header className="relative animate-fade-up">
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 z-0 overflow-hidden" style={{ left: "calc(50% - 50vw)", width: "100vw" }}>
+          <ParticleField className="absolute inset-0 h-full w-full opacity-70" />
         </div>
-        <Link href="/join/service" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">
-          Get listed
-        </Link>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 py-6">
+          <div className="max-w-2xl">
+            <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Directory</span>
+            <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+              Who&rsquo;s building<br />on the rail
+            </h1>
+            <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
+              Live x402 services and the merchants settling on XRPL — indexed from mainnet, in RLUSD and XRP.
+            </p>
+          </div>
+          <Link href="/join/service" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm shrink-0">
+            Get listed
+          </Link>
+        </div>
       </header>
 
       <DirectoryView services={services} merchants={merchants} />
