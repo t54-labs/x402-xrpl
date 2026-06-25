@@ -31,8 +31,8 @@ export function OverviewMetricsStrip({
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
         <CurrencyCell label="XRP settled" value={xrp} asset="XRP" />
         <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" />
-        <MetricCell label="Transactions" value={totalTransactions} />
-        <MetricCell label="Merchants" value={totalMerchants} />
+        <MetricCell label="Transactions" value={totalTransactions} href="/transactions" />
+        <MetricCell label="Merchants" value={totalMerchants} href="/directory" />
       </div>
     </div>
   );
