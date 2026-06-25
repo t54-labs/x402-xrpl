@@ -88,7 +88,9 @@ function DeltaBadge({ values }: { values: number[] }) {
       label = "—";
       color = "text-[var(--paper-mute)]";
     } else {
-      label = `${pct > 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(0)}%`;
+      // Large swings read better as a multiplier (▲ 21×) than ▲ 2057%.
+      const mag = Math.abs(pct) >= 1000 ? `${Math.round(recent / prior)}×` : `${Math.abs(pct).toFixed(0)}%`;
+      label = `${pct > 0 ? "▲" : "▼"} ${mag}`;
       color = pct > 0 ? "text-[var(--brand-blue)]" : "text-[var(--t54-coral)]";
     }
   }
