@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DotField } from "../../components/BrandDots";
+import { OfferedApisList } from "../../components/OfferedApisList";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
 import { getExplorerUrl } from "../../utils/explorer";
@@ -147,21 +148,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-lg font-medium tracking-tight text-[var(--paper)]">Offered APIs</h2>
-          <div className="space-y-3">
-            {merchant.resources.map((res) => (
-              <div key={res.id} className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5">
-                <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">{res.name || "Unnamed resource"}</h3>
-                <p className="mt-1 text-[11px] font-mono text-[var(--text-muted)] truncate" title={res.url}>{res.url}</p>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="font-mono text-[13px] text-[var(--brand-blue)]">{res.priceAmount} {formatCurrency(res.priceAsset)}</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border ${res.isActive ? "text-emerald-400 bg-emerald-500/8 border-emerald-500/15" : "text-[var(--text-muted)] bg-[rgba(255,255,255,0.04)] border-[var(--border)]"}`}>{res.isActive ? "Active" : "Inactive"}</span>
-                </div>
-              </div>
-            ))}
-            {merchant.resources.length === 0 && (
-              <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">No resources registered for this merchant.</div>
-            )}
-          </div>
+          <OfferedApisList resources={merchant.resources} />
         </div>
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-lg font-medium tracking-tight text-[var(--paper)]">Recent payments</h2>
