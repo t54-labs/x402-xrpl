@@ -550,6 +550,39 @@ app.get("/transactions/:hash", async (req, res) => {
   }
 });
 
+// Build a continuous, 0-filled transaction-count series for a sparkline.
+// Granularity adapts to the active span: hourly when it fits ~3 days (so a
+// short, dense history still draws a real curve), otherwise daily. 0-fills
+// gaps so the time axis stays linear, capped to the most recent ~120 buckets.
+function buildTxSeries(rows: Array<{ bucket: Date | string; count: number | bigint }>): Array<{ t: string; count: number }> {
+  if (rows.length === 0) return [];
+  const hourMs = 3_600_000;
+  const dayMs = 86_400_000;
+  const first = new Date(rows[0].bucket).getTime();
+  const last = new Date(rows[rows.length - 1].bucket).getTime();
+  const hourly = last - first <= 3 * dayMs;
+  const step = hourly ? hourMs : dayMs;
+  const sliceLen = hourly ? 13 : 10; // YYYY-MM-DDTHH | YYYY-MM-DD
+  const keyOf = (ms: number) => new Date(ms).toISOString().slice(0, sliceLen);
+
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    const ms = Math.floor(new Date(r.bucket).getTime() / step) * step;
+    counts.set(keyOf(ms), (counts.get(keyOf(ms)) ?? 0) + Number(r.count));
+  }
+
+  const MAX = 120;
+  const startTrunc = Math.floor(first / step) * step;
+  const endTrunc = Math.floor(last / step) * step;
+  let cursor = Math.max(startTrunc, endTrunc - (MAX - 1) * step);
+  const series: Array<{ t: string; count: number }> = [];
+  while (cursor <= endTrunc) {
+    series.push({ t: new Date(cursor).toISOString(), count: counts.get(keyOf(cursor)) ?? 0 });
+    cursor += step;
+  }
+  return series;
+}
+
 // ── Address (cached 10s per address+page) ───────────────────
 app.get("/address/:address", async (req, res) => {
   try {
@@ -573,7 +606,7 @@ app.get("/address/:address", async (req, res) => {
     }
 
     if (isMerchant) {
-      const [transactions, totalTxCount, volumeResult] = await Promise.all([
+      const [transactions, totalTxCount, volumeResult, txHourlyRaw] = await Promise.all([
         prisma.transaction.findMany({
           where: { merchantAddr: address },
           take: pageSize,
@@ -586,6 +619,12 @@ app.get("/address/:address", async (req, res) => {
           `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "merchantAddr" = $1 GROUP BY asset ORDER BY total DESC`,
           address
         ),
+        prisma.$queryRawUnsafe<Array<{ bucket: Date; count: number }>>(
+          `SELECT date_trunc('hour', "timestamp") as bucket, COUNT(*)::int as count
+           FROM "Transaction" WHERE "merchantAddr" = $1
+           GROUP BY 1 ORDER BY 1 ASC`,
+          address
+        ),
       ]);
 
       const volumeByAsset = volumeResult.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
@@ -596,6 +635,7 @@ app.get("/address/:address", async (req, res) => {
         totalTxCount,
         totalVolume: volumeByAsset.find((v) => v.asset === "XRP")?.total ?? 0,
         volumeByAsset,
+        txSeries: buildTxSeries(txHourlyRaw),
         transactions,
         pagination: { page, pageSize, totalPages: Math.ceil(totalTxCount / pageSize) },
       };

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DotField } from "../../components/BrandDots";
+import { MerchantTxChart } from "../../components/MerchantTxChart";
 import { OfferedApisList } from "../../components/OfferedApisList";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
@@ -37,6 +38,7 @@ type AddressResponse = {
   txCount?: number;
   totalVolume?: number;
   volumeByAsset?: AssetVolume[];
+  txSeries?: Array<{ t: string; count: number }>;
   totalSpent?: number;
   spentByAsset?: AssetVolume[];
   uniqueMerchants?: number;
@@ -117,11 +119,20 @@ function hostOf(u: string) {
 function MerchantView({ address, data }: { address: string; data: AddressResponse }) {
   const merchant = data.merchant!;
   const totalTxCount = data.totalTxCount ?? 0;
+  const series = data.txSeries ?? [];
+  const hasChart = series.length >= 2;
+  // Short, dense spans label the ends with the time too (like an intraday tape).
+  const spanMs = hasChart ? new Date(series[series.length - 1].t).getTime() - new Date(series[0].t).getTime() : 0;
+  const withTime = spanMs <= 3 * 86_400_000;
+  const fmtTick = (iso: string) =>
+    new Date(iso).toLocaleString("en-US", withTime ? { month: "short", day: "numeric", hour: "numeric" } : { month: "short", day: "numeric" });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       <div className="dashboard-panel relative overflow-hidden bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8">
-        <DotField className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block text-[var(--paper-faint)] opacity-[0.1]" cols={10} rows={4} />
+        {hasChart ? null : (
+          <DotField className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block text-[var(--paper-faint)] opacity-[0.1]" cols={10} rows={4} />
+        )}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 sm:gap-6">
           <Avatar logoUrl={merchant.logoUrl} name={merchant.name} accent="blue" />
           <div className="min-w-0">
@@ -136,6 +147,18 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
               <a href={`${getExplorerUrl()}/accounts/${address}`} target="_blank" rel="noreferrer" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">XRPL Explorer &#8599;</a>
             </div>
           </div>
+          {hasChart ? (
+            <div className="ml-auto hidden w-[300px] shrink-0 lg:block">
+              <span className="mb-1.5 block font-plek text-[9px] uppercase tracking-[0.2em] text-[var(--paper-mute)]">Transactions over time</span>
+              <div className="h-[60px]">
+                <MerchantTxChart series={series} />
+              </div>
+              <div className="mt-1 flex items-center justify-between font-mono text-[9px] text-[var(--paper-faint)] tabular-nums">
+                <span>{fmtTick(series[0].t)}</span>
+                <span>{fmtTick(series[series.length - 1].t)}</span>
+              </div>
+            </div>
+          ) : null}
         </div>
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-7 border-t border-[var(--rule)]">
           <StatCell label="Total volume"><VolumeDisplay volumes={data.volumeByAsset} fallback={data.totalVolume} /></StatCell>
