@@ -178,7 +178,7 @@ export function DashboardLive({ initialData, services, servicesTotal }: { initia
           <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed">
             <span className="text-[var(--paper)] font-medium">Verifiable Intent, built in.</span> Every agent payment on the hub can carry
             Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54&rsquo;s
-            X402 Secure before it settles.
+            x402 Secure before it settles.
           </p>
         </div>
 

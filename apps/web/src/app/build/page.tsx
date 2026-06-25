@@ -42,7 +42,7 @@ const WHY = [
   {
     spec: "Mastercard Verifiable Intent",
     title: "Authority is provable, before the money moves",
-    body: "X402 Secure implements a Verifiable Intent chain — a Know-Your-Agent credential, an owner-signed delegation with spend limits, and a per-payment agent signature — checked against your risk policy before settlement. Verifiable Intent is Mastercard's framework (Agent Pay for Machines); Ripple and t54 Labs are named partners.",
+    body: "x402 Secure implements a Verifiable Intent chain — a Know-Your-Agent credential, an owner-signed delegation with spend limits, and a per-payment agent signature — checked against your risk policy before settlement. Verifiable Intent is Mastercard's framework (Agent Pay for Machines); Ripple and t54 Labs are named partners.",
   },
 ];
 
@@ -96,7 +96,7 @@ const STEPS = [
 const REFS = [
   { label: "x402-xrpl SDK", href: "https://www.npmjs.com/package/x402-xrpl", note: "npm · PyPI · TypeScript + Python" },
   { label: "x402 Facilitator", href: "https://xrpl-x402.t54.ai", note: "hosted verify + settle · no custody" },
-  { label: "X402 Secure — Verifiable Intent", href: "https://www.t54.ai/x402-secure", note: "KYA + delegation + risk gating" },
+  { label: "x402 Secure — Verifiable Intent", href: "https://www.t54.ai/x402-secure", note: "KYA + delegation + risk gating" },
   { label: "XRPL agentic docs", href: "https://xrpl.org/docs/agents/getting-started-with-agentic-transactions", note: "official wallet + payments skills" },
 ];
 

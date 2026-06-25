@@ -159,7 +159,7 @@ export default function WhyXrplPage() {
               standardization.
             </p>
             <p className="mt-4 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-3xl">
-              t54&rsquo;s X402 Secure implements a Verifiable Intent chain on XRPL — a Know-Your-Agent credential
+              t54&rsquo;s x402 Secure implements a Verifiable Intent chain on XRPL — a Know-Your-Agent credential
               (L1), an owner-signed delegation with spend limits (L2), and a per-payment agent signature (L3) — and the
               facilitator checks that chain against your risk policy <em>before</em> a payment settles. Authority isn&rsquo;t
               asserted in a log after the fact; it&rsquo;s proven on the payment path.
