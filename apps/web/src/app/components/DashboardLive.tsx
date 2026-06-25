@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
-import { OverviewMetricsStrip } from "./DashboardStats";
+import { OverviewMetricsStrip, type TimeBucket } from "./DashboardStats";
+import { CumulativeVolumeChart, SettlementMixDonut } from "./HomeCharts";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
 import { BrandLogo } from "./BrandLogo";
@@ -58,6 +59,7 @@ export type DashboardData = {
     txCount: number;
     volumeByAsset?: AssetVolume[];
   }>;
+  timeSeries?: TimeBucket[];
 };
 
 export type DirectoryService = {
@@ -158,7 +160,12 @@ export function DashboardLive({ initialData, services, servicesTotal }: { initia
           fallbackXrp={data.totalVolumeXrp}
           totalTransactions={data.totalTransactions}
           totalMerchants={data.totalMerchants}
+          timeSeries={data.timeSeries}
         />
+      </div>
+
+      <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
+        <CumulativeVolumeChart series={data.timeSeries} />
       </div>
 
       <div className="flex flex-col gap-6 stagger-children">
@@ -177,7 +184,12 @@ export function DashboardLive({ initialData, services, servicesTotal }: { initia
 
         <FacilitatorPanel />
         <ServiceMarquee services={services} total={servicesTotal} />
-        <TopMerchantsPanel merchants={data.topMerchants} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <TopMerchantsPanel merchants={data.topMerchants} />
+          </div>
+          <SettlementMixDonut volumes={data.volumeByAsset} />
+        </div>
       </div>
     </div>
   );

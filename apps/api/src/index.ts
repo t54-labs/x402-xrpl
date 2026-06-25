@@ -229,7 +229,7 @@ app.get("/dashboard", async (req, res) => {
     const cached = getCached(cacheKey);
     if (cached) return res.json(cached);
 
-    const [indexerState, totalMerchantsAll, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw, windowCountsRaw] = await Promise.all([
+    const [indexerState, totalMerchantsAll, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw, windowCountsRaw, tsRows, tsAssetRows] = await Promise.all([
       prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
@@ -266,6 +266,14 @@ app.get("/dashboard", async (req, res) => {
       ),
       prisma.$queryRawUnsafe<Array<{ tx: bigint; merchants: bigint }>>(
         `SELECT COUNT(*) as tx, COUNT(DISTINCT "merchantAddr") as merchants FROM "Transaction" ${tf}`
+      ),
+      prisma.$queryRawUnsafe<Array<{ bucket: Date; tx: number; vol: number; merchants: number }>>(
+        `SELECT date_trunc('hour', "timestamp") AS bucket, COUNT(*)::int AS tx, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) AS vol, COUNT(DISTINCT "merchantAddr")::int AS merchants
+         FROM "Transaction" ${tf} GROUP BY 1 ORDER BY 1 ASC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ bucket: Date; asset: string; vol: number }>>(
+        `SELECT date_trunc('hour', "timestamp") AS bucket, asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) AS vol
+         FROM "Transaction" ${tf} GROUP BY 1, asset ORDER BY 1 ASC`
       ),
     ]);
 
@@ -318,6 +326,7 @@ app.get("/dashboard", async (req, res) => {
       volumeByAsset: facVolMap.get(Number(f.sourceTag)) || [],
     }));
     const activeAgents = Number(activeAgentsRaw[0]?.c ?? 0);
+    const timeSeries = buildDashSeries(tsRows, tsAssetRows);
 
     const data = {
       range,
@@ -328,6 +337,7 @@ app.get("/dashboard", async (req, res) => {
       volumeByAsset,
       activeAgents,
       facilitators,
+      timeSeries,
       recentTransactions,
       recentResources,
       topMerchants,
@@ -581,6 +591,63 @@ function buildTxSeries(rows: Array<{ bucket: Date | string; count: number | bigi
     cursor += step;
   }
   return series;
+}
+
+// Decode an XRPL currency code to its display label (mirror of the web's
+// formatCurrency): "XRP" stays; 40-char hex codes decode to ASCII (e.g. RLUSD).
+function decodeAsset(code: string): string {
+  if (!code) return "???";
+  if (code === "XRP") return "XRP";
+  const cur = code.includes(".") ? code.split(".")[0] : code;
+  if (cur.length <= 3) return cur;
+  if (cur.length === 40 && /^[0-9A-Fa-f]+$/.test(cur)) {
+    const ascii = cur
+      .match(/.{2}/g)!
+      .map((h) => parseInt(h, 16))
+      .filter((c) => c > 0 && c < 128)
+      .map((c) => String.fromCharCode(c))
+      .join("");
+    return ascii || cur.slice(0, 8);
+  }
+  return cur;
+}
+
+// Build the home dashboard time-series: hourly buckets, 0-filled between the
+// first and last active hour (capped to the most recent 720), each carrying tx
+// count, total volume, distinct active merchants, and volume per decoded asset.
+function buildDashSeries(
+  rows: Array<{ bucket: Date | string; tx: number | bigint; vol: number; merchants: number | bigint }>,
+  assetRows: Array<{ bucket: Date | string; asset: string; vol: number }>,
+): Array<{ t: string; txCount: number; volume: number; merchants: number; byAsset: Record<string, number> }> {
+  if (rows.length === 0) return [];
+  const stepMs = 3_600_000;
+  const keyOf = (ms: number) => new Date(ms).toISOString().slice(0, 13);
+  const baseMs = (b: Date | string) => Math.floor(new Date(b).getTime() / stepMs) * stepMs;
+
+  const main = new Map<string, { txCount: number; volume: number; merchants: number }>();
+  for (const r of rows) main.set(keyOf(baseMs(r.bucket)), { txCount: Number(r.tx), volume: Number(r.vol), merchants: Number(r.merchants) });
+
+  const assets = new Map<string, Record<string, number>>();
+  for (const r of assetRows) {
+    const k = keyOf(baseMs(r.bucket));
+    const rec = assets.get(k) ?? {};
+    const label = decodeAsset(r.asset);
+    rec[label] = (rec[label] ?? 0) + Number(r.vol);
+    assets.set(k, rec);
+  }
+
+  const first = baseMs(rows[0].bucket);
+  const last = baseMs(rows[rows.length - 1].bucket);
+  const MAX = 720;
+  let cursor = Math.max(first, last - (MAX - 1) * stepMs);
+  const out: Array<{ t: string; txCount: number; volume: number; merchants: number; byAsset: Record<string, number> }> = [];
+  while (cursor <= last) {
+    const k = keyOf(cursor);
+    const m = main.get(k);
+    out.push({ t: new Date(cursor).toISOString(), txCount: m?.txCount ?? 0, volume: m?.volume ?? 0, merchants: m?.merchants ?? 0, byAsset: assets.get(k) ?? {} });
+    cursor += stepMs;
+  }
+  return out;
 }
 
 // ── Address (cached 10s per address+page) ───────────────────
