@@ -11,6 +11,8 @@ import { CumulativeVolumeChart } from "./HomeCharts";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
 import { BrandLogo } from "./BrandLogo";
+import { EcosystemSignals } from "./EcosystemSignals";
+import type { Signal } from "../lib/signals";
 import { formatCurrency } from "../utils/currency";
 
 const REFRESH_INTERVAL_MS = 8000;
@@ -72,7 +74,7 @@ export type DirectoryService = {
   merchant?: { name: string | null; logoUrl?: string | null } | null;
 };
 
-export function DashboardLive({ initialData, services, servicesTotal }: { initialData: DashboardData; services: DirectoryService[]; servicesTotal: number }) {
+export function DashboardLive({ initialData, services, servicesTotal, signals }: { initialData: DashboardData; services: DirectoryService[]; servicesTotal: number; signals: Signal[] }) {
   const [data, setData] = useState(initialData);
   const [range, setRange] = useState<"7d" | "30d" | "all">("all");
 
@@ -170,6 +172,8 @@ export function DashboardLive({ initialData, services, servicesTotal }: { initia
 
       <div className="flex flex-col gap-6 stagger-children">
         <RecentTransactionsPanel transactions={feed} />
+
+        <EcosystemSignals signals={signals} />
 
         {/* Mastercard Verifiable Intent — the agent-authority layer integrated across the hub */}
         <div className="flex items-start sm:items-center gap-4 dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] px-5 py-4">
