@@ -1,4 +1,6 @@
 import { DashboardLive, type DashboardData, type DirectoryService } from "./components/DashboardLive";
+import { EcosystemSignals } from "./components/EcosystemSignals";
+import { SIGNALS } from "./lib/signals";
 import { apiFetch } from "./lib/api";
 
 export const dynamic = "force-dynamic";
@@ -41,5 +43,12 @@ export default async function Home() {
     getDirectoryServices(),
   ]);
 
-  return <DashboardLive initialData={dashboardData} services={directory.items} servicesTotal={directory.total} />;
+  const signals = [...SIGNALS].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
+
+  return (
+    <>
+      <DashboardLive initialData={dashboardData} services={directory.items} servicesTotal={directory.total} />
+      <EcosystemSignals signals={signals} />
+    </>
+  );
 }
