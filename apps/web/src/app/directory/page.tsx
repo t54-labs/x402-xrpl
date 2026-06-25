@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 async function getServices(): Promise<Service[]> {
   try {
-    const r = await apiFetch<{ items: Service[] }>("/resources?limit=48");
+    const r = await apiFetch<{ items: Service[] }>("/resources?limit=100");
     // Collapse duplicate endpoints of the same service (e.g. NOFA registers a
     // backtest + dry-run endpoint under one name) to one card per provider+name.
     const seen = new Set<string>();
