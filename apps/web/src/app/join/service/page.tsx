@@ -60,6 +60,7 @@ export default function JoinServicePage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoResult, setLogoResult] = useState<LogoResult | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -329,16 +330,28 @@ export default function JoinServicePage() {
         <p className="text-[13px] text-[var(--text-secondary)] mt-1.5 max-w-lg leading-relaxed">
           If you don&rsquo;t have an x402 endpoint live yet — or you just want a manual listing in the Directory — email us the details and we&rsquo;ll add you after a quick review.
         </p>
-        <a
-          href={DIRECTORY_MAILTO}
-          className="ui-control inline-flex items-center gap-2 mt-5 px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <rect x="3" y="5" width="18" height="14" rx="2" />
-            <path d="m3 7 9 6 9-6" />
-          </svg>
-          Email {SUPPORT_EMAIL}
-        </a>
+        <div className="mt-5 flex items-center gap-3 flex-wrap">
+          <a
+            href={DIRECTORY_MAILTO}
+            onClick={() => {
+              try {
+                void navigator.clipboard?.writeText(SUPPORT_EMAIL);
+              } catch {}
+              setEmailCopied(true);
+              window.setTimeout(() => setEmailCopied(false), 2400);
+            }}
+            className="ui-control inline-flex items-center gap-2 px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+            Email {SUPPORT_EMAIL}
+          </a>
+          <span className={`text-[12px] transition-colors ${emailCopied ? "text-[var(--success)]" : "text-[var(--text-muted)]"}`}>
+            {emailCopied ? "Address copied — paste it into your mail app." : "No mail app? Clicking copies the address."}
+          </span>
+        </div>
       </section>
     </div>
   );
