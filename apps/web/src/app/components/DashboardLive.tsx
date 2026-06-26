@@ -169,7 +169,7 @@ function Hero() {
           Build the agent economy on XRP Ledger <span className="text-[var(--t54-coral)]">together</span>
         </h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-lg leading-relaxed">
-          An open community of builders, agents, and services growing on the XRP Ledger — where calls are paid in XRP/RLUSD.
+          An open community of builders, agents, and services growing on the XRP Ledger — where agents transact in XRP and RLUSD.
         </p>
         <div className="flex flex-wrap items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Join the community</Link>
