@@ -40,7 +40,7 @@ export function ParticleField({ className = "" }: { className?: string }) {
       canvas.width = Math.max(1, Math.round(W * dpr));
       canvas.height = Math.max(1, Math.round(H * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const N = Math.min(360, Math.max(120, Math.round((W * H) / 5200)));
+      const N = Math.min(720, Math.max(260, Math.round(W / 3)));
       dots = Array.from({ length: N }, mk);
     };
     size();
