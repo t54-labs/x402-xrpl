@@ -49,14 +49,23 @@ export function ParticleField({ className = "" }: { className?: string }) {
     let raf = 0;
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
+      const cx = W * 0.5;
+      const cy = H * 0.5;
+      const sigma = Math.max(130, W * 0.12); // width of the central gather
       for (let k = 0; k < dots.length; k++) {
         const p = dots[k];
-        if (!reduce) p.x += p.vx * 1.4;
-        const y = p.y + Math.sin(p.ph + p.x * 0.02) * p.amp;
-        ctx.globalAlpha = p.a;
+        const dx = p.x - cx;
+        const prox = Math.exp(-(dx * dx) / (2 * sigma * sigma)); // ~1 at centre, →0 at edges
+        if (!reduce) p.x += p.vx * (0.4 + 0.6 * (1 - prox)) * 1.5; // slow as it nears the knot
+        // vertical pinch: spread wide at the edges, converge to the centreline at the knot
+        const ty = cy + Math.sin(p.ph + p.x * 0.018) * (p.amp + H * 0.34 * (1 - prox));
+        p.y += (ty - p.y) * 0.12;
+        let alpha = p.a * (0.6 + 0.75 * prox); // brighter where it gathers
+        if (alpha > 1) alpha = 1;
+        ctx.globalAlpha = alpha;
         ctx.fillStyle = p.col;
         ctx.beginPath();
-        ctx.arc(p.x, y, p.r, 0, 6.2832);
+        ctx.arc(p.x, p.y, p.r * (0.85 + 0.55 * prox), 0, 6.2832);
         ctx.fill();
         if (p.x > W + 12) {
           Object.assign(p, mk());
