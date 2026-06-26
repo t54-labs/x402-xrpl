@@ -45,12 +45,13 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
     }
     return sum;
   };
-  let run = 0;
-  const data = series.map((b) => {
-    run += pick(b);
-    return { t: b.t, cum: run };
-  });
-  const total = run;
+  // Cumulative running total, built without reassigning an outer variable
+  // during render (keeps the react-hooks immutability rule happy).
+  const data = series.reduce<Array<{ t: string; cum: number }>>((arr, b) => {
+    const cum = (arr.length ? arr[arr.length - 1].cum : 0) + pick(b);
+    return [...arr, { t: b.t, cum }];
+  }, []);
+  const total = data.length ? data[data.length - 1].cum : 0;
   const lastT = data[data.length - 1].t;
   const opts: Mode[] = ["all", "XRP", "RLUSD"];
 

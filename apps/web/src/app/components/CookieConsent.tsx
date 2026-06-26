@@ -22,6 +22,9 @@ export function CookieConsent() {
 
   useEffect(() => {
     try {
+      // localStorage is client-only, so the initial "show" decision must run in
+      // an effect (not during SSR render) to avoid a hydration mismatch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!localStorage.getItem("cookie-consent")) setShow(true);
     } catch {
       /* localStorage blocked — leave analytics denied, don't show the banner */

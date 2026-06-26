@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CopyButton } from "./CopyButton";
 import { OverviewMetricsStrip, type TimeBucket } from "./DashboardStats";
@@ -428,18 +428,6 @@ function TopMerchantsPanel({ merchants }: { merchants: DashboardData["topMerchan
       </motion.div>
     </div>
   );
-}
-
-function AnimatedAmount({ amount }: { amount: string }) {
-  const value = Number(amount);
-  const decimals = useMemo(() => {
-    const fraction = amount.split(".")[1] ?? "";
-    return Math.min(Math.max(fraction.length, value > 0 && value < 1 ? 4 : 0), 6);
-  }, [amount, value]);
-
-  if (!Number.isFinite(value)) return amount;
-
-  return <AnimatedNumber value={value} decimals={decimals} duration={1600} />;
 }
 
 function rankClassName(index: number) {
