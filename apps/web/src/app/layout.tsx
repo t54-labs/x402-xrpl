@@ -27,9 +27,60 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://xrpl-ai.org";
+const SITE_NAME = "XRPL AI Hub";
+const SITE_DESCRIPTION =
+  "XRPL AI Hub is the live index of the agentic economy on the XRP Ledger — discover x402-enabled services and agents, track real-time RLUSD and XRP settlements, and build agent payments with verifiable intent and built-in risk controls.";
+
 export const metadata: Metadata = {
-  title: "t54 — The XRPL AI Index",
-  description: "The live ledger of the XRPL agentic economy. Institution-grade rails for agentic commerce on the XRP Ledger.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "XRPL AI Hub — the live index of agentic payments on the XRP Ledger",
+    template: "%s — XRPL AI Hub",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "XRPL",
+    "XRP Ledger",
+    "RLUSD",
+    "x402",
+    "AI agents",
+    "agentic payments",
+    "agentic commerce",
+    "machine economy",
+    "stablecoin payments",
+    "agent trust layer",
+    "verifiable intent",
+    "t54",
+    "Ripple",
+  ],
+  authors: [{ name: "t54 Labs", url: "https://t54.ai" }],
+  creator: "t54 Labs",
+  publisher: "t54 Labs",
+  category: "technology",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: "XRPL AI Hub — the live index of agentic payments on the XRP Ledger",
+    description: SITE_DESCRIPTION,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@t54ai",
+    creator: "@t54ai",
+    title: "XRPL AI Hub — the live index of agentic payments on the XRP Ledger",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  icons: { icon: "/icon.png", shortcut: "/favicon.ico", apple: "/icon.png" },
 };
 
 export default function RootLayout({

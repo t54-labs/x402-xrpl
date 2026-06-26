@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DotField } from "../../components/BrandDots";
@@ -12,6 +13,16 @@ import { apiFetch } from "../../lib/api";
 interface PageProps {
   params: Promise<{ address: string }>;
   searchParams: Promise<{ page?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { address } = await params;
+  const short = address.length > 16 ? `${address.slice(0, 8)}…${address.slice(-6)}` : address;
+  return {
+    title: `${short} · Address`,
+    description: `x402 activity for XRPL address ${address} — settlements, offered services and merchant profile.`,
+    alternates: { canonical: `/address/${address}` },
+  };
 }
 
 type TxRow = {

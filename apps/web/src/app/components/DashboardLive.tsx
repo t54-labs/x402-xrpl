@@ -98,48 +98,10 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
     };
   }, [range]);
 
-  // ── Debug toolbar (only when ?debug is in the URL) — inject synthetic
-  // settlements so the live-feed entrance/seal animation can be demoed on staging.
-  const [injected, setInjected] = useState<TransactionRow[]>([]);
-  const [debug, setDebug] = useState(false);
-  useEffect(() => {
-    try {
-      const sp = new URLSearchParams(window.location.search);
-      // The debug bar (synthetic-settlement injectors) is opt-in: it shows only
-      // when ?debug is in the URL, so every shared link is clean by default.
-      setDebug(sp.has("debug"));
-    } catch {}
-  }, []);
-  const feed = [...injected, ...(data.recentTransactions || [])].slice(0, 12);
-  function injectTx(opts: { verifiableIntent?: boolean; riskChecked?: boolean }) {
-    const id = Math.floor(Math.random() * 0xffffffff).toString(16).toUpperCase().padStart(8, "0");
-    const asset = Math.random() > 0.5 ? "RLUSD" : "XRP";
-    const amt = Math.random() * (asset === "RLUSD" ? 200 : 5) + 0.5;
-    const tx: TransactionRow = {
-      hash: (id + id + id + id + id + id + id + id).slice(0, 64),
-      amount: amt.toFixed(asset === "RLUSD" ? 2 : 6),
-      asset,
-      timestamp: new Date().toISOString(),
-      sourceTag: 804681468,
-      verifiableIntent: opts.verifiableIntent ?? true,
-      riskChecked: opts.riskChecked ?? false,
-      merchant: { address: "r" + id, name: ["agent.alpha", "agent.merca", "NofaAI", "LucyOS"][Math.floor(Math.random() * 4)] },
-    };
-    setInjected((prev) => [tx, ...prev].slice(0, 12));
-  }
+  const feed = (data.recentTransactions || []).slice(0, 12);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
-      {debug ? (
-        <div className="dashboard-panel bg-[var(--ink-raised)] border border-[rgba(0,140,255,0.3)] px-4 py-2.5 flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--brand-blue)]">debug</span>
-          <span className="text-[11px] font-mono text-[var(--paper-mute)] mr-1">inject settlement</span>
-          <button onClick={() => injectTx({ verifiableIntent: true, riskChecked: true })} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper)] transition-colors hover:bg-[var(--blue-08)]">Sealed</button>
-          <button onClick={() => injectTx({ verifiableIntent: true, riskChecked: false })} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper)] transition-colors hover:bg-[var(--blue-08)]">Verified</button>
-          <button onClick={() => injectTx({ verifiableIntent: false, riskChecked: false })} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper-mute)] transition-colors hover:bg-[var(--blue-08)]">Unverified</button>
-          <button onClick={() => setInjected([])} className="text-[11px] font-mono px-2.5 py-1 rounded border border-[var(--rule)] text-[var(--paper-faint)] transition-colors hover:text-[var(--paper)] ml-auto">Clear</button>
-        </div>
-      ) : null}
       <Hero />
 
       <div className="flex items-center justify-end gap-2 animate-fade-up pt-2 flex-wrap">

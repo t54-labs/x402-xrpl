@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { ParticleField } from "../components/ParticleField";
 import { DirectoryView, type Service, type Merchant } from "./DirectoryView";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Directory",
+  description:
+    "Browse live x402-enabled services and the merchants settling on the XRP Ledger — indexed from XRPL mainnet in RLUSD and XRP.",
+  alternates: { canonical: "/directory" },
+};
 
 async function getServices(): Promise<Service[]> {
   try {

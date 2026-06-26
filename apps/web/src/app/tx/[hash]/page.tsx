@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
@@ -8,6 +9,16 @@ import { apiFetch } from "../../lib/api";
 
 interface PageProps {
   params: Promise<{ hash: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { hash } = await params;
+  const short = hash.length > 16 ? `${hash.slice(0, 8)}…${hash.slice(-6)}` : hash;
+  return {
+    title: `Transaction ${short}`,
+    description: `x402 settlement transaction ${hash} on the XRP Ledger — amount, asset, merchant and verification status.`,
+    alternates: { canonical: `/tx/${hash}` },
+  };
 }
 
 type TxDetail = {

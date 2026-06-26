@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
+
+export const metadata: Metadata = {
+  title: "Agora",
+  description:
+    "The live marketplace of x402 endpoints that AI agents can pay to use on the XRP Ledger, priced in RLUSD and XRP.",
+  alternates: { canonical: "/agora" },
+};
 
 interface SearchParams {
   page?: string;

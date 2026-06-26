@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Facilitators",
+  description:
+    "x402 facilitators settling autonomous agent payments on the XRP Ledger, with live volume by asset.",
+  alternates: { canonical: "/facilitators" },
+};
 
 type Facilitator = {
   sourceTag: number;

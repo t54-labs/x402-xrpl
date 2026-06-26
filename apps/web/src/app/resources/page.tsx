@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ResourceLogo } from "../components/ResourceLogo";
+
+export const metadata: Metadata = {
+  title: "Resources",
+  description:
+    "Developer tools, SDKs, docs and infrastructure for building x402 agent payments on the XRP Ledger.",
+  alternates: { canonical: "/resources" },
+};
 
 type Resource = {
   name: string;

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
+
+export const metadata: Metadata = {
+  title: "Search",
+  description: "Search the XRPL AI Hub by XRPL address or transaction hash.",
+  robots: { index: false, follow: true },
+};
 
 interface SearchParams {
   q?: string;

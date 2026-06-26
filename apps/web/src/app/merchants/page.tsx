@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { apiFetch } from "../lib/api";
 import { CopyButton } from "../components/CopyButton";
+
+export const metadata: Metadata = {
+  title: "Merchants",
+  description:
+    "Merchants and agents accepting x402 payments on the XRP Ledger, ranked by live on-chain activity.",
+  alternates: { canonical: "/merchants" },
+};
 
 interface SearchParams {
   page?: string;
