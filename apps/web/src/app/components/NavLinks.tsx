@@ -4,26 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/", label: "Dashboard" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/merchants", label: "Merchants" },
-  { href: "/agora", label: "Agora" },
-  { href: "/partners", label: "Partners" },
-  { href: "/resources/register", label: "Register" },
+  { href: "/", label: "Index" },
+  { href: "/build", label: "Build" },
+  { href: "/resources", label: "Resources" },
+  { href: "/directory", label: "Directory" },
+  // { href: "/merchant", label: "Merchant" }, // hidden for now (page kept)
+  // { href: "/events", label: "Events" }, // hidden for now (page emptied; CMO to fill)
+  { href: "/why-xrpl", label: "Why XRPL" },
 ];
 
 export function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <div className="hidden lg:flex h-full items-center gap-1.5 xl:gap-2 text-[12px] xl:text-[13px] font-medium">
+    <div className="hidden lg:flex h-full items-center gap-1.5 xl:gap-2 text-[12px] xl:text-[13px] font-medium font-youth whitespace-nowrap">
       {links.map(({ href, label }) => {
         const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-        const isRegister = label === "Register";
+        const isRegister = label === "Partner with us";
         return (
           <Link
             key={href}
             href={href}
+            aria-current={isActive ? "page" : undefined}
             className={
               isRegister
                 ? "px-3 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 transition-colors"

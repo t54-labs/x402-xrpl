@@ -1,0 +1,87 @@
+# Staging stack for the x402-xrpl backend.
+#
+# Fully ISOLATED from the default/production stack: its own project name, database,
+# volume, and host ports — bringing this up never touches production data.
+#
+# Usage (loads variables from .env.staging — copy it from .env.staging.example first):
+#   pnpm staging:up        # build + start postgres + api + indexer (detached)
+#   pnpm staging:db:push   # apply the Prisma schema to the staging database
+#   pnpm staging:logs
+#   pnpm staging:down
+#
+# The frontend normally runs on a Vercel preview deployment (per dev branch), with its
+# API_URL pointed at this stack's public api URL. To also run web here, add --profile with-web.
+
+name: x402xrpl-staging
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.staging}
+      POSTGRES_DB: ${POSTGRES_DB:-x402_xrpl_staging}
+    ports:
+      - "${STAGING_DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "${STAGING_API_PORT:-4101}:4001"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-x402_xrpl_staging}
+      PORT: 4001
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env.staging}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?Set ADMIN_SESSION_SECRET in .env.staging}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  indexer:
+    build:
+      context: .
+      dockerfile: apps/indexer/Dockerfile
+    ports:
+      - "${STAGING_HEALTH_PORT:-4100}:4000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-x402_xrpl_staging}
+      # Mainnet (prod-like) by default; switch to testnet in .env.staging if preferred.
+      XRPL_WSS: ${STAGING_XRPL_WSS:-wss://s1.ripple.com:51233}
+      HEALTH_PORT: 4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Optional self-contained staging frontend. The dev branch's Vercel preview is the
+  # primary frontend surface, so this is off by default. Enable with: --profile with-web
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "${STAGING_WEB_PORT:-3100}:3000"
+    environment:
+      API_URL: http://api:4001
+      NEXT_PUBLIC_XRPL_NETWORK: ${NEXT_PUBLIC_XRPL_NETWORK:-mainnet}
+    depends_on:
+      api:
+        condition: service_started
+    profiles:
+      - with-web
+    restart: unless-stopped
+
+volumes:
+  postgres_staging_data:

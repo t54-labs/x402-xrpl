@@ -6,7 +6,7 @@ export default function NotFound() {
       <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center mx-auto mb-6">
         <span className="text-2xl font-light text-cyan-400">404</span>
       </div>
-      <h2 className="text-xl font-light text-white mb-3">Not Found</h2>
+      <h1 className="text-xl font-light text-white mb-3">Not Found</h1>
       <p className="text-sm text-gray-500 mb-6">The page, address, or transaction you&apos;re looking for doesn&apos;t exist.</p>
       <Link
         href="/"

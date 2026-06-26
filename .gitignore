@@ -10,7 +10,12 @@ out/
 .env
 .env.local
 .env.*.local
+.env.staging
 !.env.example
+!.env.staging.example
+
+# internal strategy docs (keep out of the public repo)
+T54_XRPL_AI_HUB_PLAN.md
 
 # IDE
 .cursor/

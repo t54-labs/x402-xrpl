@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-staging",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "API_URL=http://127.0.0.1:9 NEXT_PUBLIC_XRPL_NETWORK=mainnet pnpm --filter web dev"],
+      "port": 3000
+    }
+  ]
+}

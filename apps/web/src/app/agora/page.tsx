@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
+
+export const metadata: Metadata = {
+  title: "Agora",
+  description:
+    "The live marketplace of x402 endpoints that AI agents can pay to use on the XRP Ledger, priced in RLUSD and XRP.",
+  alternates: { canonical: "/agora" },
+};
 
 interface SearchParams {
   page?: string;
@@ -28,6 +36,7 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-6 sm:space-y-8">
+
       <header className="animate-fade-up">
         <h1 className="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">Agora</h1>
         <p className="text-sm text-[var(--text-muted)] mt-1">
@@ -37,15 +46,10 @@ export default async function AgoraPage({ searchParams }: { searchParams: Promis
       </header>
 
       {resources.length === 0 ? (
-        <div className="ui-card bg-[var(--bg-surface)] rounded-2xl border border-[var(--border)] p-10 sm:p-16 text-center animate-fade-up" style={{ animationDelay: "80ms" }}>
-          <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          </div>
-          <h2 className="text-lg text-[var(--text-primary)] mb-2">No Resources Listed Yet</h2>
+        <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-10 sm:p-16 text-center animate-fade-up" style={{ animationDelay: "80ms" }}>
+          <h2 className="text-lg font-medium text-[var(--paper)] mb-2">No resources listed yet</h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">Be the first to register an x402-compatible API on the XRPL.</p>
-          <Link href="/resources/register" className="ui-control inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-blue)] text-white font-semibold rounded-lg transition-all text-sm">
+          <Link href="/join/service" className="ui-control inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--brand-blue)] text-white font-semibold rounded-lg transition-all text-sm">
             Register Your API
           </Link>
         </div>

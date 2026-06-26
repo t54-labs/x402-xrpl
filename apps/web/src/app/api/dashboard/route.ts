@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { apiFetch } from "../../lib/api";
 
-export async function GET() {
+// The all-time aggregate can take several seconds against the full ledger.
+export const maxDuration = 30;
+
+export async function GET(request: Request) {
   try {
-    const data = await apiFetch("/dashboard");
+    const raw = new URL(request.url).searchParams.get("range");
+    const range = raw === "7d" || raw === "30d" ? raw : "all";
+    const data = await apiFetch(`/dashboard?range=${range}`);
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(

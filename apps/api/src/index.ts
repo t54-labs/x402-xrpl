@@ -220,12 +220,16 @@ app.get("/stats", async (_req, res) => {
 });
 
 // ── Dashboard (cached 10s) ───────────────────────────────────
-app.get("/dashboard", async (_req, res) => {
+app.get("/dashboard", async (req, res) => {
   try {
-    const cached = getCached("dashboard");
+    const range = req.query.range === "7d" ? "7d" : req.query.range === "30d" ? "30d" : "all";
+    const days = range === "7d" ? 7 : range === "30d" ? 30 : 0;
+    const tf = days ? `WHERE "timestamp" >= NOW() - INTERVAL '${days} days'` : "";
+    const cacheKey = `dashboard:${range}`;
+    const cached = getCached(cacheKey);
     if (cached) return res.json(cached);
 
-    const [indexerState, totalMerchants, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw] = await Promise.all([
+    const [indexerState, totalMerchantsAll, totalResources, recentTransactions, recentResources, topMerchantsRaw, volumeByAssetRaw, activeAgentsRaw, facilitatorTxRaw, facilitatorVolRaw, windowCountsRaw, tsRows, tsAssetRows] = await Promise.all([
       prisma.indexerState.findUnique({ where: { id: "default" } }),
       prisma.merchant.count(),
       prisma.resource.count({ where: { isActive: true } }),
@@ -244,7 +248,32 @@ app.get("/dashboard", async (_req, res) => {
          FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`
       ),
       prisma.$queryRawUnsafe<Array<{ asset: string; total: string }>>(
-        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" GROUP BY asset ORDER BY total DESC`
+        `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" ${tf} GROUP BY asset ORDER BY total DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ c: bigint }>>(
+        `SELECT COUNT(DISTINCT "buyerAddress") as c FROM "Transaction" ${tf}`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; name: string | null; tx_count: bigint }>>(
+        `SELECT t."sourceTag" as "sourceTag", f.name as name, COUNT(*) as tx_count
+         FROM "Transaction" t JOIN "FacilitatorTag" f ON f."sourceTag" = t."sourceTag"
+         WHERE t."sourceTag" IS NOT NULL
+         GROUP BY t."sourceTag", f.name ORDER BY tx_count DESC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; asset: string; total: string }>>(
+        `SELECT t."sourceTag" as "sourceTag", t.asset as asset, COALESCE(SUM(CAST(t.amount AS DOUBLE PRECISION)), 0) as total
+         FROM "Transaction" t WHERE t."sourceTag" IS NOT NULL
+         GROUP BY t."sourceTag", t.asset`
+      ),
+      prisma.$queryRawUnsafe<Array<{ tx: bigint; merchants: bigint }>>(
+        `SELECT COUNT(*) as tx, COUNT(DISTINCT "merchantAddr") as merchants FROM "Transaction" ${tf}`
+      ),
+      prisma.$queryRawUnsafe<Array<{ bucket: Date; tx: number; vol: number; merchants: number }>>(
+        `SELECT date_trunc('hour', "timestamp") AS bucket, COUNT(*)::int AS tx, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) AS vol, COUNT(DISTINCT "merchantAddr")::int AS merchants
+         FROM "Transaction" ${tf} GROUP BY 1 ORDER BY 1 ASC`
+      ),
+      prisma.$queryRawUnsafe<Array<{ bucket: Date; asset: string; vol: number }>>(
+        `SELECT date_trunc('hour', "timestamp") AS bucket, asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) AS vol
+         FROM "Transaction" ${tf} GROUP BY 1, asset ORDER BY 1 ASC`
       ),
     ]);
 
@@ -283,21 +312,202 @@ app.get("/dashboard", async (_req, res) => {
 
     const volumeByAsset = volumeByAssetRaw.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
 
+    const facVolMap = new Map<number, Array<{ asset: string; total: number }>>();
+    for (const v of facilitatorVolRaw) {
+      const tag = Number(v.sourceTag);
+      const list = facVolMap.get(tag) || [];
+      list.push({ asset: v.asset, total: parseFloat(v.total || "0") });
+      facVolMap.set(tag, list);
+    }
+    const facilitators = facilitatorTxRaw.map((f) => ({
+      sourceTag: Number(f.sourceTag),
+      name: f.name,
+      txCount: Number(f.tx_count),
+      volumeByAsset: facVolMap.get(Number(f.sourceTag)) || [],
+    }));
+    const activeAgents = Number(activeAgentsRaw[0]?.c ?? 0);
+    const timeSeries = buildDashSeries(tsRows, tsAssetRows);
+
     const data = {
-      totalTransactions: indexerState?.totalTxCount ?? 0,
-      totalMerchants,
+      range,
+      totalTransactions: days ? Number(windowCountsRaw[0]?.tx ?? 0) : (indexerState?.totalTxCount ?? 0),
+      totalMerchants: days ? Number(windowCountsRaw[0]?.merchants ?? 0) : totalMerchantsAll,
       totalResources,
       totalVolumeXrp: indexerState?.totalVolumeXrp ?? 0,
       volumeByAsset,
+      activeAgents,
+      facilitators,
+      timeSeries,
       recentTransactions,
       recentResources,
       topMerchants,
     };
-    setCache("dashboard", data, 10_000);
+    setCache(cacheKey, data, 10_000);
     res.json(data);
   } catch (err) {
     console.error("GET /dashboard error:", err);
     res.status(500).json({ error: "Failed to fetch dashboard" });
+  }
+});
+
+// ── Facilitator registry ─────────────────────────────────────
+app.get("/facilitators", async (_req, res) => {
+  try {
+    const cached = getCached("facilitators");
+    if (cached) return res.json(cached);
+    const [tags, stats, vol] = await Promise.all([
+      prisma.facilitatorTag.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; tx_count: bigint; buyers: bigint }>>(
+        `SELECT "sourceTag" as "sourceTag", COUNT(*) as tx_count, COUNT(DISTINCT "buyerAddress") as buyers
+         FROM "Transaction" WHERE "sourceTag" IS NOT NULL GROUP BY "sourceTag"`
+      ),
+      prisma.$queryRawUnsafe<Array<{ sourceTag: number; asset: string; total: string }>>(
+        `SELECT "sourceTag" as "sourceTag", asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)),0) as total
+         FROM "Transaction" WHERE "sourceTag" IS NOT NULL GROUP BY "sourceTag", asset`
+      ),
+    ]);
+    const statMap = new Map(stats.map((s) => [Number(s.sourceTag), { txCount: Number(s.tx_count), buyers: Number(s.buyers) }]));
+    const volMap = new Map<number, Array<{ asset: string; total: number }>>();
+    for (const v of vol) {
+      const t = Number(v.sourceTag);
+      const list = volMap.get(t) || [];
+      list.push({ asset: v.asset, total: parseFloat(v.total || "0") });
+      volMap.set(t, list);
+    }
+    const data = tags
+      .map((t) => ({
+        sourceTag: t.sourceTag,
+        name: t.name,
+        url: t.url,
+        website: t.website,
+        description: t.description,
+        logoUrl: t.logoUrl,
+        networks: t.networks,
+        assets: t.assets,
+        isActive: t.isActive,
+        txCount: statMap.get(t.sourceTag)?.txCount ?? 0,
+        activeBuyers: statMap.get(t.sourceTag)?.buyers ?? 0,
+        volumeByAsset: volMap.get(t.sourceTag) ?? [],
+      }))
+      .sort((a, b) => b.txCount - a.txCount);
+    setCache("facilitators", data, 10_000);
+    res.json(data);
+  } catch (err) {
+    console.error("GET /facilitators error:", err);
+    res.status(500).json({ error: "Failed to fetch facilitators" });
+  }
+});
+
+app.post("/join/facilitator", verifyRateLimit, async (req, res) => {
+  try {
+    const { name, sourceTag, url, website, description, networks, assets } = req.body ?? {};
+    const tag = Number(sourceTag);
+    if (!name || typeof name !== "string" || !Number.isInteger(tag) || tag < 0 || tag > 4294967295) {
+      return res.status(400).json({ error: "name and a valid integer sourceTag (0–4294967295) are required" });
+    }
+    const common = {
+      name: name.trim().slice(0, 120),
+      url: typeof url === "string" ? url.slice(0, 300) : null,
+      website: typeof website === "string" ? website.slice(0, 300) : null,
+      description: typeof description === "string" ? description.slice(0, 500) : null,
+      networks: Array.isArray(networks) ? networks.slice(0, 4).map(String) : [],
+      assets: Array.isArray(assets) ? assets.slice(0, 8).map(String) : [],
+      isActive: true,
+    };
+    const created = await prisma.facilitatorTag.upsert({
+      where: { sourceTag: tag },
+      update: common,
+      create: { sourceTag: tag, status: "listed", ...common },
+    });
+    clearDashboardCaches();
+    res.json({ success: true, facilitator: { sourceTag: created.sourceTag, name: created.name } });
+  } catch (err) {
+    console.error("POST /join/facilitator error:", err);
+    res.status(500).json({ error: "Failed to register facilitator" });
+  }
+});
+
+// ── Directory ────────────────────────────────────────────────
+app.get("/directory", async (req, res) => {
+  try {
+    const partnerType = typeof req.query.type === "string" ? req.query.type : undefined;
+    const listings = await prisma.directoryListing.findMany({
+      where: { status: "approved", ...(partnerType ? { partnerType } : {}) },
+      orderBy: { submittedAt: "desc" },
+    });
+    res.json(listings);
+  } catch (err) {
+    console.error("GET /directory error:", err);
+    res.status(500).json({ error: "Failed to fetch directory" });
+  }
+});
+
+app.post("/join/service", verifyRateLimit, async (req, res) => {
+  try {
+    const { name, tagline, description, website, category, useCase, asset, contactEmail, merchantAddr } = req.body ?? {};
+    if (!name || typeof name !== "string") return res.status(400).json({ error: "name is required" });
+    const created = await prisma.directoryListing.create({
+      data: {
+        name: name.trim().slice(0, 120),
+        tagline: typeof tagline === "string" ? tagline.slice(0, 160) : null,
+        description: typeof description === "string" ? description.slice(0, 600) : null,
+        website: typeof website === "string" ? website.slice(0, 300) : null,
+        category: typeof category === "string" ? category.slice(0, 60) : null,
+        useCase: typeof useCase === "string" ? useCase.slice(0, 60) : null,
+        asset: typeof asset === "string" ? asset.slice(0, 20) : null,
+        contactEmail: typeof contactEmail === "string" ? contactEmail.slice(0, 160) : null,
+        merchantAddr: typeof merchantAddr === "string" ? merchantAddr.slice(0, 60) : null,
+        status: "pending",
+        partnerType: "service",
+      },
+    });
+    res.json({ success: true, id: created.id, status: created.status });
+  } catch (err) {
+    console.error("POST /join/service error:", err);
+    res.status(500).json({ error: "Failed to submit listing" });
+  }
+});
+
+// ── Directory admin review queue ─────────────────────────────
+app.get("/admin/directory", requireAdminAuth, async (req, res) => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    const listings = await prisma.directoryListing.findMany({
+      where: status ? { status } : {},
+      orderBy: { submittedAt: "desc" },
+    });
+    res.json(listings);
+  } catch (err) {
+    console.error("GET /admin/directory error:", err);
+    res.status(500).json({ error: "Failed to fetch listings" });
+  }
+});
+
+app.post("/admin/directory/approve", requireAdminAuth, async (req, res) => {
+  try {
+    const { id } = req.body ?? {};
+    if (!id || typeof id !== "string") return res.status(400).json({ error: "id is required" });
+    const updated = await prisma.directoryListing.update({ where: { id }, data: { status: "approved", reviewComment: null } });
+    clearDashboardCaches();
+    res.json({ success: true, id: updated.id, status: updated.status });
+  } catch (err) {
+    console.error("POST /admin/directory/approve error:", err);
+    res.status(500).json({ error: "Failed to approve listing" });
+  }
+});
+
+app.post("/admin/directory/reject", requireAdminAuth, async (req, res) => {
+  try {
+    const { id, comment } = req.body ?? {};
+    if (!id || typeof id !== "string") return res.status(400).json({ error: "id is required" });
+    const updated = await prisma.directoryListing.update({
+      where: { id },
+      data: { status: "rejected", reviewComment: typeof comment === "string" ? comment.slice(0, 300) : null },
+    });
+    res.json({ success: true, id: updated.id, status: updated.status });
+  } catch (err) {
+    console.error("POST /admin/directory/reject error:", err);
+    res.status(500).json({ error: "Failed to reject listing" });
   }
 });
 
@@ -350,6 +560,96 @@ app.get("/transactions/:hash", async (req, res) => {
   }
 });
 
+// Build a continuous, 0-filled transaction-count series for a sparkline.
+// Granularity adapts to the active span: hourly when it fits ~3 days (so a
+// short, dense history still draws a real curve), otherwise daily. 0-fills
+// gaps so the time axis stays linear, capped to the most recent ~120 buckets.
+function buildTxSeries(rows: Array<{ bucket: Date | string; count: number | bigint }>): Array<{ t: string; count: number }> {
+  if (rows.length === 0) return [];
+  const hourMs = 3_600_000;
+  const dayMs = 86_400_000;
+  const first = new Date(rows[0].bucket).getTime();
+  const last = new Date(rows[rows.length - 1].bucket).getTime();
+  const hourly = last - first <= 3 * dayMs;
+  const step = hourly ? hourMs : dayMs;
+  const sliceLen = hourly ? 13 : 10; // YYYY-MM-DDTHH | YYYY-MM-DD
+  const keyOf = (ms: number) => new Date(ms).toISOString().slice(0, sliceLen);
+
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    const ms = Math.floor(new Date(r.bucket).getTime() / step) * step;
+    counts.set(keyOf(ms), (counts.get(keyOf(ms)) ?? 0) + Number(r.count));
+  }
+
+  const MAX = 120;
+  const startTrunc = Math.floor(first / step) * step;
+  const endTrunc = Math.floor(last / step) * step;
+  let cursor = Math.max(startTrunc, endTrunc - (MAX - 1) * step);
+  const series: Array<{ t: string; count: number }> = [];
+  while (cursor <= endTrunc) {
+    series.push({ t: new Date(cursor).toISOString(), count: counts.get(keyOf(cursor)) ?? 0 });
+    cursor += step;
+  }
+  return series;
+}
+
+// Decode an XRPL currency code to its display label (mirror of the web's
+// formatCurrency): "XRP" stays; 40-char hex codes decode to ASCII (e.g. RLUSD).
+function decodeAsset(code: string): string {
+  if (!code) return "???";
+  if (code === "XRP") return "XRP";
+  const cur = code.includes(".") ? code.split(".")[0] : code;
+  if (cur.length <= 3) return cur;
+  if (cur.length === 40 && /^[0-9A-Fa-f]+$/.test(cur)) {
+    const ascii = cur
+      .match(/.{2}/g)!
+      .map((h) => parseInt(h, 16))
+      .filter((c) => c > 0 && c < 128)
+      .map((c) => String.fromCharCode(c))
+      .join("");
+    return ascii || cur.slice(0, 8);
+  }
+  return cur;
+}
+
+// Build the home dashboard time-series: hourly buckets, 0-filled between the
+// first and last active hour (capped to the most recent 720), each carrying tx
+// count, total volume, distinct active merchants, and volume per decoded asset.
+function buildDashSeries(
+  rows: Array<{ bucket: Date | string; tx: number | bigint; vol: number; merchants: number | bigint }>,
+  assetRows: Array<{ bucket: Date | string; asset: string; vol: number }>,
+): Array<{ t: string; txCount: number; volume: number; merchants: number; byAsset: Record<string, number> }> {
+  if (rows.length === 0) return [];
+  const stepMs = 3_600_000;
+  const keyOf = (ms: number) => new Date(ms).toISOString().slice(0, 13);
+  const baseMs = (b: Date | string) => Math.floor(new Date(b).getTime() / stepMs) * stepMs;
+
+  const main = new Map<string, { txCount: number; volume: number; merchants: number }>();
+  for (const r of rows) main.set(keyOf(baseMs(r.bucket)), { txCount: Number(r.tx), volume: Number(r.vol), merchants: Number(r.merchants) });
+
+  const assets = new Map<string, Record<string, number>>();
+  for (const r of assetRows) {
+    const k = keyOf(baseMs(r.bucket));
+    const rec = assets.get(k) ?? {};
+    const label = decodeAsset(r.asset);
+    rec[label] = (rec[label] ?? 0) + Number(r.vol);
+    assets.set(k, rec);
+  }
+
+  const first = baseMs(rows[0].bucket);
+  const last = baseMs(rows[rows.length - 1].bucket);
+  const MAX = 720;
+  let cursor = Math.max(first, last - (MAX - 1) * stepMs);
+  const out: Array<{ t: string; txCount: number; volume: number; merchants: number; byAsset: Record<string, number> }> = [];
+  while (cursor <= last) {
+    const k = keyOf(cursor);
+    const m = main.get(k);
+    out.push({ t: new Date(cursor).toISOString(), txCount: m?.txCount ?? 0, volume: m?.volume ?? 0, merchants: m?.merchants ?? 0, byAsset: assets.get(k) ?? {} });
+    cursor += stepMs;
+  }
+  return out;
+}
+
 // ── Address (cached 10s per address+page) ───────────────────
 app.get("/address/:address", async (req, res) => {
   try {
@@ -373,7 +673,7 @@ app.get("/address/:address", async (req, res) => {
     }
 
     if (isMerchant) {
-      const [transactions, totalTxCount, volumeResult] = await Promise.all([
+      const [transactions, totalTxCount, volumeResult, txHourlyRaw] = await Promise.all([
         prisma.transaction.findMany({
           where: { merchantAddr: address },
           take: pageSize,
@@ -386,6 +686,12 @@ app.get("/address/:address", async (req, res) => {
           `SELECT asset, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total FROM "Transaction" WHERE "merchantAddr" = $1 GROUP BY asset ORDER BY total DESC`,
           address
         ),
+        prisma.$queryRawUnsafe<Array<{ bucket: Date; count: number }>>(
+          `SELECT date_trunc('hour', "timestamp") as bucket, COUNT(*)::int as count
+           FROM "Transaction" WHERE "merchantAddr" = $1
+           GROUP BY 1 ORDER BY 1 ASC`,
+          address
+        ),
       ]);
 
       const volumeByAsset = volumeResult.map((v) => ({ asset: v.asset, total: parseFloat(v.total || "0") }));
@@ -396,6 +702,7 @@ app.get("/address/:address", async (req, res) => {
         totalTxCount,
         totalVolume: volumeByAsset.find((v) => v.asset === "XRP")?.total ?? 0,
         volumeByAsset,
+        txSeries: buildTxSeries(txHourlyRaw),
         transactions,
         pagination: { page, pageSize, totalPages: Math.ceil(totalTxCount / pageSize) },
       };

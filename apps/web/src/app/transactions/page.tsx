@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { RelativeTime } from "../components/RelativeTime";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
+
+export const metadata: Metadata = {
+  title: "Transactions",
+  description:
+    "Live x402 settlement transactions on XRPL mainnet — autonomous agent payments in RLUSD and XRP.",
+  alternates: { canonical: "/transactions" },
+};
 
 interface SearchParams {
   page?: string;
