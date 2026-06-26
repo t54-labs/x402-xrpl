@@ -4,6 +4,10 @@ import { useRef, useState } from "react";
 import type { Signal } from "../lib/signals";
 import { RelativeTime } from "./RelativeTime";
 
+// Left offset that lines a full-bleed element's content up with the page's
+// 88vw centered container (DashboardLive uses max-w-7xl == 88vw, padding px-6).
+const EDGE = "calc((100vw - 88vw) / 2 + 1.5rem)";
+
 function NewsCard({ s }: { s: Signal }) {
   const [err, setErr] = useState(false);
   const hasImg = !!s.image && !err;
@@ -12,7 +16,7 @@ function NewsCard({ s }: { s: Signal }) {
       href={s.url}
       target="_blank"
       rel="noreferrer"
-      className="group relative block h-[232px] w-[330px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
+      className="group relative block h-[252px] w-[346px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
     >
       {hasImg ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -31,10 +35,13 @@ function NewsCard({ s }: { s: Signal }) {
           }}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/5" />
+
+      {/* Dim the whole poster, then darken the lower half so the copy pops. */}
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/55 to-black/15" />
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
-        <span className="font-plek text-[10px] uppercase tracking-[0.16em] text-white/75">
+        <span className="font-plek text-[10px] uppercase tracking-[0.16em] text-white/80">
           {s.source}
           {s.verified ? " ✓" : ""}
         </span>
@@ -42,11 +49,12 @@ function NewsCard({ s }: { s: Signal }) {
       </div>
 
       <div className="absolute inset-x-0 bottom-0 p-4">
-        <p className="text-[17px] font-medium leading-snug text-white line-clamp-2 [text-shadow:0_1px_8px_rgba(0,0,0,0.5)]">{s.shortTitle}</p>
-        <div className="mt-2 flex items-center gap-1.5 font-mono text-[10px] text-white/55">
+        <p className="text-[16px] font-medium leading-snug text-white line-clamp-2">{s.shortTitle}</p>
+        <p className="mt-1.5 text-[12px] leading-snug text-white/65 line-clamp-2">{s.headline}</p>
+        <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[10px] text-white/50">
           <RelativeTime date={s.publishedAt} />
           <span>·</span>
-          <span className="transition-colors group-hover:text-white/80">open ↗</span>
+          <span className="transition-colors group-hover:text-white/85">open ↗</span>
         </div>
       </div>
     </a>
@@ -55,13 +63,13 @@ function NewsCard({ s }: { s: Signal }) {
 
 export function NewsRail({ signals }: { signals: Signal[] }) {
   const railRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: number) => railRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
+  const scroll = (dir: number) => railRef.current?.scrollBy({ left: dir * 370, behavior: "smooth" });
 
   if (!signals.length) return null;
 
   return (
-    <div style={{ width: "100vw", marginLeft: "calc(50% - 50vw)" }} className="animate-fade-up py-7">
-      <div className="mb-5 flex items-end justify-between gap-4" style={{ paddingLeft: "max(1rem, 6vw)", paddingRight: "max(1rem, 6vw)" }}>
+    <div className="animate-fade-up py-6">
+      <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <span className="font-plek text-[11px] uppercase tracking-[0.3em] text-[var(--paper-mute)]">Ecosystem</span>
           <h2 className="mt-1 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)]">News</h2>
@@ -89,7 +97,7 @@ export function NewsRail({ signals }: { signals: Signal[] }) {
       <div
         ref={railRef}
         className="hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2"
-        style={{ paddingLeft: "max(1rem, 6vw)", paddingRight: "max(1rem, 6vw)", scrollPaddingLeft: "max(1rem, 6vw)" }}
+        style={{ width: "100vw", marginLeft: "calc(50% - 50vw)", paddingLeft: EDGE, paddingRight: EDGE, scrollPaddingLeft: EDGE }}
       >
         {signals.map((s) => (
           <NewsCard key={s.id} s={s} />
