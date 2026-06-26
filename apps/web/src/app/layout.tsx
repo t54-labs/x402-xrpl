@@ -30,7 +30,8 @@ const geistMono = Geist_Mono({
 const SITE_URL = "https://xrpl-ai.org";
 const SITE_NAME = "XRPL AI Hub";
 const SITE_DESCRIPTION =
-  "XRPL AI Hub is the live index of the agentic economy on the XRP Ledger — discover x402-enabled services and agents, track real-time RLUSD and XRP settlements, and build agent payments with verifiable intent and built-in risk controls.";
+  "An open community of builders, agents and services growing on the XRP Ledger — where agents transact in XRP and RLUSD.";
+const SOCIAL_TITLE = "Build the agent economy on XRP Ledger together";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -64,7 +65,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     url: SITE_URL,
-    title: "XRPL AI Hub — the live index of agentic payments on the XRP Ledger",
+    title: SOCIAL_TITLE,
     description: SITE_DESCRIPTION,
     locale: "en_US",
   },
@@ -72,7 +73,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@t54ai",
     creator: "@t54ai",
-    title: "XRPL AI Hub — the live index of agentic payments on the XRP Ledger",
+    title: SOCIAL_TITLE,
     description: SITE_DESCRIPTION,
   },
   robots: {
