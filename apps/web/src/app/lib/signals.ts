@@ -105,17 +105,6 @@ export const SIGNALS: Signal[] = [
     publishedAt: "2026-06-10",
   },
   {
-    id: "xrplorg-agentic-tx",
-    kind: "news",
-    source: "xrpl.org",
-    verified: true,
-    headline: "Agentic transactions on the XRP Ledger — autonomous blockchain payments and financial automation",
-    shortTitle: "Agentic transactions on XRPL",
-    url: "https://xrpl.org/docs/agents/agentic-transactions",
-    tag: "XRPL · agents",
-    publishedAt: "2026-06-10",
-  },
-  {
     id: "pymnts-starter-kit",
     kind: "news",
     source: "PYMNTS",
@@ -136,7 +125,7 @@ export const SIGNALS: Signal[] = [
     shortTitle: "XRPL × x402 = agentic finance",
     url: "https://x.com/xrpl_commons/status/2016179549734592902",
     tag: "XRPL · x402",
-    publishedAt: "2026-05-28",
+    publishedAt: "2026-01-27",
   },
   {
     id: "theblock-t54-seed",
@@ -147,7 +136,7 @@ export const SIGNALS: Signal[] = [
     url: "https://www.theblock.co/post/391273/ripple-franklin-templeton-ai-agent-trust-startup-t54-labs",
     image: "https://www.tbstat.com/wp/uploads/2022/06/20220603_Funding-Roundup-1200x675.jpg",
     tag: "t54 · agentic finance",
-    publishedAt: "2026-05-20",
+    publishedAt: "2026-02-25",
   },
   {
     id: "bankxrp-tweet",
@@ -159,7 +148,7 @@ export const SIGNALS: Signal[] = [
     shortTitle: "A trust layer on the XRP Ledger",
     url: "https://x.com/BankXRP/status/2011810271132529056",
     tag: "XRP · agents",
-    publishedAt: "2026-05-16",
+    publishedAt: "2026-01-15",
   },
   {
     id: "t54ai-tweet-x402secure",
@@ -172,6 +161,6 @@ export const SIGNALS: Signal[] = [
     shortTitle: "x402 Secure: the trust layer",
     url: "https://x.com/t54ai/status/1982809581962052083",
     tag: "x402 · trust",
-    publishedAt: "2026-04-25",
+    publishedAt: "2025-10-27",
   },
 ];
