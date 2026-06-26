@@ -43,13 +43,13 @@ export function X402Flow() {
         )}
 
         {/* nodes */}
-        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-y-6">
+        <div className="relative grid grid-cols-4 gap-y-6">
           {STAGES.map((s, i) => {
             const sealed = i === STAGES.length - 1;
             const color = i === 0 ? "var(--t54-coral)" : "var(--brand-blue)";
             const delay = tNode[i] * CYCLE;
             return (
-              <div key={s.label} className="relative flex flex-col items-start pr-3">
+              <div key={s.label} className="relative flex flex-col items-start pr-1 sm:pr-3">
                 <span className="relative block w-3.5 h-3.5">
                   {/* ripple ring when the sweep lands */}
                   {!reduce && (
@@ -79,8 +79,8 @@ export function X402Flow() {
                     />
                   )}
                 </span>
-                <span className="mt-3 text-[10px] font-plek uppercase tracking-[0.14em] text-[var(--paper)] leading-tight">{s.label}</span>
-                <span className="mt-1 text-[11px] text-[var(--text-muted)] leading-snug">{s.note}</span>
+                <span className="mt-3 text-[9px] sm:text-[10px] font-plek uppercase tracking-[0.1em] sm:tracking-[0.14em] text-[var(--paper)] leading-tight">{s.label}</span>
+                <span className="mt-1 hidden sm:block text-[11px] text-[var(--text-muted)] leading-snug">{s.note}</span>
               </div>
             );
           })}

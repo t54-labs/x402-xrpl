@@ -6,7 +6,7 @@ import { RelativeTime } from "./RelativeTime";
 
 // Left offset that lines a full-bleed element's content up with the page's
 // 88vw centered container (DashboardLive uses max-w-7xl == 88vw, padding px-6).
-const EDGE = "calc((100vw - 88vw) / 2 + 1.5rem)";
+const EDGE = "var(--page-edge)";
 
 function NewsCard({ s }: { s: Signal }) {
   const [err, setErr] = useState(false);

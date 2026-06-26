@@ -231,17 +231,17 @@ export default function BuildPage() {
           <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-6">
             <h3 className="text-[11px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">Assets &amp; amounts</h3>
             <dl className="mt-4 space-y-3 text-[13px]">
-              <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-[var(--text-muted)]">XRP</dt>
-                <dd className="text-[var(--text-secondary)] text-right">priced in drops <span className="font-mono text-[12px] text-[var(--text-muted)]">(1e6 = 1 XRP)</span></dd>
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                <dt className="text-[var(--text-muted)] shrink-0">XRP</dt>
+                <dd className="text-[var(--text-secondary)] sm:text-right">priced in drops <span className="font-mono text-[12px] text-[var(--text-muted)]">(1e6 = 1 XRP)</span></dd>
               </div>
-              <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-[var(--text-muted)]">RLUSD / IOU</dt>
-                <dd className="text-[var(--text-secondary)] text-right">decimal value + <span className="font-mono text-[12px] text-[var(--text-muted)]">issuer</span></dd>
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                <dt className="text-[var(--text-muted)] shrink-0">RLUSD / IOU</dt>
+                <dd className="text-[var(--text-secondary)] sm:text-right">decimal value + <span className="font-mono text-[12px] text-[var(--text-muted)]">issuer</span></dd>
               </div>
-              <div className="flex items-baseline justify-between gap-4 pt-2 border-t border-[var(--rule)]">
-                <dt className="text-[var(--text-muted)]">Networks</dt>
-                <dd className="font-mono text-[12px] text-[var(--text-secondary)]">xrpl:0 · xrpl:1 · xrpl:2</dd>
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 pt-2 border-t border-[var(--rule)]">
+                <dt className="text-[var(--text-muted)] shrink-0">Networks</dt>
+                <dd className="font-mono text-[12px] text-[var(--text-secondary)] break-all">xrpl:0 · xrpl:1 · xrpl:2</dd>
               </div>
             </dl>
           </div>
