@@ -144,14 +144,14 @@ export default function RootLayout({
         <footer className="border-t border-[rgba(255,255,255,0.06)] py-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-[11px] text-[var(--text-muted)]">&copy; 2026 t54 labs. All rights reserved.</p>
-            <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)]">
-              <Link href="/terms" className="hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
-              <CookieSettingsLink className="hover:text-[var(--text-secondary)] transition-colors" />
-              <a href="https://t54.ai" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">t54.ai</a>
-              <a href="https://x402.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
-              <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
-              <a href="https://x.com/t54ai" target="_blank" rel="noreferrer" aria-label="t54 on X" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-muted)]">
+              <Link href="/terms" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
+              <Link href="/privacy" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
+              <CookieSettingsLink className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors" />
+              <a href="https://t54.ai" target="_blank" rel="noreferrer" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">t54.ai</a>
+              <a href="https://x402.org" target="_blank" rel="noreferrer" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">x402 Protocol</a>
+              <a href="https://xrpl.org" target="_blank" rel="noreferrer" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">XRPL</a>
+              <a href="https://x.com/t54ai" target="_blank" rel="noreferrer" aria-label="t54 on X" className="inline-flex items-center justify-center min-h-[40px] min-w-[40px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>

@@ -199,12 +199,12 @@ export function BuildConsole() {
   return (
     <div className="dashboard-panel bg-[var(--ink-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-3 pt-3 border-b border-[var(--border)]">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto min-w-0 hide-scrollbar">
           {(Object.keys(CODE) as TabKey[]).map((k) => (
             <button
               key={k}
               onClick={() => setTab(k)}
-              className={`px-3 py-2 text-[11px] font-plek uppercase tracking-[0.14em] transition-colors border-b-2 -mb-px ${
+              className={`shrink-0 px-2 sm:px-3 py-2 text-[11px] font-plek uppercase tracking-[0.08em] sm:tracking-[0.14em] whitespace-nowrap transition-colors border-b-2 -mb-px ${
                 tab === k ? "text-[var(--paper)] border-[var(--brand-blue)]" : "text-[var(--paper-mute)] border-transparent hover:text-[var(--paper)]"
               }`}
             >

@@ -119,8 +119,8 @@ function CurrencyCell({ label, value, asset, series }: { label: string; value: n
         <Label>{label}</Label>
         {series ? <DeltaBadge values={series} /> : null}
       </div>
-      <p className="mt-2.5 flex items-baseline gap-1.5">
-        <span className="font-mono tabular-nums text-2xl sm:text-[28px] leading-none text-[var(--paper)]">
+      <p className="mt-2.5 flex items-baseline gap-1.5 min-w-0">
+        <span className="font-mono tabular-nums text-xl sm:text-2xl lg:text-[28px] leading-none text-[var(--paper)] truncate">
           <AnimatedNumber value={value} decimals={value > 0 && value < 1 ? 4 : 2} duration={2000} />
         </span>
         <span className="text-[10px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)]">{formatCurrency(asset)}</span>
