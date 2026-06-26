@@ -40,6 +40,12 @@ function NewsCard({ s }: { s: Signal }) {
       <div className="absolute inset-0 bg-black/40" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/55 to-black/15" />
 
+      {!hasImg ? (
+        <svg viewBox="0 0 24 24" aria-hidden fill="currentColor" className="absolute left-1/2 top-[40%] h-16 w-16 -translate-x-1/2 -translate-y-1/2 text-white/[0.22]">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ) : null}
+
       <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
         <span className="font-plek text-[10px] uppercase tracking-[0.16em] text-white/80">
           {s.source}
