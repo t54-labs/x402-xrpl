@@ -192,8 +192,9 @@ export default function JoinServicePage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className={label}>Origin or API endpoint URL</label>
+            <label htmlFor="svc-endpoint-url" className={label}>Origin or API endpoint URL</label>
             <input
+              id="svc-endpoint-url"
               type="url"
               required
               value={url}
@@ -269,8 +270,9 @@ export default function JoinServicePage() {
 
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className={label}>Verified address</label>
+                    <label htmlFor="svc-verified-address" className={label}>Verified address</label>
                     <select
+                      id="svc-verified-address"
                       value={selectedMerchant}
                       onChange={(e) => setSelectedMerchant(e.target.value)}
                       className={`${input} font-mono`}
@@ -284,8 +286,9 @@ export default function JoinServicePage() {
                   </div>
 
                   <div>
-                    <label className={label}>Logo file</label>
+                    <label htmlFor="svc-logo-file" className={label}>Logo file</label>
                     <input
+                      id="svc-logo-file"
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/gif"
                       onChange={handleLogoFileChange}

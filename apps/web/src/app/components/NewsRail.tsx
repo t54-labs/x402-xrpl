@@ -23,6 +23,8 @@ function NewsCard({ s }: { s: Signal }) {
         <img
           src={s.image}
           alt=""
+          loading="lazy"
+          decoding="async"
           onError={() => setErr(true)}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
         />

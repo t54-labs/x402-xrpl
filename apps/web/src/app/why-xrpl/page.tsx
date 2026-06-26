@@ -1,8 +1,9 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Why XRPL — t54 XRPL AI Index",
+  title: "Why XRPL",
   description: "The institution-grade, payment-native settlement and compliance stack that makes XRPL the rail for agent commerce — identity, recourse, and programmable settlement built into the protocol.",
+  alternates: { canonical: "/why-xrpl" },
 };
 
 type Feature = { spec: string; title: string; why: string; body: string };

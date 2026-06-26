@@ -110,6 +110,7 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
             <button
               key={v}
               onClick={() => setRange(v)}
+              aria-pressed={range === v}
               className={`px-2.5 py-1 rounded-md transition-colors ${range === v ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
             >
               {label}

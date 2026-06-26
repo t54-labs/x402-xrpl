@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { TimeBucket } from "./DashboardStats";
+import { formatCurrency } from "../utils/currency";
 
 const BLUE = "#008CFF";
 const CORAL = "#C9462E";
@@ -35,7 +36,15 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
   const [mode, setMode] = useState<Mode>("all");
   if (!series || series.length < 2) return null;
 
-  const pick = (b: TimeBucket) => (mode === "all" ? b.volume : b.byAsset?.[mode] ?? 0);
+  const pick = (b: TimeBucket) => {
+    if (mode === "all") return b.volume;
+    // byAsset keys may arrive raw 40-hex (RLUSD) or already decoded; canonicalize to match.
+    let sum = 0;
+    for (const [code, val] of Object.entries(b.byAsset ?? {})) {
+      if (formatCurrency(code) === mode) sum += val;
+    }
+    return sum;
+  };
   let run = 0;
   const data = series.map((b) => {
     run += pick(b);
@@ -60,6 +69,7 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
             <button
               key={k}
               onClick={() => setMode(k)}
+              aria-pressed={mode === k}
               className={`px-2.5 py-1 rounded-md transition-colors ${mode === k ? "bg-[var(--blue-16)] text-[var(--paper)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
             >
               {k === "all" ? "All" : k}

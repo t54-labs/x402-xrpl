@@ -54,35 +54,35 @@ export default function JoinFacilitatorPage() {
       <form onSubmit={submit} className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 space-y-5 animate-fade-up" style={{ animationDelay: "80ms" }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className={label}>Facilitator name</label>
-            <input className={input} required value={form.name} onChange={set("name")} placeholder="Acme Facilitator" />
+            <label htmlFor="fac-name" className={label}>Facilitator name</label>
+            <input id="fac-name" className={input} required value={form.name} onChange={set("name")} placeholder="Acme Facilitator" />
           </div>
           <div>
-            <label className={label}>SourceTag</label>
-            <input className={input} required type="number" value={form.sourceTag} onChange={set("sourceTag")} placeholder="804681468" />
+            <label htmlFor="fac-sourceTag" className={label}>SourceTag</label>
+            <input id="fac-sourceTag" className={input} required type="number" value={form.sourceTag} onChange={set("sourceTag")} placeholder="804681468" />
           </div>
         </div>
         <div>
-          <label className={label}>Website</label>
-          <input className={input} value={form.website} onChange={set("website")} placeholder="https://facilitator.example" />
+          <label htmlFor="fac-website" className={label}>Website</label>
+          <input id="fac-website" className={input} value={form.website} onChange={set("website")} placeholder="https://facilitator.example" />
         </div>
         <div>
-          <label className={label}>Facilitator URL</label>
-          <input className={input} value={form.url} onChange={set("url")} placeholder="https://facilitator.example/api" />
+          <label htmlFor="fac-url" className={label}>Facilitator URL</label>
+          <input id="fac-url" className={input} value={form.url} onChange={set("url")} placeholder="https://facilitator.example/api" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className={label}>Networks (comma-separated)</label>
-            <input className={input} value={form.networks} onChange={set("networks")} placeholder="xrpl:0, xrpl:1" />
+            <label htmlFor="fac-networks" className={label}>Networks (comma-separated)</label>
+            <input id="fac-networks" className={input} value={form.networks} onChange={set("networks")} placeholder="xrpl:0, xrpl:1" />
           </div>
           <div>
-            <label className={label}>Assets (comma-separated)</label>
-            <input className={input} value={form.assets} onChange={set("assets")} placeholder="XRP, RLUSD" />
+            <label htmlFor="fac-assets" className={label}>Assets (comma-separated)</label>
+            <input id="fac-assets" className={input} value={form.assets} onChange={set("assets")} placeholder="XRP, RLUSD" />
           </div>
         </div>
         <div>
-          <label className={label}>Description</label>
-          <textarea className={input} rows={3} value={form.description} onChange={set("description")} placeholder="What your facilitator does." />
+          <label htmlFor="fac-description" className={label}>Description</label>
+          <textarea id="fac-description" className={input} rows={3} value={form.description} onChange={set("description")} placeholder="What your facilitator does." />
         </div>
 
         <button type="submit" disabled={loading} className="ui-control w-full bg-[var(--brand-blue)] text-white font-medium py-3 px-4 rounded-lg transition-all disabled:opacity-50">

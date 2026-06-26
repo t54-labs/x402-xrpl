@@ -1,7 +1,8 @@
 
 export const metadata = {
-  title: "Merchant — t54 XRPL AI Index",
+  title: "Merchant",
   description: "Onboard established merchants to RLUSD and XRP settlement on XRPL through network partners.",
+  alternates: { canonical: "/merchant" },
 };
 
 const BRANDS = ["Macy's", "Saks Fifth Avenue", "Harrods", "Michael Kors", "Zappos"];

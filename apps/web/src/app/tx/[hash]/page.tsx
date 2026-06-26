@@ -79,7 +79,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
             <span className="font-mono tabular-nums text-[13px] text-[var(--text-secondary)]">{tx.ledgerIndex.toLocaleString()}</span>
           </Row>
           <Row label="Timestamp">
-            <span className="text-[14px] text-[var(--text-secondary)]">{new Date(tx.timestamp).toLocaleString()}</span>
+            <span suppressHydrationWarning className="text-[14px] text-[var(--text-secondary)]">{new Date(tx.timestamp).toLocaleString()}</span>
             <span className="text-[12px] text-[var(--text-muted)]">(<RelativeTime date={tx.timestamp} />)</span>
           </Row>
           {tx.assetIssuer ? (

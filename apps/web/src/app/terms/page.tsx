@@ -1,8 +1,9 @@
 import { LegalDoc } from "../components/LegalDoc";
 
 export const metadata = {
-  title: "Terms & Conditions — t54 XRPL AI",
+  title: "Terms & Conditions",
   description: "Terms & Conditions for XRPL AI, the T54 Labs Inc. ecosystem hub indexing x402 agentic-payment services on the XRP Ledger.",
+  alternates: { canonical: "/terms" },
 };
 
 const SECTIONS = [

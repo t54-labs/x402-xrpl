@@ -47,6 +47,7 @@ export function ParticleField({ className = "" }: { className?: string }) {
     window.addEventListener("resize", size);
 
     let raf = 0;
+    let running = false;
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
       const cx = W * 0.5;
@@ -73,11 +74,36 @@ export function ParticleField({ className = "" }: { className?: string }) {
         }
       }
       ctx.globalAlpha = 1;
-      if (!reduce) raf = requestAnimationFrame(draw);
+      if (!reduce && running) raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
-    return () => {
+    const start = () => {
+      if (reduce || running) return;
+      running = true;
+      raf = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      running = false;
       cancelAnimationFrame(raf);
+    };
+
+    // Pause the rAF loop whenever the canvas scrolls out of view — the directory
+    // hero sits above a long scrollable list, so this saves CPU/GPU and battery.
+    let io: IntersectionObserver | null = null;
+    if (reduce) {
+      draw(); // single static frame, no loop
+    } else if (typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver((entries) => {
+        if (entries[0]?.isIntersecting) start();
+        else stop();
+      });
+      io.observe(canvas);
+    } else {
+      start();
+    }
+
+    return () => {
+      stop();
+      io?.disconnect();
       window.removeEventListener("resize", size);
     };
   }, []);

@@ -25,6 +25,7 @@ export function NavLinks() {
           <Link
             key={href}
             href={href}
+            aria-current={isActive ? "page" : undefined}
             className={
               isRegister
                 ? "px-3 py-1.5 rounded-lg bg-white text-black hover:bg-white/90 transition-colors"

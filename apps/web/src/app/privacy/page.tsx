@@ -1,8 +1,9 @@
 import { LegalDoc } from "../components/LegalDoc";
 
 export const metadata = {
-  title: "Privacy Policy — t54 XRPL AI",
+  title: "Privacy Policy",
   description: "Privacy Policy for XRPL AI — what limited data T54 Labs Inc. collects, how it is used, and your choices and rights.",
+  alternates: { canonical: "/privacy" },
 };
 
 const SECTIONS = [

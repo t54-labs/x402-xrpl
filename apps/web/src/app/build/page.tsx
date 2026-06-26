@@ -2,8 +2,9 @@ import Link from "next/link";
 import { BuildConsole, X402Flow } from "./BuildConsole";
 
 export const metadata = {
-  title: "Build — t54 XRPL AI Index",
+  title: "Build",
   description: "Why and how to build x402 agentic payments on XRPL: gate a route, pay as an agent, and add Verifiable Intent — with the t54 facilitator.",
+  alternates: { canonical: "/build" },
 };
 
 function PartLabel({ n, total, title }: { n: string; total: string; title: string }) {

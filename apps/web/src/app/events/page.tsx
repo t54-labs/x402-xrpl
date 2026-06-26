@@ -1,6 +1,8 @@
 export const metadata = {
-  title: "Events — t54 XRPL AI Index",
+  title: "Events",
   description: "Programming for the XRPL AI community.",
+  // Hidden placeholder until the CMO fills it in — keep it out of the index.
+  robots: { index: false, follow: true },
 };
 
 // Intentionally a placeholder. The Events framework is hidden from nav until the

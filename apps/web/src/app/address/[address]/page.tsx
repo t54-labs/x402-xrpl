@@ -136,7 +136,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
   const spanMs = hasChart ? new Date(series[series.length - 1].t).getTime() - new Date(series[0].t).getTime() : 0;
   const withTime = spanMs <= 3 * 86_400_000;
   const fmtTick = (iso: string) =>
-    new Date(iso).toLocaleString("en-US", withTime ? { month: "short", day: "numeric", hour: "numeric" } : { month: "short", day: "numeric" });
+    new Date(iso).toLocaleString("en-US", withTime ? { timeZone: "UTC", month: "short", day: "numeric", hour: "numeric" } : { timeZone: "UTC", month: "short", day: "numeric" });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -175,7 +175,7 @@ function MerchantView({ address, data }: { address: string; data: AddressRespons
           <StatCell label="Total volume"><VolumeDisplay volumes={data.volumeByAsset} fallback={data.totalVolume} /></StatCell>
           <StatCell label="Payments received"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{totalTxCount.toLocaleString()}</p></StatCell>
           <StatCell label="Active APIs"><p className="text-2xl font-mono tabular-nums text-[var(--paper)]">{merchant.resources.length}</p></StatCell>
-          <StatCell label="Joined"><p className="mt-1 text-sm text-[var(--text-secondary)]">{new Date(merchant.createdAt).toLocaleDateString()}</p></StatCell>
+          <StatCell label="Joined"><p className="mt-1 text-sm text-[var(--text-secondary)]">{new Date(merchant.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })}</p></StatCell>
         </div>
       </div>
 

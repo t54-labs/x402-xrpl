@@ -62,6 +62,7 @@ export function SearchBar() {
         <input
           ref={inputRef}
           type="text"
+          aria-label="Search by address or transaction hash"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}

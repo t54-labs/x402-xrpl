@@ -30,10 +30,21 @@ export function OverviewMetricsStrip({
   }
   const xrp = byAsset.get("XRP") ?? fallbackXrp;
   const rlusd = byAsset.get("RLUSD") ?? 0;
-  // Per-card history (sliced from the one dashboard timeSeries field).
+  // Per-card history (sliced from the one dashboard timeSeries field). Decode
+  // each bucket's byAsset keys the same way as the headline volumes above — the
+  // backend currently sends decoded keys here but raw 40-hex on volumeByAsset,
+  // so canonicalize defensively to stay correct if that contract ever changes.
   const ts = timeSeries ?? [];
-  const xrpSeries = ts.map((b) => b.byAsset?.["XRP"] ?? 0);
-  const rlusdSeries = ts.map((b) => b.byAsset?.["RLUSD"] ?? 0);
+  const decoded = ts.map((b) => {
+    const m: Record<string, number> = {};
+    for (const [code, val] of Object.entries(b.byAsset ?? {})) {
+      const name = formatCurrency(code);
+      m[name] = (m[name] ?? 0) + val;
+    }
+    return m;
+  });
+  const xrpSeries = decoded.map((m) => m["XRP"] ?? 0);
+  const rlusdSeries = decoded.map((m) => m["RLUSD"] ?? 0);
   const txSeries = ts.map((b) => b.txCount);
   const merchSeries = ts.map((b) => b.merchants);
   return (
