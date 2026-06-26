@@ -55,35 +55,35 @@ const RLUSD_ISSUER = "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De";
 
 const FACILITATORS = [
   { sourceTag: 804681468, name: "t54 XRPL Facilitator", url: "https://xrpl-facilitator-mainnet.t54.ai", weight: 0.6, description: "No-custody x402 verify + settle for XRPL, with X402 Secure Verifiable Intent.", website: "https://xrpl-x402.t54.ai", networks: ["xrpl:0", "xrpl:1"], assets: ["XRP", "RLUSD"] },
-  { sourceTag: 612345678, name: "Catalyst Pay", url: "https://catalyst.example", weight: 0.25, description: "Sample facilitator (seed data).", website: "https://catalyst.example", networks: ["xrpl:0"], assets: ["XRP", "RLUSD"] },
-  { sourceTag: 913572468, name: "LedgerGate", url: "https://ledgergate.example", weight: 0.15, description: "Sample facilitator (seed data).", website: "https://ledgergate.example", networks: ["xrpl:0"], assets: ["RLUSD"] },
+  { sourceTag: 612345678, name: "Sample Facilitator A", url: "https://facilitator-a.example", weight: 0.25, description: "Sample facilitator (seed data).", website: "https://facilitator-a.example", networks: ["xrpl:0"], assets: ["XRP", "RLUSD"] },
+  { sourceTag: 913572468, name: "Sample Facilitator B", url: "https://facilitator-b.example", weight: 0.15, description: "Sample facilitator (seed data).", website: "https://facilitator-b.example", networks: ["xrpl:0"], assets: ["RLUSD"] },
 ];
 
 const MERCHANTS = [
-  { name: "AskSurf", website: "https://asksurf.ai", logoUrl: "/merchants/asksurf.ico", description: "AI-powered conversational search and crypto data skills, payable per query over x402." },
-  { name: "LucyOS", website: "https://lucyos.ai", logoUrl: "/merchants/lucy.ico", description: "Real-time token analytics for the XRPL ecosystem, metered by call." },
-  { name: "Heurist", website: "https://heurist.xyz", logoUrl: "/merchants/heurist.ico", description: "Decentralized AI inference — LLMs and image generation, pay-per-use." },
-  { name: "BlockRunAI", website: "https://blockrun.ai", logoUrl: null, description: "Per-call LLM gateway across 30+ models, settled on XRPL." },
-  { name: "NofaAI", website: "https://nofa.ai", logoUrl: "/merchants/nofa.png", description: "Agent memory and retrieval API for autonomous workflows." },
-  { name: "Virtuals on XRPL", website: "https://virtuals.io", logoUrl: null, description: "Agent Commerce Protocol settlement via the t54 facilitator." },
+  { name: "Demo Search API", website: "https://search.example", logoUrl: null, description: "Sample service (seed data): conversational search and crypto data skills, payable per query over x402." },
+  { name: "Demo Token Analytics", website: "https://analytics.example", logoUrl: null, description: "Sample service (seed data): real-time token analytics for the XRPL ecosystem, metered by call." },
+  { name: "Demo Inference Cloud", website: "https://inference.example", logoUrl: null, description: "Sample service (seed data): decentralized AI inference — LLMs and image generation, pay-per-use." },
+  { name: "Demo LLM Gateway", website: "https://llmgateway.example", logoUrl: null, description: "Sample service (seed data): per-call LLM gateway across many models, settled on XRPL." },
+  { name: "Demo Agent Memory", website: "https://agentmemory.example", logoUrl: null, description: "Sample service (seed data): agent memory and retrieval API for autonomous workflows." },
+  { name: "Demo Agent Commerce", website: "https://agentcommerce.example", logoUrl: null, description: "Sample service (seed data): Agent Commerce Protocol settlement via the t54 facilitator." },
 ];
 
 const RESOURCES: Record<string, Array<{ name: string; url: string; priceAmount: string; priceAsset: string }>> = {
-  AskSurf: [
-    { name: "Conversational Search", url: "https://api.asksurf.ai/v1/search", priceAmount: "0.02", priceAsset: "RLUSD" },
-    { name: "Crypto Data Skill", url: "https://api.asksurf.ai/v1/data", priceAmount: "0.01", priceAsset: "RLUSD" },
+  "Demo Search API": [
+    { name: "Conversational Search", url: "https://search.example/v1/search", priceAmount: "0.02", priceAsset: "RLUSD" },
+    { name: "Crypto Data Skill", url: "https://search.example/v1/data", priceAmount: "0.01", priceAsset: "RLUSD" },
   ],
-  LucyOS: [{ name: "Token Analysis", url: "https://api.lucyos.ai/v1/analyze", priceAmount: "0.5", priceAsset: "XRP" }],
-  Heurist: [
-    { name: "LLM Inference (Llama-3)", url: "https://api.heurist.xyz/v1/chat", priceAmount: "0.05", priceAsset: "RLUSD" },
-    { name: "Image Generation", url: "https://api.heurist.xyz/v1/image", priceAmount: "0.10", priceAsset: "RLUSD" },
+  "Demo Token Analytics": [{ name: "Token Analysis", url: "https://analytics.example/v1/analyze", priceAmount: "0.5", priceAsset: "XRP" }],
+  "Demo Inference Cloud": [
+    { name: "LLM Inference", url: "https://inference.example/v1/chat", priceAmount: "0.05", priceAsset: "RLUSD" },
+    { name: "Image Generation", url: "https://inference.example/v1/image", priceAmount: "0.10", priceAsset: "RLUSD" },
   ],
-  BlockRunAI: [
-    { name: "GPT-4o Gateway", url: "https://api.blockrun.ai/v1/openai", priceAmount: "0.03", priceAsset: "RLUSD" },
-    { name: "Claude Gateway", url: "https://api.blockrun.ai/v1/anthropic", priceAmount: "0.04", priceAsset: "RLUSD" },
+  "Demo LLM Gateway": [
+    { name: "Model Gateway A", url: "https://llmgateway.example/v1/model-a", priceAmount: "0.03", priceAsset: "RLUSD" },
+    { name: "Model Gateway B", url: "https://llmgateway.example/v1/model-b", priceAmount: "0.04", priceAsset: "RLUSD" },
   ],
-  NofaAI: [{ name: "Agent Memory API", url: "https://api.nofa.ai/v1/memory", priceAmount: "0.2", priceAsset: "XRP" }],
-  "Virtuals on XRPL": [{ name: "ACP Settlement", url: "https://api.virtuals.io/acp/settle", priceAmount: "1.0", priceAsset: "RLUSD" }],
+  "Demo Agent Memory": [{ name: "Agent Memory API", url: "https://agentmemory.example/v1/memory", priceAmount: "0.2", priceAsset: "XRP" }],
+  "Demo Agent Commerce": [{ name: "ACP Settlement", url: "https://agentcommerce.example/acp/settle", priceAmount: "1.0", priceAsset: "RLUSD" }],
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
