@@ -43,13 +43,13 @@ export function X402Flow() {
         )}
 
         {/* nodes */}
-        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-y-6">
+        <div className="relative grid grid-cols-4 gap-y-6">
           {STAGES.map((s, i) => {
             const sealed = i === STAGES.length - 1;
             const color = i === 0 ? "var(--t54-coral)" : "var(--brand-blue)";
             const delay = tNode[i] * CYCLE;
             return (
-              <div key={s.label} className="relative flex flex-col items-start pr-3">
+              <div key={s.label} className="relative flex flex-col items-start pr-1 sm:pr-3">
                 <span className="relative block w-3.5 h-3.5">
                   {/* ripple ring when the sweep lands */}
                   {!reduce && (
@@ -79,8 +79,8 @@ export function X402Flow() {
                     />
                   )}
                 </span>
-                <span className="mt-3 text-[10px] font-plek uppercase tracking-[0.14em] text-[var(--paper)] leading-tight">{s.label}</span>
-                <span className="mt-1 text-[11px] text-[var(--text-muted)] leading-snug">{s.note}</span>
+                <span className="mt-3 text-[9px] sm:text-[10px] font-plek uppercase tracking-[0.1em] sm:tracking-[0.14em] text-[var(--paper)] leading-tight">{s.label}</span>
+                <span className="mt-1 hidden sm:block text-[11px] text-[var(--text-muted)] leading-snug">{s.note}</span>
               </div>
             );
           })}
@@ -199,12 +199,12 @@ export function BuildConsole() {
   return (
     <div className="dashboard-panel bg-[var(--ink-surface)] border border-[var(--border)] overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-3 pt-3 border-b border-[var(--border)]">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto min-w-0 hide-scrollbar">
           {(Object.keys(CODE) as TabKey[]).map((k) => (
             <button
               key={k}
               onClick={() => setTab(k)}
-              className={`px-3 py-2 text-[11px] font-plek uppercase tracking-[0.14em] transition-colors border-b-2 -mb-px ${
+              className={`shrink-0 px-2 sm:px-3 py-2 text-[11px] font-plek uppercase tracking-[0.08em] sm:tracking-[0.14em] whitespace-nowrap transition-colors border-b-2 -mb-px ${
                 tab === k ? "text-[var(--paper)] border-[var(--brand-blue)]" : "text-[var(--paper-mute)] border-transparent hover:text-[var(--paper)]"
               }`}
             >

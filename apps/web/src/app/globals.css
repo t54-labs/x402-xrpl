@@ -102,6 +102,9 @@
 
 :root {
   color-scheme: dark;
+  /* Full-bleed rail gutter: tuned to align with the centered max-w-7xl content on
+     desktop; overridden to the px-4 gutter (1rem) on phones in the media query below. */
+  --page-edge: calc((100vw - 88vw) / 2 + 1.5rem);
   /* Warm oxide palette (was pure #000). Existing var names kept + re-pointed
      so the whole site shifts warm without touching every component. */
   --bg-base: #0C0A08;
@@ -142,6 +145,11 @@
   --dur-cerem: 800ms;
   --ease-tail: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-micro: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Phones use the flat px-4 page gutter for full-bleed rails; the desktop formula over-insets at narrow widths. */
+@media (max-width: 639px) {
+  :root { --page-edge: 1rem; }
 }
 
 /* Static blueprint grid (precision texture, ~6% alpha, no blobs/box-shadow) */
