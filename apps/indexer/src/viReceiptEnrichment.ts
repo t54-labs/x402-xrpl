@@ -17,6 +17,10 @@ export type ViReceiptScanCursor = {
   hash: string;
 };
 
+export type ViReceiptEnrichmentRunState = {
+  backlogCursor?: ViReceiptScanCursor;
+};
+
 const DEFAULT_TIMEOUT_MS = 5_000;
 const DEFAULT_BATCH_SIZE = 50;
 const DEFAULT_INTERVAL_MS = 60_000;
@@ -134,19 +138,44 @@ export async function enrichViReceiptStatuses(
   };
 }
 
+export async function runViReceiptEnrichmentTick(
+  config: ViReceiptEnrichmentConfig,
+  db: TransactionStore = prisma,
+  state: ViReceiptEnrichmentRunState = {},
+): Promise<{ checked: number; updated: number }> {
+  const liveResult = await enrichViReceiptStatuses(config, db);
+  let checked = liveResult.checked;
+  let updated = liveResult.updated;
+
+  if (!liveResult.nextCursor) {
+    state.backlogCursor = undefined;
+    return { checked, updated };
+  }
+
+  const backlogResult = await enrichViReceiptStatuses(
+    config,
+    db,
+    state.backlogCursor ?? liveResult.nextCursor,
+  );
+  state.backlogCursor = backlogResult.nextCursor ?? undefined;
+  checked += backlogResult.checked;
+  updated += backlogResult.updated;
+
+  return { checked, updated };
+}
+
 export function startViReceiptEnrichmentLoop(
   config: ViReceiptEnrichmentConfig,
   db: TransactionStore = prisma,
 ): void {
   let running = false;
-  let cursor: ViReceiptScanCursor | undefined;
+  const state: ViReceiptEnrichmentRunState = {};
 
   const tick = async () => {
     if (running) return;
     running = true;
     try {
-      const result = await enrichViReceiptStatuses(config, db, cursor);
-      cursor = result.nextCursor ?? undefined;
+      const result = await runViReceiptEnrichmentTick(config, db, state);
       if (result.checked > 0 || result.updated > 0) {
         console.log(
           `VI receipt enrichment checked ${result.checked} tx(s), updated ${result.updated}.`,
