@@ -142,9 +142,15 @@ export default function RootLayout({
         </main>
         
         <footer className="border-t border-[rgba(255,255,255,0.06)] py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-[11px] text-[var(--text-muted)]">&copy; 2026 t54 labs. All rights reserved.</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-muted)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <a href="https://t54.ai" target="_blank" rel="noreferrer" aria-label="t54 Labs" className="inline-flex items-center shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logos/t54.svg" alt="t54 Labs" className="h-5 w-auto opacity-90" />
+              </a>
+              <p className="text-[11px] text-[var(--text-muted)]">&copy; 2026 t54 labs. All rights reserved.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-start sm:justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-muted)]">
               <Link href="/terms" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">Terms</Link>
               <Link href="/privacy" className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors">Privacy</Link>
               <CookieSettingsLink className="inline-flex items-center min-h-[40px] hover:text-[var(--text-secondary)] transition-colors" />

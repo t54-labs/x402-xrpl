@@ -63,7 +63,7 @@ const serviceDescription = (s: Service) => {
   return withoutToolInstruction || `Pay-per-call x402 endpoint at ${hostOf(s.url)}.`;
 };
 
-const SERVICES_PER_PAGE = 9;
+const SERVICES_PER_PAGE = 8;
 const MERCHANTS_PER_PAGE = 15;
 
 function Pager({ page, pages, setPage, label }: { page: number; pages: number; setPage: (p: number) => void; label: string }) {
@@ -147,7 +147,7 @@ function ServiceCard({ service: s }: { service: Service }) {
 
 export function DirectoryView({ services, merchants }: { services: Service[]; merchants: Merchant[] }) {
   // Services: put the distinct non-Heurist providers first, then Heurist's many
-  // tool endpoints; paginate 9 to a page.
+  // tool endpoints; paginate 8 to a page.
   const sortedServices = useMemo(() => {
     const heuristLast = (s: Service) => (/heurist/i.test(s.url) ? 1 : 0);
     return [...services].sort((a, b) => heuristLast(a) - heuristLast(b));
