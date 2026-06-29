@@ -174,6 +174,7 @@ function Hero() {
         <div className="flex flex-wrap items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Join the community</Link>
           <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Explore the map</Link>
+          <Link href="/join/service" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Get listed</Link>
         </div>
       </div>
       <div className="dashboard-panel relative z-10 border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
