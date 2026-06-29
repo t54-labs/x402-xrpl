@@ -10,6 +10,7 @@ export type Service = {
   merchantAddr: string;
   url: string;
   name: string | null;
+  description?: string | null;
   priceAmount: string;
   priceAsset: string;
   network?: string | null;
@@ -33,6 +34,34 @@ const hostOf = (u: string) => {
     return u;
   }
 };
+const endpointLabel = (u: string) => {
+  try {
+    const url = new URL(u);
+    const host = url.hostname.replace(/^www\./, "");
+    const segments = url.pathname.split("/").filter(Boolean);
+    const tail = segments.slice(-2).join("/");
+    return tail ? `${host}/${tail}` : host;
+  } catch {
+    return u;
+  }
+};
+const titleFromResourceName = (name?: string | null) => {
+  const raw = name?.replace(/\s*MANDATORY:[\s\S]*$/i, "").trim();
+  const match = raw?.match(/^([A-Z0-9]{2,}(?:[- ][A-Z][A-Za-z0-9]+){0,2})\b/);
+  return match?.[1]?.replace(/-/g, " ");
+};
+const serviceTitle = (s: Service) => s.merchant?.name?.trim() || titleFromResourceName(s.name) || hostOf(s.url) || "API provider";
+const serviceLogoUrl = (s: Service) => {
+  const logoUrl = s.merchant?.logoUrl;
+  if (logoUrl) return logoUrl;
+  return hostOf(s.url) === "sentinel.xrpl-utilities.io" ? "https://xrpl-utilities.com/assets/xr-sentinel.png" : null;
+};
+const serviceDescription = (s: Service) => {
+  const raw = (s.description || s.name || "").trim();
+  const withoutMandatory = raw.replace(/\s*MANDATORY:[\s\S]*$/i, "").trim();
+  const withoutToolInstruction = withoutMandatory.replace(/\s*Use this tool if[\s\S]*$/i, "").trim();
+  return withoutToolInstruction || `Pay-per-call x402 endpoint at ${hostOf(s.url)}.`;
+};
 
 const SERVICES_PER_PAGE = 9;
 const MERCHANTS_PER_PAGE = 15;
@@ -55,18 +84,64 @@ function Pager({ page, pages, setPage, label }: { page: number; pages: number; s
 }
 
 const cardHover =
-  "group relative block rounded-[16px] bg-[var(--bg-surface)] border border-[var(--border)] p-5 transition duration-200 ease-out hover:-translate-y-1 hover:bg-[var(--ink-raised)] hover:border-[rgba(201,70,46,0.5)] hover:[filter:drop-shadow(0_10px_22px_rgba(0,0,0,0.45))_drop-shadow(0_6px_18px_rgba(201,70,46,0.16))]";
+  "group relative block rounded-[16px] bg-[var(--bg-surface)] border border-[var(--border)] p-4 sm:p-5 transition duration-200 ease-out hover:-translate-y-1 hover:bg-[var(--ink-raised)] hover:border-[rgba(201,70,46,0.5)] hover:[filter:drop-shadow(0_10px_22px_rgba(0,0,0,0.45))_drop-shadow(0_6px_18px_rgba(201,70,46,0.16))]";
 
 function SectionHead({ n, title, count, sub }: { n: string; title: string; count: number; sub: string }) {
   return (
     <div>
       <div className="flex items-baseline gap-3">
         <span className="text-[10px] font-plek uppercase tracking-[0.24em] text-[var(--paper-faint)]">{n}</span>
-        <h2 className="text-xl font-medium tracking-tight text-[var(--paper)]">{title}</h2>
-        <span className="text-[12px] font-mono text-[var(--text-muted)]">{count}</span>
+        <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)]">{title}</h2>
+        <span className="text-[13px] font-mono text-[var(--text-muted)]">{count}</span>
       </div>
-      <p className="mt-1 text-sm text-[var(--text-muted)] max-w-2xl">{sub}</p>
+      <p className="mt-1 text-[15px] text-[var(--text-muted)] max-w-2xl">{sub}</p>
     </div>
+  );
+}
+
+function ServiceCard({ service: s }: { service: Service }) {
+  const title = serviceTitle(s);
+  const description = serviceDescription(s);
+  const endpoint = endpointLabel(s.url);
+
+  return (
+    <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={cardHover}>
+      <div className="flex gap-4 sm:gap-5">
+        <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.04]">
+          <BrandLogo logoUrl={serviceLogoUrl(s)} name={title} className="h-12 w-12" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="flex min-w-0 items-start gap-2 text-[21px] sm:text-[23px] font-semibold leading-tight tracking-tight text-[var(--text-primary)]">
+              <span className="truncate">{title}</span>
+              <span
+                aria-hidden="true"
+                className="mt-0.5 shrink-0 text-[16px] text-[var(--t54-coral)] opacity-0 -translate-x-1 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+              >
+                &#8599;
+              </span>
+            </h3>
+            <span
+              className={`shrink-0 rounded border px-2 py-0.5 text-[10px] uppercase tracking-wider font-medium ${
+                s.isDiscovered
+                  ? "text-purple-300 bg-purple-500/8 border-purple-500/15"
+                  : "text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]"
+              }`}
+            >
+              {s.isDiscovered ? "Discovered" : "Registered"}
+            </span>
+          </div>
+          <p className="mt-1.5 truncate font-mono text-[13px] text-[rgba(142,164,176,0.92)]">{endpoint}</p>
+          <p className="mt-3 line-clamp-2 text-[15px] leading-relaxed text-[var(--text-secondary)]">{description}</p>
+          <div className="mt-3 flex items-center gap-3 text-[11px]">
+            <span className="font-mono text-[var(--brand-blue)]">
+              {s.priceAmount} {formatCurrency(s.priceAsset)}
+            </span>
+            {s._count ? <span className="font-mono text-[12px] text-[var(--text-muted)]">{s._count.transactions.toLocaleString()} txns</span> : null}
+          </div>
+        </div>
+      </div>
+    </a>
   );
 }
 
@@ -99,40 +174,9 @@ export function DirectoryView({ services, merchants }: { services: Service[]; me
           <Empty label="No services indexed yet." />
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {svcSlice.map((s) => (
-              <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={cardHover}>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.06]">
-                    <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} />
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border ${
-                      s.isDiscovered
-                        ? "text-purple-300 bg-purple-500/8 border-purple-500/15"
-                        : "text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]"
-                    }`}
-                  >
-                    {s.isDiscovered ? "Discovered" : "Registered"}
-                  </span>
-                </div>
-                <h3 className="flex items-start gap-1.5 text-sm font-semibold text-[var(--text-primary)]">
-                  <span className="line-clamp-2">{s.name || "API resource"}</span>
-                  <span
-                    aria-hidden="true"
-                    className="mt-px shrink-0 text-[var(--t54-coral)] opacity-0 -translate-x-1 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
-                  >
-                    &#8599;
-                  </span>
-                </h3>
-                <p className="mt-1 text-[12px] font-mono text-[var(--text-muted)] truncate">{hostOf(s.url)}</p>
-                <div className="mt-3 flex items-center gap-3 text-[11px]">
-                  <span className="font-mono text-[var(--brand-blue)]">
-                    {s.priceAmount} {formatCurrency(s.priceAsset)}
-                  </span>
-                  {s._count ? <span className="text-[var(--text-muted)]">{s._count.transactions.toLocaleString()} txns</span> : null}
-                </div>
-              </a>
+                <ServiceCard key={s.id} service={s} />
               ))}
             </div>
             <Pager page={svcPage} pages={svcPages} setPage={setSvcPage} label={`${sortedServices.length} services`} />
