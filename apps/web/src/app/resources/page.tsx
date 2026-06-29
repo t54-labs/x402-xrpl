@@ -44,7 +44,8 @@ const GROUPS: Group[] = [
     blurb: "Programs and accelerators to get an XRPL-AI project off the ground.",
     items: [
       { name: "XRPL Commons — Aquarium & HAKS", description: "Residency and hackathons, including an AI & Blockchain track.", href: "https://www.xrpl-commons.org/the-aquarium", tag: "Accelerator", maturity: "external" },
-      { name: "Tenity — XRPL Accelerator", description: "Cohort-based acceleration for XRPL builders.", href: "https://www.tenity.com/program/xrpl-accelerator-2025/", tag: "Accelerator", maturity: "external" },
+      { name: "Tenity — XRPL Accelerator", description: "Cohort-based acceleration for XRPL builders.", href: "https://www.tenity.com/program/sfiip-2026/", tag: "Accelerator", maturity: "external" },
+      { name: "Brinc — XRPL Hong Kong Accelerator", description: "Hong Kong accelerator program for XRPL startups.", href: "https://brinc.io/xrpl-program", tag: "Accelerator", maturity: "external" },
       { name: "XRPL Grants", description: "Funding for open-source projects building on the XRP Ledger.", href: "https://xrplgrants.org", tag: "Grants", maturity: "external" },
       { name: "Ripple Swell (formerly Apex)", description: "Ripple's flagship summit — now folds in the XRPL developer programming previously run as Apex.", href: "https://swell.ripple.com", tag: "Program", maturity: "external" },
     ],
