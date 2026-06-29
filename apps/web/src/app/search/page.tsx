@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { apiFetch } from "../lib/api";
+import { VerificationBadge } from "../components/VerificationBadge";
 import { formatCurrency } from "../utils/currency";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ type SearchResult = {
   merchants: Array<{ address: string; name: string | null }>;
   transactions: Array<{
     hash: string; amount: string; asset: string; merchantAddr: string;
+    verifiableIntent?: boolean; riskChecked?: boolean;
     merchant?: { address: string; name: string | null } | null;
   }>;
   resources: Array<{ id: string; merchantAddr: string; url: string; name: string | null; priceAmount: string; priceAsset: string }>;
@@ -84,6 +86,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <p className="text-xs text-gray-500 mt-1">
                     {tx.merchant?.name || tx.merchantAddr.substring(0, 16) + "..."}
                   </p>
+                  <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} compact className="mt-2" />
                 </div>
                 <span className="text-sm text-white font-medium shrink-0 ml-4">
                   {tx.amount} <span className="text-xs text-gray-500">{tx.asset}</span>

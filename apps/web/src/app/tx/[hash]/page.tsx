@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CopyButton } from "../../components/CopyButton";
 import { RelativeTime } from "../../components/RelativeTime";
+import { VerificationBadge } from "../../components/VerificationBadge";
 import { getExplorerUrl } from "../../utils/explorer";
 import { formatCurrency } from "../../utils/currency";
 import { apiFetch } from "../../lib/api";
@@ -26,6 +27,7 @@ type TxDetail = {
   assetIssuer: string | null; buyerAddress: string; merchantAddr: string;
   sourceTag: number | null; destinationTag: number | null; invoiceId: string | null;
   facilitator: string | null; rawMemo: string | null;
+  verifiableIntent?: boolean | null; riskChecked?: boolean | null;
   merchant?: { name: string | null } | null;
   resource?: { url: string; name: string | null } | null;
 };
@@ -61,7 +63,10 @@ export default async function TransactionDetailPage({ params }: PageProps) {
           &larr; All transactions
         </Link>
         <span className="mt-6 block text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">Transaction</span>
-        <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">Transaction details</h1>
+        <div className="mt-1.5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">Transaction details</h1>
+          <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} showIdle />
+        </div>
         <p className="mt-2 font-mono text-[13px] text-[var(--text-muted)] break-all">{hash}</p>
       </header>
 
@@ -70,6 +75,9 @@ export default async function TransactionDetailPage({ params }: PageProps) {
           <Row label="Amount">
             <span className="font-mono tabular-nums text-lg text-[var(--paper)]">{tx.amount}</span>
             <span className="text-[11px] font-plek uppercase tracking-[0.16em] text-[var(--paper-mute)]">{formatCurrency(tx.asset)}</span>
+          </Row>
+          <Row label="Intent status">
+            <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} showIdle />
           </Row>
           <Row label="Transaction hash">
             <span className={mono}>{tx.hash}</span>

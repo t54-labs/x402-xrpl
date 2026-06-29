@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
 import { selectNewTransactions, sumXrpVolume } from "./ledgerState";
+import { loadViReceiptEnrichmentConfig, startViReceiptEnrichmentLoop } from "./viReceiptEnrichment";
 
 dotenv.config();
 
@@ -316,6 +317,14 @@ async function startIndexer() {
   await loadFacilitatorTags();
   if (knownSourceTags.size === 0) {
     console.warn("⚠️  No facilitator tags. Insert a FacilitatorTag row to start indexing.");
+  }
+
+  const viReceiptEnrichment = loadViReceiptEnrichmentConfig();
+  if (viReceiptEnrichment) {
+    console.log(`VI receipt enrichment enabled: ${viReceiptEnrichment.url}`);
+    startViReceiptEnrichmentLoop(viReceiptEnrichment);
+  } else {
+    console.log("VI receipt enrichment disabled. Set VI_RECEIPT_LOOKUP_URL to enable.");
   }
 
   const client = await connectToXrpl();

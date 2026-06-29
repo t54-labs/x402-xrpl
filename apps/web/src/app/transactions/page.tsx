@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RelativeTime } from "../components/RelativeTime";
+import { VerificationBadge, isVerifiedIntent } from "../components/VerificationBadge";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
 
@@ -19,6 +20,7 @@ type TxListResponse = {
   items: Array<{
     hash: string; timestamp: string; amount: string; asset: string;
     buyerAddress: string; merchantAddr: string;
+    verifiableIntent?: boolean; riskChecked?: boolean;
     merchant?: { address: string; name: string | null } | null;
     resource?: { id: string; url: string; name: string | null } | null;
   }>;
@@ -46,37 +48,51 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
 
       {/* Mobile list */}
       <div className="md:hidden space-y-3 animate-fade-up" style={{ animationDelay: "80ms" }}>
-        {transactions.map((tx) => (
-          <div key={tx.hash} className="table-shell bg-[var(--bg-surface)] border border-[var(--border)] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-[var(--brand-blue)]">
-                {tx.hash.substring(0, 16)}...
-              </Link>
-              <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
-                <RelativeTime date={tx.timestamp} />
-              </span>
-            </div>
-            <div className="mt-2 text-sm text-[var(--text-secondary)]">
-              <Link href={`/address/${tx.merchantAddr}`} className="hover:text-[var(--text-primary)] transition-colors">
-                {tx.merchant?.name || tx.merchantAddr.substring(0, 14) + "..."}
-              </Link>
-            </div>
-            {tx.resource && (
-              <div className="mt-1 text-xs text-[var(--text-muted)] font-mono truncate">
-                {tx.resource.url}
+        {transactions.map((tx) => {
+          const verified = isVerifiedIntent(tx);
+          return (
+            <div
+              key={tx.hash}
+              className={[
+                "table-shell bg-[var(--bg-surface)] border p-4",
+                verified ? "border-[var(--blue-28)] shadow-[inset_2px_0_0_var(--brand-blue)]" : "border-[var(--border)]",
+              ].join(" ")}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-[var(--brand-blue)]">
+                    {tx.hash.substring(0, 16)}...
+                  </Link>
+                  <div className="mt-1">
+                    <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} compact />
+                  </div>
+                </div>
+                <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
+                  <RelativeTime date={tx.timestamp} />
+                </span>
               </div>
-            )}
-            <div className="mt-3 flex items-center justify-between">
-              <Link href={`/address/${tx.buyerAddress}`} className="font-mono text-xs text-[var(--text-muted)]">
-                {tx.buyerAddress.substring(0, 12)}...
-              </Link>
-              <div className="text-sm">
-                <span className="font-medium text-[var(--text-primary)]">{tx.amount}</span>
-                <span className="text-[var(--text-muted)] text-xs ml-1">{formatCurrency(tx.asset)}</span>
+              <div className="mt-2 text-sm text-[var(--text-secondary)]">
+                <Link href={`/address/${tx.merchantAddr}`} className="hover:text-[var(--text-primary)] transition-colors">
+                  {tx.merchant?.name || tx.merchantAddr.substring(0, 14) + "..."}
+                </Link>
+              </div>
+              {tx.resource && (
+                <div className="mt-1 text-xs text-[var(--text-muted)] font-mono truncate">
+                  {tx.resource.url}
+                </div>
+              )}
+              <div className="mt-3 flex items-center justify-between">
+                <Link href={`/address/${tx.buyerAddress}`} className="font-mono text-xs text-[var(--text-muted)]">
+                  {tx.buyerAddress.substring(0, 12)}...
+                </Link>
+                <div className="text-sm">
+                  <span className="font-medium text-[var(--text-primary)]">{tx.amount}</span>
+                  <span className="text-[var(--text-muted)] text-xs ml-1">{formatCurrency(tx.asset)}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {transactions.length === 0 && (
           <div className="table-shell bg-[var(--bg-surface)] border border-[var(--border)] p-10 text-center text-sm text-[var(--text-muted)]">
             No x402 transactions found on the ledger yet.
@@ -92,48 +108,61 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
               <tr>
                 <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Transaction Hash</th>
                 <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Time</th>
+                <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Intent</th>
                 <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Merchant / Resource</th>
                 <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Buyer</th>
                 <th className="px-6 py-4 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest text-right">Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {transactions.map((tx) => (
-                <tr key={tx.hash} className="hover:bg-[var(--bg-elevated)] transition-colors">
-                  <td className="px-6 py-4">
-                    <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-[var(--brand-blue)] hover:text-[var(--brand-blue)] transition-colors">
-                      {tx.hash.substring(0, 16)}...
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
-                    <RelativeTime date={tx.timestamp} />
-                  </td>
-                  <td className="px-6 py-4 max-w-xs">
-                    <div className="text-sm font-medium text-[var(--text-primary)] truncate">
-                      <Link href={`/address/${tx.merchantAddr}`} className="hover:text-[var(--brand-blue)] transition-colors">
-                        {tx.merchant?.name || tx.merchantAddr}
+              {transactions.map((tx) => {
+                const verified = isVerifiedIntent(tx);
+                return (
+                  <tr
+                    key={tx.hash}
+                    className={[
+                      "hover:bg-[var(--bg-elevated)] transition-colors",
+                      verified ? "bg-[rgba(0,140,255,0.035)] shadow-[inset_2px_0_0_var(--brand-blue)]" : "",
+                    ].join(" ")}
+                  >
+                    <td className="px-6 py-4">
+                      <Link href={`/tx/${tx.hash}`} className="font-mono text-sm text-[var(--brand-blue)] hover:text-[var(--brand-blue)] transition-colors">
+                        {tx.hash.substring(0, 16)}...
                       </Link>
-                    </div>
-                    {tx.resource && (
-                      <div className="text-xs text-[var(--text-muted)] font-mono truncate mt-0.5">
-                        {tx.resource.url}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-secondary)]">
+                      <RelativeTime date={tx.timestamp} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} showIdle compact />
+                    </td>
+                    <td className="px-6 py-4 max-w-xs">
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
+                        <Link href={`/address/${tx.merchantAddr}`} className="hover:text-[var(--brand-blue)] transition-colors">
+                          {tx.merchant?.name || tx.merchantAddr}
+                        </Link>
                       </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link href={`/address/${tx.buyerAddress}`} className="font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--brand-blue)] transition-colors">
-                      {tx.buyerAddress.substring(0, 12)}...
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-right">
-                    <span className="font-medium text-[var(--text-primary)]">{tx.amount}</span>
-                    <span className="text-[var(--text-muted)] text-xs ml-1">{formatCurrency(tx.asset)}</span>
-                  </td>
-                </tr>
-              ))}
+                      {tx.resource && (
+                        <div className="text-xs text-[var(--text-muted)] font-mono truncate mt-0.5">
+                          {tx.resource.url}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link href={`/address/${tx.buyerAddress}`} className="font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--brand-blue)] transition-colors">
+                        {tx.buyerAddress.substring(0, 12)}...
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right">
+                      <span className="font-medium text-[var(--text-primary)]">{tx.amount}</span>
+                      <span className="text-[var(--text-muted)] text-xs ml-1">{formatCurrency(tx.asset)}</span>
+                    </td>
+                  </tr>
+                );
+              })}
               {transactions.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-[var(--text-muted)] text-sm">
+                  <td colSpan={6} className="px-6 py-16 text-center text-[var(--text-muted)] text-sm">
                     No x402 transactions found on the ledger yet.
                   </td>
                 </tr>
