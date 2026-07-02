@@ -6,7 +6,7 @@ import { useState } from "react";
 // claw.credit, …) are designed for light backgrounds, so the tile is white —
 // that keeps every mark readable and consistent on the dark cards. First-party
 // t54 hosts use the brand wordmark; a dark monogram covers the rare failure.
-export function ResourceLogo({ href, name }: { href: string; name: string }) {
+export function ResourceLogo({ href, name, logo }: { href: string; name: string; logo?: string }) {
   const [failed, setFailed] = useState(false);
 
   let host = "";
@@ -17,8 +17,8 @@ export function ResourceLogo({ href, name }: { href: string; name: string }) {
   }
   const monogram = (name.match(/[A-Za-z0-9]/)?.[0] ?? "·").toUpperCase();
   const isT54 = /(^|\.)t54\.ai$/i.test(host);
-  const src = isT54 ? "/logos/t54.svg" : `https://www.google.com/s2/favicons?domain=${host}&sz=64`;
-  const useImg = host && !failed;
+  const src = logo ?? (isT54 ? "/logos/t54.svg" : `https://www.google.com/s2/favicons?domain=${host}&sz=64`);
+  const useImg = (logo || host) && !failed;
 
   return (
     <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[rgba(0,0,0,0.08)] bg-white">
@@ -29,7 +29,7 @@ export function ResourceLogo({ href, name }: { href: string; name: string }) {
           alt=""
           loading="lazy"
           referrerPolicy="no-referrer"
-          className={isT54 ? "h-auto w-[26px] object-contain" : "h-5 w-5 object-contain"}
+          className={logo ? "h-6 w-6 object-contain" : isT54 ? "h-auto w-[26px] object-contain" : "h-5 w-5 object-contain"}
           onError={() => setFailed(true)}
         />
       ) : (

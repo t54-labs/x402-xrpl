@@ -16,6 +16,7 @@ type Resource = {
   tag: string;
   maturity?: "live" | "beta" | "external" | "unverified";
   install?: string;
+  logo?: string; // optional explicit logo (overrides the favicon derived from href)
 };
 
 type Group = { title: string; blurb: string; items: Resource[] };
@@ -30,6 +31,7 @@ const GROUPS: Group[] = [
       { name: "t54 x402 Facilitator", description: "Hosted verify + settle for XRPL presigned payments. No custody, no API keys. Mainnet + testnet.", href: "https://xrpl-x402.t54.ai", tag: "Facilitator", maturity: "live" },
       { name: "x402 Secure — Verifiable Intent", description: "Know-Your-Agent credential + owner→agent delegation + per-payment risk gating, enforced before settlement (L1–L3).", href: "https://www.t54.ai/x402-secure", tag: "Security", maturity: "live" },
       { name: "Verifiable Intent", description: "Open specification for cryptographic agent authorization in commerce — tamper-evident delegation chains that bind AI agent actions to human-approved scope.", href: "https://verifiableintent.dev/", tag: "Spec", maturity: "external" },
+      { name: "Virtuals — Agent Commerce Protocol (ACP)", description: "Standard for autonomous agents to discover, contract, and settle transactions with each other.", href: "https://os.virtuals.io/acp/overview", tag: "Protocol", maturity: "external", logo: "/logos/virtuals.svg" },
       { name: "RLUSD CLI", description: "Multi-chain RLUSD CLI for XRP Ledger and Ethereum (+ L2s): trust lines and payments, native XRPL DEX & AMM trading, Uniswap and Aave on EVM, Wormhole bridging, encrypted wallets, x402 paid requests, and JSON output.", href: "https://github.com/t54-labs/rlusd-cli", tag: "CLI", maturity: "live" },
       { name: "XRPL CLI — xrpl-up", description: "Ripple's CLI for XRPL local dev & scripting — spin up a local sandbox with pre-funded accounts, run scripts, manage snapshots, and hit testnet/devnet, with a Claude Code plugin.", href: "https://github.com/ripple/xrpl-up", tag: "CLI", maturity: "external", install: "npm i -g xrpl-up" },
       { name: "RLUSD Skills", description: "Claude / MCP agent skills wrapping the RLUSD CLI, with per-transaction spend caps.", href: "https://github.com/t54-labs/rlusd-skills", tag: "Agent skills", maturity: "live" },
@@ -100,7 +102,7 @@ export default function ResourcesPage() {
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.06]">
-                    <ResourceLogo href={r.href} name={r.name} />
+                    <ResourceLogo href={r.href} name={r.name} logo={r.logo} />
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] border-[rgba(0,140,255,0.12)]">
