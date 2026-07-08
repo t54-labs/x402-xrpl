@@ -23,13 +23,15 @@ const EMPTY_DASHBOARD: DashboardData = {
   facilitators: [],
 };
 
-// The home marquee shows the first 20 Directory services — one entry per
-// provider (grouped server-side by /services), most-active first.
+// The home marquee is a lively per-endpoint strip (shows the API name of each
+// live x402 endpoint). Render a good spread, and label it with the FULL live
+// endpoint count (pagination.total), not the fetch cap. (The /directory page
+// groups these by provider; the marquee intentionally stays per-endpoint.)
 async function getDirectoryServices(): Promise<{ items: DirectoryService[]; total: number }> {
   try {
-    const r = await apiFetch<{ items: DirectoryService[] }>("/services", ssrOpts());
+    const r = await apiFetch<{ items: DirectoryService[]; pagination?: { total?: number } }>("/resources?limit=100", ssrOpts());
     const items = r.items ?? [];
-    return { items: items.slice(0, 20), total: items.length };
+    return { items: items.slice(0, 40), total: r.pagination?.total ?? items.length };
   } catch {
     return { items: [], total: 0 };
   }
