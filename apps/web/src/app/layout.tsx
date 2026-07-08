@@ -3,6 +3,7 @@ import { Poppins, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Script from "next/script";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import { SearchBar } from "./components/SearchBar";
 import { MobileNav } from "./components/MobileNav";
 import { NavLinks } from "./components/NavLinks";
@@ -171,6 +172,7 @@ export default function RootLayout({
           </div>
         </footer>
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );
