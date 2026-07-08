@@ -862,6 +862,50 @@ app.get("/services", async (_req, res) => {
   }
 });
 
+// Top merchants ranked by transaction count within a window (24h / 7d / all).
+app.get("/top-merchants", async (req, res) => {
+  try {
+    const raw = String(req.query.range || "24h");
+    const range = raw === "7d" || raw === "all" ? raw : "24h";
+    const cacheKey = `top_merchants_${range}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
+    let rows: Array<{ merchantAddr: string; tx_count: bigint }>;
+    if (range === "all") {
+      rows = await prisma.$queryRawUnsafe(
+        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 10`,
+      );
+    } else {
+      const cutoff = new Date(Date.now() - (range === "7d" ? 7 : 1) * 24 * 3600 * 1000);
+      rows = await prisma.$queryRawUnsafe(
+        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" WHERE "timestamp" >= $1 GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 10`,
+        cutoff,
+      );
+    }
+
+    const addrs = rows.map((r) => r.merchantAddr);
+    const details = addrs.length
+      ? await prisma.merchant.findMany({ where: { address: { in: addrs } }, select: { address: true, name: true, logoUrl: true } })
+      : [];
+    const nameMap = new Map(details.map((m) => [m.address, m.name]));
+    const logoMap = new Map(details.map((m) => [m.address, m.logoUrl]));
+    const items = rows.map((r) => ({
+      address: r.merchantAddr,
+      name: nameMap.get(r.merchantAddr) ?? null,
+      logoUrl: logoMap.get(r.merchantAddr) ?? null,
+      txCount: Number(r.tx_count),
+    }));
+
+    const data = { items, range };
+    setCache(cacheKey, data, 30_000);
+    res.json(data);
+  } catch (err) {
+    console.error("GET /top-merchants error:", err);
+    res.status(500).json({ error: "Failed to fetch top merchants" });
+  }
+});
+
 // ── Discovery (x402 spec format) ────────────────────────────
 app.get("/discovery/resources", async (req, res) => {
   try {

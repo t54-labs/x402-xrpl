@@ -172,7 +172,7 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
 
         <FacilitatorPanel />
         <ServiceMarquee services={services} total={servicesTotal} />
-        <TopMerchantsPanel merchants={data.topMerchants} />
+        <TopMerchantsPanel initial={data.topMerchants} />
       </div>
     </div>
   );
@@ -371,83 +371,98 @@ function RecentTransactionsPanel({ transactions }: { transactions: TransactionRo
   );
 }
 
-function TopMerchantsPanel({ merchants }: { merchants: DashboardData["topMerchants"] }) {
-  if (merchants.length === 0) return null;
+type MerchantRank = { address: string; name: string | null; logoUrl?: string | null; txCount: number };
+const MERCHANT_RANGES = [
+  { k: "24h" as const, label: "24h" },
+  { k: "7d" as const, label: "7d" },
+  { k: "all" as const, label: "All time" },
+];
+
+function TopMerchantsPanel({ initial }: { initial: MerchantRank[] }) {
+  const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
+  const [merchants, setMerchants] = useState<MerchantRank[]>(initial);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`/api/top-merchants?range=${range}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => { if (active) { setMerchants(d.items ?? []); setLoaded(true); } })
+      .catch(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, [range]);
 
   return (
     <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
-      <div className="flex justify-between items-center px-5 sm:px-6 py-4 border-b border-[var(--border)]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Top Merchants</h2>
-          </div>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Most active merchants by transactions and volume.</p>
+      <div className="flex flex-wrap justify-between items-center gap-3 px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Top Merchants</h2>
         </div>
-        <Link href="/merchants" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
-          View All &rarr;
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
+            {MERCHANT_RANGES.map(({ k, label }) => (
+              <button
+                key={k}
+                onClick={() => setRange(k)}
+                aria-pressed={range === k}
+                className={`px-2.5 py-1 rounded-md transition-colors ${range === k ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Link href="/merchants" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors whitespace-nowrap">
+            View All &rarr;
+          </Link>
+        </div>
       </div>
-      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        <AnimatePresence initial={false}>
-          {merchants.map((merchant, index) => (
-            <motion.div
-              key={merchant.address}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="border-r border-[var(--border)] border-b sm:border-b-0"
-            >
-              <Link href={`/address/${merchant.address}`} className="block p-4 sm:p-5 hover:bg-[rgba(255,255,255,0.02)] transition-colors group h-full">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="relative shrink-0">
-                    <div className="!rounded-md w-8 h-8 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] flex items-center justify-center overflow-hidden">
-                      {merchant.logoUrl ? (
-                        <Image src={merchant.logoUrl} alt={merchant.name || ""} width={32} height={32} className="object-cover w-full h-full" />
-                      ) : (
-                        <span className="text-sm font-light text-[var(--text-secondary)]">{merchant.name ? merchant.name.charAt(0) : "M"}</span>
-                      )}
-                    </div>
-                    <span className={`absolute -top-2 -left-2 min-w-[20px] h-5 px-1 rounded-full border text-[10px] font-bold flex items-center justify-center ${rankClassName(index)}`}>
-                      #{index + 1}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--text-primary)]">
-                      {merchant.name || `${merchant.address.substring(0, 8)}...${merchant.address.slice(-4)}`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
-                    <AnimatedNumber value={merchant.txCount} duration={1400} /> txs
-                  </span>
-                  <div className="text-right min-w-0">
-                    {merchant.volumeByAsset && merchant.volumeByAsset.length > 0 ? (
-                      merchant.volumeByAsset.map((volume) => (
-                        <span key={volume.asset} className="block text-xs font-mono text-[var(--text-secondary)]">
-                          <AnimatedNumber
-                            value={volume.total}
-                            decimals={volume.total < 1 ? 3 : 2}
-                            duration={1600}
-                          />{" "}
-                          {formatCurrency(volume.asset)}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs font-mono text-[var(--text-secondary)]">
-                        <AnimatedNumber value={merchant.volume} decimals={3} duration={1600} /> XRP
+      {merchants.length === 0 ? (
+        <div className="px-5 sm:px-6 py-10 text-center text-sm text-[var(--text-muted)]">
+          {loaded ? "No merchant activity in this window yet." : "Loading…"}
+        </div>
+      ) : (
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+          <AnimatePresence initial={false}>
+            {merchants.map((merchant, index) => (
+              <motion.div
+                key={merchant.address}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className="border-r border-[var(--border)] border-b sm:border-b-0"
+              >
+                <Link href={`/address/${merchant.address}`} className="block p-4 sm:p-5 hover:bg-[rgba(255,255,255,0.02)] transition-colors group h-full">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="relative shrink-0">
+                      <div className="!rounded-md w-8 h-8 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] flex items-center justify-center overflow-hidden">
+                        {merchant.logoUrl ? (
+                          <Image src={merchant.logoUrl} alt={merchant.name || ""} width={32} height={32} className="object-cover w-full h-full" />
+                        ) : (
+                          <span className="text-sm font-light text-[var(--text-secondary)]">{merchant.name ? merchant.name.charAt(0) : "M"}</span>
+                        )}
+                      </div>
+                      <span className={`absolute -top-2 -left-2 min-w-[20px] h-5 px-1 rounded-full border text-[10px] font-bold flex items-center justify-center ${rankClassName(index)}`}>
+                        #{index + 1}
                       </span>
-                    )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--text-primary)]">
+                        {merchant.name || `${merchant.address.substring(0, 8)}...${merchant.address.slice(-4)}`}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+                  <span className="font-mono text-sm text-[var(--brand-blue)] tabular-nums">
+                    <AnimatedNumber value={merchant.txCount} duration={1400} /> <span className="text-xs text-[var(--text-muted)]">txns</span>
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   );
 }
