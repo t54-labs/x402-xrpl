@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { track } from "../../lib/analytics";
 
 type RegisteredMerchant = {
   address: string;
@@ -64,6 +65,7 @@ export default function JoinServicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    track("endpoint_register_submit");
     setLoading(true);
     setResult(null);
     setLogoFile(null);
@@ -81,11 +83,13 @@ export default function JoinServicePage() {
       const data = (await res.json()) as VerifyResult;
       setResult(data);
       if (res.ok && data.success) {
+        track("endpoint_register_success", { count: data.registeredCount ?? 0 });
         const merchants = getRegisteredMerchants(data);
         setVerifiedUrl(submittedUrl);
         setSelectedMerchant(merchants[0]?.address || "");
         setUrl("");
       } else {
+        track("endpoint_register_error", { error: data.error ?? String(res.status) });
         setVerifiedUrl("");
         setSelectedMerchant("");
       }
@@ -337,6 +341,7 @@ export default function JoinServicePage() {
           <a
             href={DIRECTORY_MAILTO}
             onClick={() => {
+              track("directory_email_click");
               try {
                 void navigator.clipboard?.writeText(SUPPORT_EMAIL);
               } catch {}

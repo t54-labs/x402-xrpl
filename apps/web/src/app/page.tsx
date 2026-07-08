@@ -2,7 +2,14 @@ import { DashboardLive, type DashboardData, type DirectoryService } from "./comp
 import { SIGNALS } from "./lib/signals";
 import { apiFetch } from "./lib/api";
 
-export const dynamic = "force-dynamic";
+// ISR: serve a shared, periodically-revalidated snapshot instead of rendering
+// (and hitting the backend) once per visitor. The client live-polls every 8s,
+// so a first paint that is up to ~10s stale is invisible. Under a launch spike
+// this collapses thousands of SSR renders/min into ~one every 10s.
+export const revalidate = 10;
+const SSR_CACHE = { next: { revalidate: 10 } } as const;
+// Fresh timeout per call — AbortSignal.timeout must not be shared (it fires once).
+const ssrOpts = () => ({ ...SSR_CACHE, signal: AbortSignal.timeout(12000) });
 
 const EMPTY_DASHBOARD: DashboardData = {
   totalTransactions: 0,
@@ -21,7 +28,7 @@ const EMPTY_DASHBOARD: DashboardData = {
 // using the same dedup the /directory page uses so the counts match.
 async function getDirectoryServices(): Promise<{ items: DirectoryService[]; total: number }> {
   try {
-    const r = await apiFetch<{ items: DirectoryService[] }>("/resources?limit=100");
+    const r = await apiFetch<{ items: DirectoryService[] }>("/resources?limit=100", ssrOpts());
     const seen = new Set<string>();
     const uniq = (r.items ?? []).filter((s) => {
       const key = `${s.merchantAddr}|${(s.name ?? "").toLowerCase().trim()}`;
@@ -38,7 +45,7 @@ async function getDirectoryServices(): Promise<{ items: DirectoryService[]; tota
 
 export default async function Home() {
   const [dashboardData, directory] = await Promise.all([
-    apiFetch<DashboardData>("/dashboard").catch(() => EMPTY_DASHBOARD),
+    apiFetch<DashboardData>("/dashboard", ssrOpts()).catch(() => EMPTY_DASHBOARD),
     getDirectoryServices(),
   ]);
 

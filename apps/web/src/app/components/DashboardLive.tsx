@@ -14,6 +14,7 @@ import { BrandLogo } from "./BrandLogo";
 import { NewsRail } from "./NewsRail";
 import type { Signal } from "../lib/signals";
 import { formatCurrency } from "../utils/currency";
+import { track } from "../lib/analytics";
 
 const REFRESH_INTERVAL_MS = 8000;
 
@@ -80,21 +81,41 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
 
   useEffect(() => {
     let active = true;
+    let timer: number | undefined;
+    let delay = REFRESH_INTERVAL_MS;
     const refresh = async () => {
+      // Don't poll hidden/background tabs — Twitter's in-app browser leaves many
+      // open, and each one hammering the origin every 8s is sustained load that
+      // outlasts the spike. visibilitychange restarts polling when it returns.
+      if (!active || document.visibilityState !== "visible") return;
       try {
         const res = await fetch(`/api/dashboard?range=${range}`, { cache: "no-store" });
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(String(res.status));
         const nextData = (await res.json()) as DashboardData;
         if (active) setData(nextData);
+        delay = REFRESH_INTERVAL_MS; // reset backoff on success
       } catch {
-        // Keep the current snapshot; the next poll will retry.
+        // Keep the current snapshot and back off, so a struggling API isn't
+        // hammered every 8s while it's trying to recover.
+        delay = Math.min(delay * 2, 60000);
+      }
+      if (active && document.visibilityState === "visible") {
+        timer = window.setTimeout(refresh, delay);
       }
     };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        window.clearTimeout(timer);
+        delay = REFRESH_INTERVAL_MS;
+        refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
     refresh();
-    const interval = window.setInterval(refresh, REFRESH_INTERVAL_MS);
     return () => {
       active = false;
-      window.clearInterval(interval);
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [range]);
 
@@ -173,8 +194,8 @@ function Hero() {
         </p>
         <div className="flex flex-wrap items-center gap-2.5 mt-5">
           <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Join the community</Link>
-          <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Explore the map</Link>
-          <Link href="/join/service" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Get listed</Link>
+          <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Explore the directory</Link>
+          <Link href="/join/service" onClick={() => track("get_listed_click", { location: "hero" })} className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Get listed</Link>
         </div>
       </div>
       <div className="dashboard-panel relative z-10 border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
