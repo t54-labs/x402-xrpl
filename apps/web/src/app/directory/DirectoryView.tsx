@@ -16,6 +16,8 @@ export type Service = {
   network?: string | null;
   isDiscovered?: boolean;
   merchant?: { name: string | null; logoUrl?: string | null } | null;
+  endpointCount?: number;
+  txCount?: number;
   _count?: { transactions: number };
 };
 
@@ -30,17 +32,6 @@ const shortAddr = (a: string) => (a.length > 16 ? `${a.slice(0, 8)}…${a.slice(
 const hostOf = (u: string) => {
   try {
     return new URL(u).hostname.replace(/^www\./, "");
-  } catch {
-    return u;
-  }
-};
-const endpointLabel = (u: string) => {
-  try {
-    const url = new URL(u);
-    const host = url.hostname.replace(/^www\./, "");
-    const segments = url.pathname.split("/").filter(Boolean);
-    const tail = segments.slice(-2).join("/");
-    return tail ? `${host}/${tail}` : host;
   } catch {
     return u;
   }
@@ -102,10 +93,9 @@ function SectionHead({ n, title, count, sub }: { n: string; title: string; count
 function ServiceCard({ service: s }: { service: Service }) {
   const title = serviceTitle(s);
   const description = serviceDescription(s);
-  const endpoint = endpointLabel(s.url);
 
   return (
-    <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className={cardHover}>
+    <Link href={`/address/${s.merchantAddr}`} className={cardHover}>
       <div className="flex gap-4 sm:gap-5">
         <span className="inline-flex transition-transform duration-200 ease-out group-hover:scale-[1.04]">
           <BrandLogo logoUrl={serviceLogoUrl(s)} name={title} className="h-12 w-12" />
@@ -131,27 +121,28 @@ function ServiceCard({ service: s }: { service: Service }) {
               {s.isDiscovered ? "Discovered" : "Registered"}
             </span>
           </div>
-          <p className="mt-1.5 truncate font-mono text-[13px] text-[rgba(142,164,176,0.92)]">{endpoint}</p>
+          <p className="mt-1.5 truncate font-mono text-[13px] text-[rgba(142,164,176,0.92)]">{hostOf(s.url)}</p>
           <p className="mt-3 line-clamp-2 text-[15px] leading-relaxed text-[var(--text-secondary)]">{description}</p>
-          <div className="mt-3 flex items-center gap-3 text-[11px]">
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
             <span className="font-mono text-[var(--brand-blue)]">
-              {s.priceAmount} {formatCurrency(s.priceAsset)}
+              {s.endpointCount && s.endpointCount > 1 ? "from " : ""}{s.priceAmount} {formatCurrency(s.priceAsset)}
             </span>
-            {s._count ? <span className="font-mono text-[12px] text-[var(--text-muted)]">{s._count.transactions.toLocaleString()} txns</span> : null}
+            {s.endpointCount ? (
+              <span className="font-mono text-[12px] text-[var(--text-muted)]">{s.endpointCount} endpoint{s.endpointCount === 1 ? "" : "s"}</span>
+            ) : null}
+            {s.txCount ? <span className="font-mono text-[12px] text-[var(--text-muted)]">{s.txCount.toLocaleString()} txns</span> : null}
           </div>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
 export function DirectoryView({ services, merchants }: { services: Service[]; merchants: Merchant[] }) {
   // Services: put the distinct non-Heurist providers first, then Heurist's many
   // tool endpoints; paginate 8 to a page.
-  const sortedServices = useMemo(() => {
-    const heuristLast = (s: Service) => (/heurist/i.test(s.url) ? 1 : 0);
-    return [...services].sort((a, b) => heuristLast(a) - heuristLast(b));
-  }, [services]);
+  // Already one card per provider, sorted by activity server-side (/services).
+  const sortedServices = services;
   const [svcPage, setSvcPage] = useState(1);
   const svcPages = Math.max(1, Math.ceil(sortedServices.length / SERVICES_PER_PAGE));
   const svcSlice = sortedServices.slice((svcPage - 1) * SERVICES_PER_PAGE, svcPage * SERVICES_PER_PAGE);

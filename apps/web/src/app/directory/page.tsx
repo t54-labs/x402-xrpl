@@ -14,17 +14,11 @@ export const metadata: Metadata = {
 };
 
 async function getServices(): Promise<Service[]> {
+  // One card per provider (merchant) — a representative endpoint + total count —
+  // so a many-endpoint gateway doesn't flood the list or crowd others out.
   try {
-    const r = await apiFetch<{ items: Service[] }>("/resources?limit=100");
-    // Collapse duplicate endpoints of the same service (e.g. NOFA registers a
-    // backtest + dry-run endpoint under one name) to one card per provider+name.
-    const seen = new Set<string>();
-    return (r.items ?? []).filter((s) => {
-      const key = `${s.merchantAddr}|${(s.name ?? "").toLowerCase().trim()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const r = await apiFetch<{ items: Service[] }>("/services");
+    return r.items ?? [];
   } catch {
     return [];
   }
