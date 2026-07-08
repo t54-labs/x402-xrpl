@@ -17,7 +17,7 @@ dotenv.config();
 const PORT = parseInt(process.env.PORT || "4001", 10);
 const app = express();
 const MAX_LOGO_BYTES = 256 * 1024;
-const MAX_DISCOVERY_RESOURCES = 20;
+const MAX_DISCOVERY_RESOURCES = 100;
 const LOGO_DATA_URL_RE = /^data:(image\/(?:png|jpeg|webp|gif));base64,([a-z0-9+/=\s]+)$/i;
 const verifyRateLimit = createRateLimit({ keyPrefix: "verify", windowMs: 60_000, max: 30 });
 const logoRateLimit = createRateLimit({ keyPrefix: "merchant-logo", windowMs: 60_000, max: 10 });
@@ -69,6 +69,7 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
 
   const origin = parsedInput.origin;
   const discoveredUrls = new Set<string>();
+  const discoveredMeta = new Map<string, { name: string | null; description: string | null }>();
   let discoveryChecked = false;
   let discoveryFound = 0;
   let discoveredMerchantName: string | null = null;
@@ -103,6 +104,14 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
           if (normalized) {
             await assertSafeHttpUrl(normalized);
             discoveredUrls.add(normalized);
+            // Carry the catalog's own name/description so a listing reads as
+            // "Exa Search" instead of a bare "Registered Resource".
+            if (entry && typeof entry === "object") {
+              discoveredMeta.set(normalized, {
+                name: typeof entry.name === "string" ? entry.name.slice(0, 120) : null,
+                description: typeof entry.description === "string" ? entry.description.slice(0, 500) : null,
+              });
+            }
           }
           if (discoveredUrls.size >= MAX_DISCOVERY_RESOURCES) break;
         } catch { /* skip invalid discovery entries */ }
@@ -115,11 +124,18 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
     discoveredUrls.add(parsedInput.toString());
   }
 
+  // Prune only on a full re-crawl of the origin root (not a single-endpoint
+  // submit), so entries advertised in an earlier run but gone from the catalog retire.
+  const discoveryComplete =
+    discoveryChecked && discoveryFound > 0 && parsedInput.pathname === "/" && !parsedInput.search;
+
   return {
     origin,
     discoveredUrls,
+    discoveredMeta,
     discoveryChecked,
     discoveryFound,
+    discoveryComplete,
     discoveredMerchantName,
     discoveredMerchantDescription,
   };
@@ -882,8 +898,10 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
     const {
       origin,
       discoveredUrls,
+      discoveredMeta,
       discoveryChecked,
       discoveryFound,
+      discoveryComplete,
       discoveredMerchantName,
       discoveredMerchantDescription,
     } = resolvedResources;
@@ -898,10 +916,14 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
         priceAmount = (Number(rawAmount) / 1_000_000).toString();
       }
 
+      // Prefer the catalog's declared name/description; fall back to the live 402.
+      const meta = discoveredMeta.get(resourceUrl);
       const resDescription = decoded?.resource?.description;
-      const resourceName = typeof resDescription === "string" && resDescription
+      const liveName = typeof resDescription === "string" && resDescription
         ? resDescription
         : (typeof decoded?.description === "string" ? decoded.description : null);
+      const resourceName = meta?.name || liveName || null;
+      const resourceDescription = meta?.description || (typeof resDescription === "string" ? resDescription : null);
 
       const merchantUpdate: Record<string, string> = { website: origin };
       if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
@@ -914,12 +936,17 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       });
       return prisma.resource.upsert({
         where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
-        update: { priceAmount, priceAsset: asset, isActive: true, ...(resourceName ? { name: resourceName } : {}) },
+        update: {
+          priceAmount, priceAsset: asset, isActive: true,
+          ...(resourceName ? { name: resourceName } : {}),
+          ...(resourceDescription ? { description: resourceDescription } : {}),
+        },
         create: {
           merchantAddr: xrplReq.payTo, url: resourceUrl,
           priceAmount, priceAsset: asset,
           schema: "x402", network: xrplReq.network || "xrpl",
           name: resourceName || "Registered Resource",
+          description: resourceDescription,
         },
       });
     }
@@ -944,12 +971,27 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       return res.status(400).json({ error: "Could not verify any x402 resources", discoveryChecked, failed });
     }
     const merchantAddresses = [...new Set(registered.map((resource) => resource.merchantAddr))];
+
+    // Retire stale endpoints: on a full catalog re-crawl, deactivate this origin's
+    // resources that are no longer advertised (prunes entries that now 404).
+    let pruned = 0;
+    if (discoveryComplete) {
+      const liveUrls = [...discoveredUrls];
+      for (const addr of merchantAddresses) {
+        const r = await prisma.resource.updateMany({
+          where: { merchantAddr: addr, isActive: true, url: { startsWith: origin }, NOT: { url: { in: liveUrls } } },
+          data: { isActive: false },
+        });
+        pruned += r.count;
+      }
+    }
+
     const merchants = await prisma.merchant.findMany({
       where: { address: { in: merchantAddresses } },
       select: { address: true, name: true, logoUrl: true },
     });
     clearDashboardCaches();
-    res.json({ success: true, registeredCount: registered.length, discoveryChecked, discoveryFound, failed, resources: registered, merchants });
+    res.json({ success: true, registeredCount: registered.length, discoveryChecked, discoveryFound, pruned, failed, resources: registered, merchants });
   } catch {
     res.status(500).json({ error: "Internal server error" });
   }
