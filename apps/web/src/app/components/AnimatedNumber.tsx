@@ -18,8 +18,11 @@ export function AnimatedNumber({
   suffix,
   className,
 }: AnimatedNumberProps) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const motionValue = useMotionValue(0);
+  // Seed with the real value so SSR / first paint / no-JS render the true number
+  // instead of flashing 0.00 (which reads as a dead/broken dashboard). Subsequent
+  // value changes from live polling still animate.
+  const [displayValue, setDisplayValue] = useState(value);
+  const motionValue = useMotionValue(value);
   const springValue = useSpring(motionValue, {
     damping: 28,
     stiffness: 180,
