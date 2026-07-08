@@ -874,12 +874,12 @@ app.get("/top-merchants", async (req, res) => {
     let rows: Array<{ merchantAddr: string; tx_count: bigint }>;
     if (range === "all") {
       rows = await prisma.$queryRawUnsafe(
-        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 10`,
+        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`,
       );
     } else {
       const cutoff = new Date(Date.now() - (range === "7d" ? 7 : 1) * 24 * 3600 * 1000);
       rows = await prisma.$queryRawUnsafe(
-        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" WHERE "timestamp" >= $1 GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 10`,
+        `SELECT "merchantAddr", COUNT(*) as tx_count FROM "Transaction" WHERE "timestamp" >= $1 GROUP BY "merchantAddr" ORDER BY tx_count DESC LIMIT 5`,
         cutoff,
       );
     }
