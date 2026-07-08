@@ -53,6 +53,7 @@ const DIRECTORY_MAILTO =
 
 export default function JoinServicePage() {
   const [url, setUrl] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifiedUrl, setVerifiedUrl] = useState("");
   const [selectedMerchant, setSelectedMerchant] = useState("");
@@ -77,7 +78,7 @@ export default function JoinServicePage() {
       const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: submittedUrl }),
+        body: JSON.stringify({ url: submittedUrl, name: displayName.trim() || undefined }),
       });
 
       const data = (await res.json()) as VerifyResult;
@@ -207,6 +208,23 @@ export default function JoinServicePage() {
               className={`${input} font-mono`}
             />
           </div>
+          <div>
+            <label htmlFor="svc-display-name" className={label}>
+              Display name <span className="font-normal normal-case tracking-normal text-[var(--text-muted)]">(optional)</span>
+            </label>
+            <input
+              id="svc-display-name"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="e.g. ClawBank"
+              maxLength={80}
+              className={input}
+            />
+            <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
+              Your merchant name on the Index. Skip it if your <code className="text-[var(--text-secondary)]">.well-known/x402</code> already sets a top-level <code className="text-[var(--text-secondary)]">name</code>.
+            </p>
+          </div>
           <button
             type="submit"
             disabled={loading}
@@ -328,6 +346,9 @@ export default function JoinServicePage() {
           Submit an origin URL to auto-discover <code className="text-[var(--text-secondary)]">/.well-known/x402</code>, or a direct endpoint URL. Every registered endpoint must return{" "}
           <code className="text-[var(--text-secondary)]">HTTP 402</code> with a valid <code className="text-[var(--text-secondary)]">PAYMENT-REQUIRED</code> header containing{" "}
           <code className="text-[var(--text-secondary)]">{`{"network":"xrpl"}`}</code>.
+        </p>
+        <p className="mt-2 text-[11px] text-[var(--text-muted)] leading-relaxed">
+          Tip: give every resource a <code className="text-[var(--text-secondary)]">name</code> and <code className="text-[var(--text-secondary)]">description</code> in your <code className="text-[var(--text-secondary)]">.well-known/x402</code> (and a top-level <code className="text-[var(--text-secondary)]">name</code> for your service) — we ingest them, so your listing reads properly instead of &ldquo;Registered Resource&rdquo;. Re-submit anytime to refresh; endpoints that leave your catalog are retired automatically.
         </p>
       </section>
 

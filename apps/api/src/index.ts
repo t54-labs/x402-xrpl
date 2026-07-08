@@ -883,6 +883,7 @@ app.get("/search", async (req, res) => {
 app.post("/verify", verifyRateLimit, async (req, res) => {
   try {
     const { url } = req.body;
+    const displayName = typeof req.body?.name === "string" ? req.body.name.trim().slice(0, 80) : "";
 
     const parsedInput = parseHttpUrl(url);
     if (!parsedInput) return res.status(400).json({ error: "Only valid http/https URLs are supported" });
@@ -927,6 +928,7 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
 
       const merchantUpdate: Record<string, string> = { website: origin };
       if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
+      else if (displayName) merchantUpdate.name = displayName;
       if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
 
       await prisma.merchant.upsert({
