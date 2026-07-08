@@ -810,6 +810,58 @@ app.get("/resources", async (req, res) => {
   }
 });
 
+// Directory "Services" — one entry per provider (merchant) with a representative
+// endpoint + total endpoint count, so a provider with many endpoints (e.g. a
+// 50-endpoint gateway) shows as a single card instead of flooding the list and
+// crowding smaller providers out of a flat, limit-capped resource fetch.
+app.get("/services", async (_req, res) => {
+  try {
+    const cached = getCached("services_grouped");
+    if (cached) return res.json(cached);
+
+    const merchants = await prisma.merchant.findMany({
+      where: { resources: { some: { isActive: true } } },
+      include: {
+        _count: { select: { transactions: true } },
+        resources: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          select: { url: true, name: true, description: true, priceAmount: true, priceAsset: true, isDiscovered: true },
+        },
+      },
+    });
+
+    const items = merchants.flatMap((m) => {
+      const list = m.resources;
+      if (list.length === 0) return [];
+      // Cheapest endpoint as the "from" price; first with copy for the blurb.
+      const rep = [...list].sort((a, b) => (parseFloat(a.priceAmount) || 0) - (parseFloat(b.priceAmount) || 0))[0];
+      const descRes = list.find((r) => r.description || r.name) || rep;
+      return [{
+        id: m.address,
+        merchantAddr: m.address,
+        merchant: { name: m.name, logoUrl: m.logoUrl },
+        name: descRes.name,
+        description: descRes.description,
+        url: rep.url,
+        priceAmount: rep.priceAmount,
+        priceAsset: rep.priceAsset,
+        isDiscovered: rep.isDiscovered,
+        endpointCount: list.length,
+        txCount: m._count.transactions,
+      }];
+    });
+    items.sort((a, b) => (b.txCount - a.txCount) || (b.endpointCount - a.endpointCount));
+
+    const data = { items };
+    setCache("services_grouped", data, 10_000);
+    res.json(data);
+  } catch (err) {
+    console.error("GET /services error:", err);
+    res.status(500).json({ error: "Failed to fetch services" });
+  }
+});
+
 // ── Discovery (x402 spec format) ────────────────────────────
 app.get("/discovery/resources", async (req, res) => {
   try {

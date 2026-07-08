@@ -267,9 +267,9 @@ function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
       className="marquee-card group relative flex h-[116px] w-[300px] shrink-0 flex-col justify-between !rounded-[14px] border border-[var(--border)] bg-[rgba(255,255,255,0.02)] p-4 transition-[border-color,transform] duration-200 hover:border-[var(--border-hover)]"
     >
       <div className="flex items-start gap-3">
-        <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} className="h-9 w-9" />
+        <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.merchant?.name || s.name || hostOf(s.url)} className="h-9 w-9" />
         <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">{s.name || "API resource"}</h3>
+          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">{s.merchant?.name || s.name || "API resource"}</h3>
           <p className="mt-0.5 truncate font-mono text-[11px] text-[var(--text-muted)]">{hostOf(s.url)}</p>
         </div>
       </div>

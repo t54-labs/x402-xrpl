@@ -23,21 +23,13 @@ const EMPTY_DASHBOARD: DashboardData = {
   facilitators: [],
 };
 
-// The home marquee shows the first 20 Directory services (distinct providers
-// first, then Heurist's), but reports the FULL deduped total in its label —
-// using the same dedup the /directory page uses so the counts match.
+// The home marquee shows the first 20 Directory services — one entry per
+// provider (grouped server-side by /services), most-active first.
 async function getDirectoryServices(): Promise<{ items: DirectoryService[]; total: number }> {
   try {
-    const r = await apiFetch<{ items: DirectoryService[] }>("/resources?limit=100", ssrOpts());
-    const seen = new Set<string>();
-    const uniq = (r.items ?? []).filter((s) => {
-      const key = `${s.merchantAddr}|${(s.name ?? "").toLowerCase().trim()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-    uniq.sort((a, b) => (/heurist/i.test(a.url) ? 1 : 0) - (/heurist/i.test(b.url) ? 1 : 0));
-    return { items: uniq.slice(0, 20), total: uniq.length };
+    const r = await apiFetch<{ items: DirectoryService[] }>("/services", ssrOpts());
+    const items = r.items ?? [];
+    return { items: items.slice(0, 20), total: items.length };
   } catch {
     return { items: [], total: 0 };
   }
