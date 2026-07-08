@@ -8,6 +8,7 @@ import { MobileNav } from "./components/MobileNav";
 import { NavLinks } from "./components/NavLinks";
 import { GoogleAnalyticsPageView } from "./components/GoogleAnalyticsPageView";
 import { CookieConsent, CookieSettingsLink } from "./components/CookieConsent";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const GA_MEASUREMENT_ID = "G-1D7VRX7WY2";
@@ -171,6 +172,7 @@ export default function RootLayout({
           </div>
         </footer>
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );
