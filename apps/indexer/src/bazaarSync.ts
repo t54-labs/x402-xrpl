@@ -1,4 +1,4 @@
-import { prisma } from "@x402-xrpl/database";
+import { prisma, normalizeX402Price } from "@x402-xrpl/database";
 import { assertSafeHttpUrl, safeHttpRequest } from "./safeFetch";
 
 type XrplRequirement = {
@@ -129,11 +129,13 @@ async function verifyAndUpsertResource(
       const xrplRequirement = extractXrplRequirement(paymentRequired);
 
       if (xrplRequirement?.payTo) {
+        const asset = xrplRequirement.asset || "XRP";
         await upsertDiscoveredResource({
           resourceUrl,
           merchantAddress: xrplRequirement.payTo,
-          amount: String(xrplRequirement.amount ?? "0"),
-          asset: xrplRequirement.asset || "XRP",
+          // XRP arrives in drops per exact_xrpl — normalize exactly like /verify does.
+          amount: normalizeX402Price(xrplRequirement.amount, asset),
+          asset,
           network: xrplRequirement.network || "xrpl",
           origin,
           name: metadata.name,

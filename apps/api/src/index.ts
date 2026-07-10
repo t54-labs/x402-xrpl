@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { prisma } from "@x402-xrpl/database";
+import { prisma, normalizeX402Price } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import {
   canIssueAdminSessions,
@@ -1006,12 +1006,8 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
     async function verifyAndRegister(resourceUrl: string) {
       const { decoded, xrplReq } = await fetchX402Requirement(resourceUrl);
 
-      const rawAmount = String(xrplReq.amount ?? "0");
       const asset = xrplReq.asset || "XRP";
-      let priceAmount = rawAmount;
-      if (asset === "XRP" && /^\d+$/.test(rawAmount)) {
-        priceAmount = (Number(rawAmount) / 1_000_000).toString();
-      }
+      const priceAmount = normalizeX402Price(xrplReq.amount, asset);
 
       // Prefer the catalog's declared name/description; fall back to the live 402.
       const meta = discoveredMeta.get(resourceUrl);
