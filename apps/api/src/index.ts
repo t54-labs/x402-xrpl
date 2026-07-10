@@ -1164,6 +1164,21 @@ app.post("/merchant-logo", logoRateLimit, async (req, res) => {
 });
 
 // ── Admin Stats ─────────────────────────────────────────────
+// Fold per-(key, asset) rows into one entry per key with a per-asset volume breakdown.
+// XRP and RLUSD are different units and must never be summed into a single "volume" figure.
+type PerAssetRow = { key: string; tx_count: string; asset: string; volume: string };
+function foldPerAsset(rows: PerAssetRow[]): Array<{ key: string; txCount: number; volumes: Array<{ asset: string; total: number }> }> {
+  const map = new Map<string, { key: string; txCount: number; volumes: Map<string, number> }>();
+  for (const r of rows) {
+    const e = map.get(r.key) ?? { key: r.key, txCount: 0, volumes: new Map<string, number>() };
+    e.txCount += parseInt(r.tx_count);
+    e.volumes.set(r.asset, (e.volumes.get(r.asset) ?? 0) + parseFloat(r.volume));
+    map.set(r.key, e);
+  }
+  return [...map.values()]
+    .map((e) => ({ key: e.key, txCount: e.txCount, volumes: [...e.volumes.entries()].map(([asset, total]) => ({ asset, total })) }));
+}
+
 app.get("/admin/stats", requireAdminAuth, async (_req, res) => {
   try {
     const cached = getCached("admin_stats");
@@ -1186,26 +1201,26 @@ app.get("/admin/stats", requireAdminAuth, async (_req, res) => {
       prisma.$queryRawUnsafe<[{ count: string }]>(
         `SELECT COUNT(DISTINCT "buyerAddress") as count FROM "Transaction"`
       ),
-      prisma.$queryRawUnsafe<Array<{ day: string; tx_count: string; volume: string }>>(
-        `SELECT DATE("timestamp") as day, COUNT(*) as tx_count,
+      prisma.$queryRawUnsafe<Array<{ key: string; asset: string; tx_count: string; volume: string }>>(
+        `SELECT DATE("timestamp")::text as key, asset, COUNT(*) as tx_count,
          COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
          FROM "Transaction"
-         GROUP BY DATE("timestamp")
-         ORDER BY day ASC`
+         GROUP BY DATE("timestamp"), asset
+         ORDER BY key ASC`
       ),
       prisma.$queryRawUnsafe<Array<{ asset: string; tx_count: string; total: string }>>(
         `SELECT asset, COUNT(*) as tx_count, COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as total
          FROM "Transaction" GROUP BY asset ORDER BY tx_count DESC`
       ),
-      prisma.$queryRawUnsafe<Array<{ merchantAddr: string; tx_count: string; volume: string }>>(
-        `SELECT "merchantAddr", COUNT(*) as tx_count,
+      prisma.$queryRawUnsafe<Array<{ key: string; asset: string; tx_count: string; volume: string }>>(
+        `SELECT "merchantAddr" as key, asset, COUNT(*) as tx_count,
          COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
-         FROM "Transaction" GROUP BY "merchantAddr" ORDER BY tx_count DESC`
+         FROM "Transaction" GROUP BY "merchantAddr", asset`
       ),
-      prisma.$queryRawUnsafe<Array<{ buyerAddress: string; tx_count: string; volume: string }>>(
-        `SELECT "buyerAddress", COUNT(*) as tx_count,
+      prisma.$queryRawUnsafe<Array<{ key: string; asset: string; tx_count: string; volume: string }>>(
+        `SELECT "buyerAddress" as key, asset, COUNT(*) as tx_count,
          COALESCE(SUM(CAST(amount AS DOUBLE PRECISION)), 0) as volume
-         FROM "Transaction" GROUP BY "buyerAddress" ORDER BY tx_count DESC LIMIT 10`
+         FROM "Transaction" GROUP BY "buyerAddress", asset`
       ),
       prisma.transaction.findMany({
         take: 20,
@@ -1214,7 +1229,12 @@ app.get("/admin/stats", requireAdminAuth, async (_req, res) => {
       }),
     ]);
 
-    const merchantAddrs = txsByMerchant.map((m) => m.merchantAddr);
+    // Fold per-(key, asset) rows into per-key entries with per-asset volume breakdowns.
+    const dailyFolded = foldPerAsset(dailyTxs).sort((a, b) => a.key.localeCompare(b.key));
+    const merchantFolded = foldPerAsset(txsByMerchant).sort((a, b) => b.txCount - a.txCount);
+    const buyersFolded = foldPerAsset(topBuyers).sort((a, b) => b.txCount - a.txCount).slice(0, 10);
+
+    const merchantAddrs = merchantFolded.map((m) => m.key);
     const merchantDetails = merchantAddrs.length > 0
       ? await prisma.merchant.findMany({ where: { address: { in: merchantAddrs } }, select: { address: true, name: true, logoUrl: true } })
       : [];
@@ -1229,27 +1249,27 @@ app.get("/admin/stats", requireAdminAuth, async (_req, res) => {
         lastLedgerIndex: indexerState?.lastLedgerIndex ?? 0,
         updatedAt: indexerState?.updatedAt ?? null,
       },
-      dailyTxs: dailyTxs.map((d) => ({
-        day: d.day,
-        txCount: parseInt(d.tx_count),
-        volume: parseFloat(d.volume),
+      dailyTxs: dailyFolded.map((d) => ({
+        day: d.key,
+        txCount: d.txCount,
+        volumes: d.volumes,
       })),
       volumeByAsset: volumeByAsset.map((v) => ({
         asset: v.asset,
         txCount: parseInt(v.tx_count),
         total: parseFloat(v.total),
       })),
-      merchantBreakdown: txsByMerchant.map((m) => ({
-        address: m.merchantAddr,
-        name: merchantMap.get(m.merchantAddr)?.name || null,
-        logoUrl: merchantMap.get(m.merchantAddr)?.logoUrl || null,
-        txCount: parseInt(m.tx_count),
-        volume: parseFloat(m.volume),
+      merchantBreakdown: merchantFolded.map((m) => ({
+        address: m.key,
+        name: merchantMap.get(m.key)?.name || null,
+        logoUrl: merchantMap.get(m.key)?.logoUrl || null,
+        txCount: m.txCount,
+        volumes: m.volumes,
       })),
-      topBuyers: topBuyers.map((b) => ({
-        address: b.buyerAddress,
-        txCount: parseInt(b.tx_count),
-        volume: parseFloat(b.volume),
+      topBuyers: buyersFolded.map((b) => ({
+        address: b.key,
+        txCount: b.txCount,
+        volumes: b.volumes,
       })),
       recentTransactions: recentTxs,
     };
