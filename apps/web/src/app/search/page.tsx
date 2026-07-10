@@ -89,7 +89,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <VerificationBadge verifiableIntent={tx.verifiableIntent} riskChecked={tx.riskChecked} compact className="mt-2" />
                 </div>
                 <span className="text-sm text-white font-medium shrink-0 ml-4">
-                  {tx.amount} <span className="text-xs text-gray-500">{tx.asset}</span>
+                  {tx.amount} <span className="text-xs text-gray-500">{formatCurrency(tx.asset)}</span>
                 </span>
               </Link>
             ))}
