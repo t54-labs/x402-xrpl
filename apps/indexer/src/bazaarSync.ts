@@ -131,6 +131,8 @@ async function upsertDiscoveredResource(input: {
   });
 }
 
+// Returns the payTo the resource was upserted under (so the caller can retire stale-owner
+// rows after a payTo rotation), or null if the endpoint did not yield a valid XRPL 402.
 async function verifyAndUpsertResource(
   resourceUrl: string,
   origin: string,
@@ -138,7 +140,7 @@ async function verifyAndUpsertResource(
     name?: string;
     description?: string;
   } = {}
-) {
+): Promise<string | null> {
   try {
     let response = await safeHttpRequest(resourceUrl, {
       method: "GET",
@@ -173,14 +175,14 @@ async function verifyAndUpsertResource(
           name: metadata.name,
           description: metadata.description,
         });
-        return true;
+        return xrplRequirement.payTo;
       }
     }
   } catch {
     // Ignore resource-level fetch errors and continue processing others.
   }
 
-  return false;
+  return null;
 }
 
 // Function to sync a specific merchant's /.well-known/x402 file
@@ -237,10 +239,25 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     // and returns false, leaving the last-known row untouched; it stays active because its URL
     // remains in catalogUrls. No per-resource call throws out of this loop.
     let syncedCount = 0;
+    const ownersByPayTo = new Map<string, string[]>();
     for (const e of entries) {
-      if (await verifyAndUpsertResource(e.url, url.origin, { name: e.name, description: e.description })) {
+      const payTo = await verifyAndUpsertResource(e.url, url.origin, { name: e.name, description: e.description });
+      if (payTo) {
         syncedCount++;
+        const urls = ownersByPayTo.get(payTo) ?? [];
+        urls.push(e.url);
+        ownersByPayTo.set(payTo, urls);
       }
+    }
+
+    // A merchant may rotate its payTo; the endpoint then upserts under the NEW address while the
+    // OLD (address, url) row lingers active, so the directory shows the same service twice. For
+    // every URL we just re-owned, retire any OTHER merchant's active discovered row for it.
+    for (const [payTo, urls] of ownersByPayTo) {
+      await prisma.resource.updateMany({
+        where: { url: { in: urls }, merchantAddr: { not: payTo }, isDiscovered: true, isActive: true },
+        data: { isActive: false },
+      });
     }
 
     // Retire ONLY endpoints the merchant no longer advertises, and ONLY on the origin we just
