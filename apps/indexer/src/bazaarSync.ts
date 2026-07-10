@@ -140,10 +140,20 @@ async function verifyAndUpsertResource(
   } = {}
 ) {
   try {
-    const response = await safeHttpRequest(resourceUrl, {
+    let response = await safeHttpRequest(resourceUrl, {
       method: "GET",
       timeout: 7000,
     });
+    // Mirror the API's /verify probe: some x402 endpoints only challenge on POST. Probing GET
+    // only meant the indexer never saw their 402 — so it could neither refresh nor discover
+    // POST-only endpoints, and (pre-catalog-prune) deactivated them, fighting /verify hourly.
+    if (response.status !== 402) {
+      response = await safeHttpRequest(resourceUrl, {
+        method: "POST",
+        data: {},
+        timeout: 7000,
+      });
+    }
 
     if (response.status === 402) {
       const paymentHeaderBase64 = response.headers["payment-required"];
