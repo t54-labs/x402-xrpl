@@ -28,7 +28,11 @@ export function OverviewMetricsStrip({
     const name = formatCurrency(v.asset);
     byAsset.set(name, (byAsset.get(name) ?? 0) + v.total);
   }
-  const xrp = byAsset.get("XRP") ?? fallbackXrp;
+  // fallbackXrp is the lifetime total; use it ONLY when there is no per-asset breakdown at
+  // all (degraded API). When a breakdown exists but has no XRP row — e.g. a 7D/30D window
+  // with RLUSD-only activity — the window's XRP volume is genuinely 0, not the all-time total.
+  const hasBreakdown = (volumes ?? []).length > 0;
+  const xrp = byAsset.get("XRP") ?? (hasBreakdown ? 0 : fallbackXrp);
   const rlusd = byAsset.get("RLUSD") ?? 0;
   // Per-card history (sliced from the one dashboard timeSeries field). Decode
   // each bucket's byAsset keys the same way as the headline volumes above — the
