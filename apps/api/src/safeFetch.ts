@@ -1,8 +1,48 @@
 import dns from "node:dns/promises";
-import net from "node:net";
+import net, { type LookupFunction } from "node:net";
+import { Agent as HttpAgent } from "node:http";
+import { Agent as HttpsAgent } from "node:https";
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 
 export type Resolver = (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+
+/**
+ * A dns.lookup-compatible callback that resolves a hostname, rejects if ANY returned
+ * address is private/blocked, and hands the socket only validated IPs. Because the address
+ * it returns is the exact address the socket connects to, a DNS-rebinding answer cannot
+ * differ between validation and connect time — the TOCTOU that assertSafeHttpUrl alone
+ * (which resolves separately from axios's connect-time lookup) cannot close.
+ */
+export function makeSafeLookup(resolver: Resolver = defaultResolve): LookupFunction {
+  return (hostname, options, callback) => {
+    const cb = callback as (
+      err: NodeJS.ErrnoException | null,
+      address?: string | Array<{ address: string; family: number }>,
+      family?: number,
+    ) => void;
+    const wantsAll =
+      typeof options === "object" && options !== null && (options as { all?: boolean }).all === true;
+    const ipVersion = net.isIP(hostname);
+    const resolved =
+      ipVersion > 0 ? Promise.resolve([{ address: hostname, family: ipVersion }]) : resolver(hostname);
+    resolved
+      .then((addresses) => {
+        if (!addresses || addresses.length === 0) {
+          cb(new Error("Could not resolve URL host") as NodeJS.ErrnoException);
+          return;
+        }
+        for (const { address } of addresses) {
+          if (isBlockedAddress(address)) {
+            cb(new Error("Private or local URLs are not allowed") as NodeJS.ErrnoException);
+            return;
+          }
+        }
+        if (wantsAll) cb(null, addresses);
+        else cb(null, addresses[0].address, addresses[0].family);
+      })
+      .catch((err) => cb(err as NodeJS.ErrnoException));
+  };
+}
 
 const BLOCKED_HOSTNAMES = new Set([
   "localhost",
@@ -39,29 +79,43 @@ export async function assertSafeHttpUrl(input: string | URL, resolver: Resolver 
 export async function safeHttpRequest<T = unknown>(
   url: string | URL,
   config: AxiosRequestConfig = {},
-  resolver?: Resolver
+  resolver: Resolver = defaultResolve
 ): Promise<AxiosResponse<T>> {
   let current = await assertSafeHttpUrl(url, resolver);
   const maxRedirects = typeof config.maxRedirects === "number" ? config.maxRedirects : 3;
 
-  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount++) {
-    const response = await axios.request<T>({
-      ...config,
-      url: current.toString(),
-      maxRedirects: 0,
-      validateStatus: () => true,
-    });
+  // Pin every connection to a validated IP: the socket resolves through makeSafeLookup, so
+  // the address checked is the address connected to — a rebinding DNS answer cannot swap in
+  // a private IP after assertSafeHttpUrl passes.
+  const lookup = makeSafeLookup(resolver);
+  const httpAgent = new HttpAgent({ lookup });
+  const httpsAgent = new HttpsAgent({ lookup });
 
-    const location = response.headers.location;
-    if (response.status >= 300 && response.status < 400 && typeof location === "string") {
-      if (redirectCount === maxRedirects) {
-        throw new Error("Too many redirects");
+  try {
+    for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount++) {
+      const response = await axios.request<T>({
+        ...config,
+        url: current.toString(),
+        httpAgent,
+        httpsAgent,
+        maxRedirects: 0,
+        validateStatus: () => true,
+      });
+
+      const location = response.headers.location;
+      if (response.status >= 300 && response.status < 400 && typeof location === "string") {
+        if (redirectCount === maxRedirects) {
+          throw new Error("Too many redirects");
+        }
+        current = await assertSafeHttpUrl(new URL(location, current), resolver);
+        continue;
       }
-      current = await assertSafeHttpUrl(new URL(location, current), resolver);
-      continue;
-    }
 
-    return response;
+      return response;
+    }
+  } finally {
+    httpAgent.destroy();
+    httpsAgent.destroy();
   }
 
   throw new Error("Too many redirects");
