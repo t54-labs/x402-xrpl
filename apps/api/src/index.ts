@@ -1018,15 +1018,20 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       const resourceName = meta?.name || liveName || null;
       const resourceDescription = meta?.description || (typeof resDescription === "string" ? resDescription : null);
 
-      const merchantUpdate: Record<string, string> = { website: origin };
-      if (discoveredMerchantName) merchantUpdate.name = discoveredMerchantName;
-      else if (displayName) merchantUpdate.name = displayName;
-      if (discoveredMerchantDescription) merchantUpdate.description = discoveredMerchantDescription;
+      const merchantIdentity: Record<string, string> = { website: origin };
+      if (discoveredMerchantName) merchantIdentity.name = discoveredMerchantName;
+      else if (displayName) merchantIdentity.name = displayName;
+      if (discoveredMerchantDescription) merchantIdentity.description = discoveredMerchantDescription;
 
       await prisma.merchant.upsert({
         where: { address: xrplReq.payTo },
-        update: merchantUpdate,
-        create: { address: xrplReq.payTo, ...merchantUpdate },
+        // Merchant identity is WRITE-ONCE. payTo comes from the fetched endpoint's own 402
+        // header, so anyone can serve a 402 declaring another merchant's payTo — letting an
+        // unauthenticated /verify overwrite that merchant's public name/website/description
+        // was a defacement/phishing vector. Identity is set only when the row is first
+        // created; changing it later must go through an ownership-proven channel.
+        update: {},
+        create: { address: xrplReq.payTo, ...merchantIdentity },
       });
       return prisma.resource.upsert({
         where: { merchantAddr_url: { merchantAddr: xrplReq.payTo, url: resourceUrl } },
@@ -1134,7 +1139,10 @@ app.post("/merchant-logo", logoRateLimit, async (req, res) => {
 
     const merchant = await prisma.merchant.upsert({
       where: { address: merchantAddress },
-      update: { logoUrl: normalizedLogo, website: origin },
+      // Only the logo is updatable here — never overwrite an existing merchant's website
+      // (a logo upload must not rewrite where their listing links to; that was a phishing
+      // vector, since the endpoint's payTo "ownership" check is spoofable by design).
+      update: { logoUrl: normalizedLogo },
       create: { address: merchantAddress, logoUrl: normalizedLogo, website: origin },
       select: { address: true, name: true, logoUrl: true },
     });
