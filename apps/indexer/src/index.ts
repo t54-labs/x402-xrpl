@@ -4,6 +4,7 @@ import { prisma } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
+import { resolveDeliveredAmount } from "./deliveredAmount";
 import { selectNewTransactions, sumXrpVolume } from "./ledgerState";
 import { loadViReceiptEnrichmentConfig, startViReceiptEnrichmentLoop } from "./viReceiptEnrichment";
 
@@ -169,16 +170,12 @@ function processTransaction(txStream: any, tx: any) {
   const receiver = tx.Destination;
   if (!receiver || typeof receiver !== "string") return;
 
-  const rawAmount = tx.Amount ?? tx.DeliverMax;
-  let amountPaid: string;
-  if (typeof rawAmount === "string") {
-    const drops = Number(rawAmount);
-    if (!Number.isFinite(drops) || drops <= 0) return;
-    amountPaid = (drops / 1_000_000).toString();
-  } else {
-    amountPaid = String(rawAmount?.value ?? "");
-  }
-  if (!amountPaid || amountPaid === "0") return;
+  // Record the amount ACTUALLY delivered (metadata.delivered_amount), never tx.Amount —
+  // a tfPartialPayment Payment settles tesSUCCESS while delivering far less, which would
+  // otherwise let anyone inflate the displayed volume. See resolveDeliveredAmount.
+  const delivered = resolveDeliveredAmount(txStream, tx);
+  if (!delivered) return;
+  const { amount: amountPaid, asset, assetIssuer } = delivered;
 
   const txHash = tx.hash || txStream.hash;
   const timestamp = txStream.close_time_iso
@@ -194,8 +191,8 @@ function processTransaction(txStream: any, tx: any) {
     buyerAddress: tx.Account,
     merchantAddr: receiver,
     amount: amountPaid,
-    asset: typeof rawAmount === "string" ? "XRP" : rawAmount?.currency || "UNKNOWN",
-    assetIssuer: typeof rawAmount === "string" ? null : rawAmount?.issuer || null,
+    asset,
+    assetIssuer,
     facilitator: facilitatorName,
     sourceTag,
     destinationTag: typeof tx.DestinationTag === "number" ? tx.DestinationTag : null,
