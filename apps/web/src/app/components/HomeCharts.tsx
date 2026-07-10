@@ -27,17 +27,17 @@ function CumTip({ active, payload }: { active?: boolean; payload?: Array<{ paylo
   );
 }
 
-type Mode = "all" | "XRP" | "RLUSD";
+type Mode = "XRP" | "RLUSD";
 
 // Running total of settled value over time — rendered bare on the page (no card).
-// Toggle between the combined total (default) and a single asset; the curve
-// redraws left-to-right on every switch.
+// Toggle per asset; the curve redraws left-to-right on every switch. There is no
+// combined mode: XRP and RLUSD are different units, so summing them into one curve
+// produced a meaningless unitless number.
 export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
-  const [mode, setMode] = useState<Mode>("all");
+  const [mode, setMode] = useState<Mode>("XRP");
   if (!series || series.length < 2) return null;
 
   const pick = (b: TimeBucket) => {
-    if (mode === "all") return b.volume;
     // byAsset keys may arrive raw 40-hex (RLUSD) or already decoded; canonicalize to match.
     let sum = 0;
     for (const [code, val] of Object.entries(b.byAsset ?? {})) {
@@ -53,7 +53,7 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
   }, []);
   const total = data.length ? data[data.length - 1].cum : 0;
   const lastT = data[data.length - 1].t;
-  const opts: Mode[] = ["all", "XRP", "RLUSD"];
+  const opts: Mode[] = ["XRP", "RLUSD"];
 
   return (
     <div className="relative">
@@ -73,7 +73,7 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
               aria-pressed={mode === k}
               className={`px-2.5 py-1 rounded-md transition-colors ${mode === k ? "bg-[var(--blue-16)] text-[var(--paper)]" : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"}`}
             >
-              {k === "all" ? "All" : k}
+              {k}
             </button>
           ))}
         </div>
