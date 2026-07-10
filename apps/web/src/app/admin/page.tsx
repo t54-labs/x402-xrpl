@@ -8,6 +8,14 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
+type AssetVolume = { asset: string; total: number };
+
+// Sum a per-key volume breakdown for one asset. XRP and RLUSD are never summed together —
+// they are different units, and one mixed figure is denominated in nothing.
+function volOf(volumes: AssetVolume[] | undefined, asset: "XRP" | "RLUSD"): number {
+  return (volumes ?? []).filter((v) => formatCurrency(v.asset) === asset).reduce((s, v) => s + v.total, 0);
+}
+
 type AdminData = {
   overview: {
     totalTransactions: number;
@@ -17,10 +25,10 @@ type AdminData = {
     lastLedgerIndex: number;
     updatedAt: string | null;
   };
-  dailyTxs: Array<{ day: string; txCount: number; volume: number }>;
+  dailyTxs: Array<{ day: string; txCount: number; volumes: AssetVolume[] }>;
   volumeByAsset: Array<{ asset: string; txCount: number; total: number }>;
-  merchantBreakdown: Array<{ address: string; name: string | null; logoUrl: string | null; txCount: number; volume: number }>;
-  topBuyers: Array<{ address: string; txCount: number; volume: number }>;
+  merchantBreakdown: Array<{ address: string; name: string | null; logoUrl: string | null; txCount: number; volumes: AssetVolume[] }>;
+  topBuyers: Array<{ address: string; txCount: number; volumes: AssetVolume[] }>;
   recentTransactions: Array<{
     hash: string; timestamp: string; buyerAddress: string; merchantAddr: string;
     amount: string; asset: string;
@@ -197,21 +205,21 @@ export default function AdminDashboard() {
   const chartData = dailyTxs.map((d) => ({
     date: new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     Transactions: d.txCount,
-    Volume: d.volume,
   }));
 
   const weeklyData = (() => {
-    const weeks: Record<string, { txCount: number; volume: number }> = {};
+    const weeks: Record<string, { txCount: number; xrp: number; rlusd: number }> = {};
     for (const d of dailyTxs) {
       const date = new Date(d.day);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
       const key = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      if (!weeks[key]) weeks[key] = { txCount: 0, volume: 0 };
+      if (!weeks[key]) weeks[key] = { txCount: 0, xrp: 0, rlusd: 0 };
       weeks[key].txCount += d.txCount;
-      weeks[key].volume += d.volume;
+      weeks[key].xrp += volOf(d.volumes, "XRP");
+      weeks[key].rlusd += volOf(d.volumes, "RLUSD");
     }
-    return Object.entries(weeks).map(([week, v]) => ({ week, Transactions: v.txCount, Volume: v.volume }));
+    return Object.entries(weeks).map(([week, v]) => ({ week, Transactions: v.txCount, xrp: v.xrp, rlusd: v.rlusd }));
   })();
 
   const assetPieData = volumeByAsset.map((v) => ({
@@ -226,24 +234,24 @@ export default function AdminDashboard() {
   }));
 
   const exportDaily = () => exportCSV("daily_transactions",
-    ["Date", "Transactions", "Volume"],
-    dailyTxs.map((d) => [d.day, String(d.txCount), String(d.volume)])
+    ["Date", "Transactions", "XRP Volume", "RLUSD Volume"],
+    dailyTxs.map((d) => [d.day, String(d.txCount), String(volOf(d.volumes, "XRP")), String(volOf(d.volumes, "RLUSD"))])
   );
   const exportWeekly = () => exportCSV("weekly_transactions",
-    ["Week", "Transactions", "Volume"],
-    weeklyData.map((w) => [w.week, String(w.Transactions), String(w.Volume)])
+    ["Week", "Transactions", "XRP Volume", "RLUSD Volume"],
+    weeklyData.map((w) => [w.week, String(w.Transactions), String(w.xrp), String(w.rlusd)])
   );
   const exportAssets = () => exportCSV("volume_by_asset",
     ["Asset", "Transactions", "Volume"],
     volumeByAsset.map((v) => [formatCurrency(v.asset), String(v.txCount), String(v.total)])
   );
   const exportMerchants = () => exportCSV("merchants",
-    ["Address", "Name", "Transactions", "Volume"],
-    merchantBreakdown.map((m) => [m.address, m.name || "", String(m.txCount), String(m.volume)])
+    ["Address", "Name", "Transactions", "XRP Volume", "RLUSD Volume"],
+    merchantBreakdown.map((m) => [m.address, m.name || "", String(m.txCount), String(volOf(m.volumes, "XRP")), String(volOf(m.volumes, "RLUSD"))])
   );
   const exportBuyers = () => exportCSV("top_buyers",
-    ["Address", "Transactions", "Volume"],
-    topBuyers.map((b) => [b.address, String(b.txCount), String(b.volume)])
+    ["Address", "Transactions", "XRP Volume", "RLUSD Volume"],
+    topBuyers.map((b) => [b.address, String(b.txCount), String(volOf(b.volumes, "XRP")), String(volOf(b.volumes, "RLUSD"))])
   );
   const exportTxs = () => exportCSV("recent_transactions",
     ["Hash", "Timestamp", "Buyer", "Merchant", "Amount", "Asset"],
@@ -402,7 +410,8 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="px-6 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">Merchant</th>
                   <th className="px-6 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest text-right">Txs</th>
-                  <th className="px-6 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest text-right">Volume</th>
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest text-right">XRP</th>
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest text-right">RLUSD</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -419,7 +428,8 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-3 text-xs text-[var(--text-primary)] text-right font-medium">{m.txCount}</td>
-                    <td className="px-6 py-3 text-xs text-[var(--text-primary)] text-right font-mono">{m.volume.toFixed(4)}</td>
+                    <td className="px-6 py-3 text-xs text-[var(--text-primary)] text-right font-mono">{volOf(m.volumes, "XRP").toFixed(4)}</td>
+                    <td className="px-6 py-3 text-xs text-[var(--text-primary)] text-right font-mono">{volOf(m.volumes, "RLUSD").toFixed(4)}</td>
                   </tr>
                 ))}
               </tbody>
