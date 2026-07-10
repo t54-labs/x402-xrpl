@@ -50,9 +50,10 @@ function boolFromAliases(source: AnyRecord, aliases: string[]): boolean | null {
 
 function positiveDecision(value: unknown): boolean {
   if (typeof value !== "string") return false;
-  return ["allow", "approve", "approved", "success", "recorded"].includes(
-    value.trim().toLowerCase(),
-  );
+  // Only genuine risk-engine approvals count. NOT "success"/"recorded": those are payment
+  // SETTLEMENT / receipt-storage states, and treating them as a risk pass over-claimed
+  // "cleared x402 Secure risk checks" for chain-verified payments the risk engine never saw.
+  return ["allow", "approve", "approved"].includes(value.trim().toLowerCase());
 }
 
 function extractHash(item: AnyRecord, fallbackHash?: string): string | null {

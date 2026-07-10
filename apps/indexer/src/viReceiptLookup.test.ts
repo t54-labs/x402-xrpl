@@ -48,6 +48,26 @@ describe("normalizeViReceiptLookupResponse", () => {
     expect(statuses.size).toBe(0);
   });
 
+  it("does not infer riskChecked from settlement status on a chain-verified receipt", () => {
+    const statuses = normalizeViReceiptLookupResponse({
+      items: [{ transaction_hash: "vi-no-risk", vi: { chain_verified: true }, status: "success" }],
+    });
+
+    expect(statuses.get("VI-NO-RISK")).toEqual({
+      hash: "VI-NO-RISK",
+      verifiableIntent: true,
+      riskChecked: false,
+    });
+  });
+
+  it("does not treat receipt-storage 'recorded' as a risk decision", () => {
+    const statuses = normalizeViReceiptLookupResponse({
+      items: [{ hash: "vi-recorded", vi: { chain_verified: true }, receiptStatus: "recorded" }],
+    });
+
+    expect(statuses.get("VI-RECORDED")?.riskChecked).toBe(false);
+  });
+
   it("treats riskChecked as implying verifiableIntent", () => {
     const statuses = normalizeViReceiptLookupResponse([
       {
