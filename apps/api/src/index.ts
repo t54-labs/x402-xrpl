@@ -1087,13 +1087,18 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
     let pruned = 0;
     if (discoveryComplete) {
       const liveUrls = [...discoveredUrls];
+      // Never retire a row touched in the last 2 minutes: this /verify computed liveUrls from a
+      // catalog snapshot taken at the start of the request, and the hourly indexer may have just
+      // upserted a newly-added endpoint from a fresher snapshot — the grace window keeps a stale
+      // prune from clobbering it (it would otherwise reappear only on the next indexer cycle).
+      const pruneBefore = new Date(Date.now() - 2 * 60_000);
       for (const addr of merchantAddresses) {
         const r = await prisma.resource.updateMany({
           // Only auto-discovered rows (isDiscovered), and match the exact origin: `origin + "/"`
           // avoids "https://foo.co" also prefixing "https://foo.community/…", and the
           // isDiscovered filter avoids retiring endpoints the merchant registered directly and
           // intentionally kept out of /.well-known/x402.
-          where: { merchantAddr: addr, isActive: true, isDiscovered: true, url: { startsWith: `${origin}/` }, NOT: { url: { in: liveUrls } } },
+          where: { merchantAddr: addr, isActive: true, isDiscovered: true, updatedAt: { lt: pruneBefore }, url: { startsWith: `${origin}/` }, NOT: { url: { in: liveUrls } } },
           data: { isActive: false },
         });
         pruned += r.count;

@@ -1,6 +1,10 @@
 import { prisma, normalizeX402Price } from "@x402-xrpl/database";
 import { assertSafeHttpUrl, safeHttpRequest } from "./safeFetch";
 
+// Bound how many catalog entries one merchant sync will probe, so a huge (or malicious,
+// never-responding) catalog can't make a single sync run for hours at 7s/probe. Env-tunable.
+const MAX_CATALOG_RESOURCES = Number(process.env.MAX_CATALOG_RESOURCES || 500);
+
 type XrplRequirement = {
   payTo?: string;
   amount?: string | number;
@@ -204,10 +208,17 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
 
     // The set the merchant CURRENTLY advertises — the authoritative basis for pruning,
     // independent of whether each endpoint answers a probe this run.
-    const entries = resources
+    const allEntries = resources
       .map((res) => parseCatalogEntry(res, url.origin))
       .filter((e): e is CatalogEntry => e !== null);
+    // Cap how many we probe. When truncated we don't know the full advertised set, so we must
+    // NOT prune (retiring beyond-cap entries would fight the merchant's own catalog).
+    const truncated = allEntries.length > MAX_CATALOG_RESOURCES;
+    const entries = truncated ? allEntries.slice(0, MAX_CATALOG_RESOURCES) : allEntries;
     const catalogUrls = entries.map((e) => e.url);
+    if (truncated) {
+      console.warn(`[Auto-Discovery] ${merchantAddress} advertises ${allEntries.length} resources; probing first ${MAX_CATALOG_RESOURCES}, skipping prune.`);
+    }
 
     console.log(`[Auto-Discovery] Found ${catalogUrls.length} resources for ${merchantAddress}. Syncing...`);
 
@@ -228,15 +239,17 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     // merchant's live domain-B endpoints. A transient probe failure keeps its URL in catalogUrls
     // (not retired); a genuinely emptied catalog (200 + []) retires this origin's resources.
     const originPrefix = `${url.origin}/`;
-    const pruned = catalogUrls.length === 0
-      ? await prisma.resource.updateMany({
-          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix } },
-          data: { isActive: false },
-        })
-      : await prisma.resource.updateMany({
-          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix, notIn: catalogUrls } },
-          data: { isActive: false },
-        });
+    const pruned = truncated
+      ? { count: 0 }
+      : catalogUrls.length === 0
+        ? await prisma.resource.updateMany({
+            where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix } },
+            data: { isActive: false },
+          })
+        : await prisma.resource.updateMany({
+            where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix, notIn: catalogUrls } },
+            data: { isActive: false },
+          });
 
     console.log(`[Auto-Discovery] Synced ${syncedCount}/${catalogUrls.length} resources for ${merchantAddress}; retired ${pruned.count}.`);
 
@@ -246,20 +259,34 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
   }
 }
 
+// node-cron does not prevent a tick from firing while the previous run is still going, and a
+// full sync can outlast the hourly interval — overlapping runs would interleave upserts and
+// deactivations on the same rows. This guard makes runs strictly non-overlapping.
+let discoverySyncRunning = false;
+
 // Global cron job function to sync ALL registered merchants with a known website
 export async function runAutoDiscoverySync() {
-  console.log(`[Auto-Discovery] Starting background sync job...`);
-  
-  // Find all merchants that have a website listed (they might have registered it manually initially)
-  const merchants = await prisma.merchant.findMany({
-    where: { website: { not: null } }
-  });
-
-  for (const merchant of merchants) {
-    if (merchant.website) {
-      await syncMerchantBazaar(merchant.address, merchant.website);
-    }
+  if (discoverySyncRunning) {
+    console.log("[Auto-Discovery] Previous sync still running; skipping this tick.");
+    return;
   }
-  
-  console.log(`[Auto-Discovery] Sync job complete.`);
+  discoverySyncRunning = true;
+  try {
+    console.log(`[Auto-Discovery] Starting background sync job...`);
+
+    // Find all merchants that have a website listed (they might have registered it manually initially)
+    const merchants = await prisma.merchant.findMany({
+      where: { website: { not: null } }
+    });
+
+    for (const merchant of merchants) {
+      if (merchant.website) {
+        await syncMerchantBazaar(merchant.address, merchant.website);
+      }
+    }
+
+    console.log(`[Auto-Discovery] Sync job complete.`);
+  } finally {
+    discoverySyncRunning = false;
+  }
 }
