@@ -415,6 +415,23 @@ async function backfillLedgers(client: Client, currentLiveIndex: number) {
   console.log(`✅ Backfill complete.`);
 }
 
+/**
+ * Sample the current validated ledger and backfill up to it. Fills the gaps the live stream
+ * cannot cover: ledgers that close while disconnected (a subscription only delivers ledgers
+ * validated after subscribe), and ledgers that close during the minutes-long startup backfill
+ * (older than the just-subscribed stream). backfillLedgers reads lastLedgerIndex, so it only
+ * fetches what has not been persisted; overlap with the stream is deduped on insert.
+ */
+async function catchUpBackfill(client: Client, reason: string) {
+  try {
+    const info = await client.request({ command: "server_info" });
+    const live = info.result.info.validated_ledger?.seq || 0;
+    if (live > 0) await backfillLedgers(client, live);
+  } catch (err) {
+    console.error(`Catch-up backfill (${reason}) failed:`, err instanceof Error ? err.message : err);
+  }
+}
+
 // ── Main ────────────────────────────────────────────────────
 async function startIndexer() {
   console.log(`Starting x402 XRPL Indexer...`);
@@ -448,6 +465,9 @@ async function startIndexer() {
       await client.request({ command: "subscribe", streams: ["transactions"] });
       indexerHealthy = true;
       console.log("Reconnected and resubscribed.");
+      // Backfill the ledgers that closed while we were disconnected — the resubscribed
+      // stream only delivers ledgers validated from now on, so this gap was previously lost.
+      await catchUpBackfill(client, "reconnect gap");
     } catch (err) {
       console.error("Reconnection failed. Process will restart via systemd.", err);
       process.exit(1);
@@ -479,6 +499,11 @@ async function startIndexer() {
     const li = txStream.ledger_index ?? 0;
     if (li > highestProcessedLedger) highestProcessedLedger = li;
   });
+
+  // Close the backfill→stream handoff: the first backfill above sampled the live edge before
+  // it ran, so any ledgers that closed during it are older than the just-subscribed stream
+  // will deliver. Fetch that delta now that the stream is capturing everything forward.
+  await catchUpBackfill(client, "startup handoff");
 
   setInterval(() => { flushQueue().catch(console.error); }, FLUSH_INTERVAL_MS);
 
