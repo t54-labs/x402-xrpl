@@ -835,7 +835,14 @@ app.get("/services", async (_req, res) => {
       const list = m.resources;
       if (list.length === 0) return [];
       // Cheapest endpoint as the "from" price; first with copy for the blurb.
-      const rep = [...list].sort((a, b) => (parseFloat(a.priceAmount) || 0) - (parseFloat(b.priceAmount) || 0))[0];
+      // Unparseable/non-positive prices sort LAST (Infinity), not first — otherwise
+      // parseFloat(garbage)||0 made a malformed price win and show as the "from" value.
+      // (Cross-asset comparison is still numeric — a true value sort needs FX rates.)
+      const priceValue = (s: string) => {
+        const n = parseFloat(s);
+        return Number.isFinite(n) && n > 0 ? n : Infinity;
+      };
+      const rep = [...list].sort((a, b) => priceValue(a.priceAmount) - priceValue(b.priceAmount))[0];
       const descRes = list.find((r) => r.description || r.name) || rep;
       return [{
         id: m.address,
