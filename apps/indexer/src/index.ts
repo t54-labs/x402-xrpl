@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import cron from "node-cron";
 import { runAutoDiscoverySync } from "./bazaarSync";
 import { resolveDeliveredAmount } from "./deliveredAmount";
+import { meetsMinAmount } from "./minAmount";
 import { selectNewTransactions, sumXrpVolume } from "./ledgerState";
 import { loadViReceiptEnrichmentConfig, startViReceiptEnrichmentLoop } from "./viReceiptEnrichment";
 
@@ -258,6 +259,10 @@ function processTransaction(txStream: any, tx: any) {
   const delivered = resolveDeliveredAmount(txStream, tx);
   if (!delivered) return;
   const { amount: amountPaid, asset, assetIssuer } = delivered;
+
+  // Ignore dust: a facilitator SourceTag is public, so without a floor anyone could mint
+  // merchants / inflate the leaderboard with near-free ~1-drop payments.
+  if (!meetsMinAmount(amountPaid, asset)) return;
 
   const txHash = tx.hash || txStream.hash;
   // A row with no hash has no primary key and would throw inside the batch transaction,
