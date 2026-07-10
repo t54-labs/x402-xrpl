@@ -14,8 +14,13 @@ const XRPL_NODES = (process.env.XRPL_WSS || "wss://xrplcluster.com,wss://s1.ripp
 const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "4000", 10);
 const FLUSH_INTERVAL_MS = 500;
 const QUEUE_WARN_SIZE = 10_000;
+// Hard ceiling on the in-memory write queue. Past this, drop incoming txs (loudly) rather
+// than grow unbounded until the process is OOM-killed — which would lose the ENTIRE queue.
+// Dropped live txs remain recoverable: lastLedgerIndex only advances on a successful flush,
+// so backfill re-fetches the gap once the DB recovers (see MAX_BACKFILL_GAP).
+const QUEUE_MAX_SIZE = Number(process.env.QUEUE_MAX_SIZE || 100_000);
 const CONNECT_TIMEOUT_MS = 15_000;
-const MAX_BACKFILL_GAP = 500;
+const MAX_BACKFILL_GAP = Number(process.env.MAX_BACKFILL_GAP || 500);
 
 let indexerHealthy = false;
 let lastLedger = 0;
@@ -83,6 +88,9 @@ let lastCheckpointTime = Date.now();
 // (which would loop forever on a poison row) and drain it row by row to isolate the bad tx.
 let consecutiveFlushFailures = 0;
 const MAX_BATCH_RETRIES = 5;
+
+// Count of live txs shed because the queue hit QUEUE_MAX_SIZE (surfaced on /health).
+let droppedTxCount = 0;
 
 function toTxRow(tx: QueuedTx) {
   return {
@@ -265,6 +273,16 @@ function processTransaction(txStream: any, tx: any) {
   // trigger); fall back to now rather than block the batch.
   if (Number.isNaN(timestamp.getTime())) timestamp = new Date();
 
+  // Shed rather than grow unbounded into an OOM kill. lastLedgerIndex hasn't advanced past
+  // these (flushes are failing), so backfill can re-index them once the DB recovers.
+  if (writeQueue.length >= QUEUE_MAX_SIZE) {
+    droppedTxCount++;
+    if (droppedTxCount === 1 || droppedTxCount % 1000 === 0) {
+      console.error(`⚠️  Write queue full (${writeQueue.length} >= ${QUEUE_MAX_SIZE}); dropped ${droppedTxCount} live tx(s) — recoverable via backfill after DB recovers.`);
+    }
+    return;
+  }
+
   writeQueue.push({
     hash: txHash,
     ledgerIndex: txStream.ledger_index ?? 0,
@@ -326,7 +344,12 @@ async function backfillLedgers(client: Client, currentLiveIndex: number) {
   }
 
   if (gap > MAX_BACKFILL_GAP) {
-    console.log(`[Backfill] Gap is ${gap} ledgers. Skipping to ${currentLiveIndex - MAX_BACKFILL_GAP} (max backfill: ${MAX_BACKFILL_GAP})`);
+    const skipFrom = state.lastLedgerIndex + 1;
+    const skipTo = currentLiveIndex - MAX_BACKFILL_GAP;
+    // This permanently skips ledgers that will NEVER be indexed — make it loud and precise
+    // instead of a quiet info line, so the data hole is observable (and MAX_BACKFILL_GAP can
+    // be raised via env to cover a longer outage).
+    console.error(`🕳️  Backfill gap ${gap} > MAX_BACKFILL_GAP ${MAX_BACKFILL_GAP}: SKIPPING ledgers ${skipFrom}→${skipTo} (${skipTo - skipFrom + 1}). These x402 payments will NOT be indexed. Raise MAX_BACKFILL_GAP to cover longer outages.`);
     await prisma.indexerState.update({
       where: { id: "default" },
       data: { lastLedgerIndex: currentLiveIndex - MAX_BACKFILL_GAP }
@@ -473,6 +496,7 @@ function startHealthServer() {
         status: indexerHealthy ? "healthy" : "starting",
         lastLedgerIndex: state?.lastLedgerIndex ?? lastLedger,
         queueSize: writeQueue.length,
+        droppedTxCount,
         updatedAt: state?.updatedAt ?? null,
         xrplNode: XRPL_NODES[currentNodeIndex % XRPL_NODES.length],
       }));
