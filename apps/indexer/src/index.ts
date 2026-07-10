@@ -79,6 +79,21 @@ let flushing = false;
 const LEDGER_CHECKPOINT_INTERVAL_MS = 5 * 60_000;
 let lastCheckpointTime = Date.now();
 
+// After this many consecutive whole-batch failures, stop retrying the batch as a unit
+// (which would loop forever on a poison row) and drain it row by row to isolate the bad tx.
+let consecutiveFlushFailures = 0;
+const MAX_BATCH_RETRIES = 5;
+
+function toTxRow(tx: QueuedTx) {
+  return {
+    hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
+    buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
+    amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
+    facilitator: tx.facilitator, sourceTag: tx.sourceTag,
+    destinationTag: tx.destinationTag, invoiceId: tx.invoiceId, rawMemo: tx.rawMemo,
+  };
+}
+
 async function flushQueue() {
   if (flushing) return;
 
@@ -113,14 +128,7 @@ async function flushQueue() {
           const insertedVolumeXrp = sumXrpVolume(txsToInsert);
           const inserted = txsToInsert.length > 0
             ? await db.transaction.createMany({
-              data: txsToInsert.map((tx) => ({
-                hash: tx.hash, ledgerIndex: tx.ledgerIndex, timestamp: tx.timestamp,
-                buyerAddress: tx.buyerAddress, merchantAddr: tx.merchantAddr,
-                amount: tx.amount, asset: tx.asset, assetIssuer: tx.assetIssuer,
-                facilitator: tx.facilitator, sourceTag: tx.sourceTag,
-                destinationTag: tx.destinationTag, invoiceId: tx.invoiceId,
-                rawMemo: tx.rawMemo,
-              })),
+              data: txsToInsert.map(toTxRow),
               skipDuplicates: true,
             })
             : { count: 0 };
@@ -135,10 +143,20 @@ async function flushQueue() {
 
         lastLedger = batchLedger;
         lastCheckpointTime = now;
+        consecutiveFlushFailures = 0;
         console.log(`✅ Flushed ${result.insertedCount}/${batch.length} new tx(s), ${uniqueMerchants.length} merchant(s) — ledger ${batchLedger}`);
       } catch (err) {
-        console.error(`❌ Flush failed (${batch.length} txs):`, err);
-        writeQueue.unshift(...batch);
+        consecutiveFlushFailures++;
+        console.error(`❌ Flush failed (attempt ${consecutiveFlushFailures}, ${batch.length} txs):`, err instanceof Error ? err.message : err);
+        if (consecutiveFlushFailures <= MAX_BATCH_RETRIES) {
+          // Likely a transient DB blip — put the whole batch back and retry next tick.
+          writeQueue.unshift(...batch);
+        } else {
+          // Persisting failures point to a poison row wedging the batch. Drain row by row so
+          // one bad tx can no longer halt ALL persistence.
+          await drainBatchRowByRow(batch, batchLedger, now);
+          consecutiveFlushFailures = 0;
+        }
       }
     } else {
       await prisma.$executeRawUnsafe(
@@ -152,6 +170,62 @@ async function flushQueue() {
   } finally {
     flushing = false;
   }
+}
+
+/**
+ * Fallback when a batch keeps failing as a unit: insert each tx on its own so a single
+ * poison row can't halt all persistence. If at least one row succeeds the database is up,
+ * so the rows that still fail are genuine poison and get dead-lettered (dropped + logged).
+ * If EVERY row fails the database is likely unavailable, so the batch is put back untouched
+ * and retried later — no real data is dropped during an outage.
+ */
+async function drainBatchRowByRow(batch: QueuedTx[], batchLedger: number, now: number) {
+  for (const addr of new Set(batch.map((tx) => tx.merchantAddr))) {
+    try {
+      await prisma.merchant.createMany({ data: [{ address: addr }], skipDuplicates: true });
+    } catch {
+      // A bad merchant address shouldn't block its transactions; the per-row insert below
+      // will surface a genuine FK problem for the affected tx only.
+    }
+  }
+
+  let insertedCount = 0;
+  let insertedVolumeXrp = 0;
+  const failed: QueuedTx[] = [];
+
+  for (const tx of batch) {
+    try {
+      const res = await prisma.transaction.createMany({ data: [toTxRow(tx)], skipDuplicates: true });
+      if (res.count > 0) {
+        insertedCount += res.count;
+        insertedVolumeXrp += sumXrpVolume([tx]);
+      }
+    } catch {
+      failed.push(tx);
+    }
+  }
+
+  if (insertedCount === 0 && failed.length === batch.length) {
+    writeQueue.unshift(...batch);
+    console.warn(`♻️  Row-by-row drain: all ${batch.length} failed — treating as transient DB error, will retry.`);
+    return;
+  }
+
+  for (const tx of failed) {
+    console.error(`☠️  Dead-lettered poison tx ${tx.hash} (ledger ${tx.ledgerIndex}) — dropped so it cannot wedge the pipeline.`);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `UPDATE "IndexerState" SET "lastLedgerIndex" = $1, "totalTxCount" = "totalTxCount" + $2, "totalVolumeXrp" = "totalVolumeXrp" + $3, "updatedAt" = NOW() WHERE id = 'default'`,
+      batchLedger, insertedCount, insertedVolumeXrp
+    );
+    lastLedger = batchLedger;
+    lastCheckpointTime = now;
+  } catch (stateErr) {
+    console.error("Failed to advance indexer state after drain:", stateErr instanceof Error ? stateErr.message : stateErr);
+  }
+  console.log(`♻️  Row-by-row drain: persisted ${insertedCount}, dead-lettered ${failed.length}/${batch.length}.`);
 }
 
 // ── Transaction detection ───────────────────────────────────
@@ -178,11 +252,18 @@ function processTransaction(txStream: any, tx: any) {
   const { amount: amountPaid, asset, assetIssuer } = delivered;
 
   const txHash = tx.hash || txStream.hash;
-  const timestamp = txStream.close_time_iso
+  // A row with no hash has no primary key and would throw inside the batch transaction,
+  // wedging every subsequent flush — drop it at the source instead.
+  if (!txHash || typeof txHash !== "string") return;
+
+  let timestamp = txStream.close_time_iso
     ? new Date(txStream.close_time_iso)
     : txStream.date
       ? new Date((txStream.date + 946684800) * 1000)
       : new Date();
+  // A malformed ledger time yields an Invalid Date that Prisma rejects (another poison
+  // trigger); fall back to now rather than block the batch.
+  if (Number.isNaN(timestamp.getTime())) timestamp = new Date();
 
   writeQueue.push({
     hash: txHash,
