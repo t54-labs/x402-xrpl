@@ -222,15 +222,19 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
       }
     }
 
-    // Retire ONLY endpoints the merchant no longer advertises. A transient probe failure keeps
-    // its URL in catalogUrls (not retired); a genuinely emptied catalog (200 + []) retires all.
+    // Retire ONLY endpoints the merchant no longer advertises, and ONLY on the origin we just
+    // crawled — the same payTo may serve x402 from more than one domain, and this run only saw
+    // one (Merchant.website). Scoping by origin stops a crawl of domain A from retiring the
+    // merchant's live domain-B endpoints. A transient probe failure keeps its URL in catalogUrls
+    // (not retired); a genuinely emptied catalog (200 + []) retires this origin's resources.
+    const originPrefix = `${url.origin}/`;
     const pruned = catalogUrls.length === 0
       ? await prisma.resource.updateMany({
-          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true },
+          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix } },
           data: { isActive: false },
         })
       : await prisma.resource.updateMany({
-          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { notIn: catalogUrls } },
+          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { startsWith: originPrefix, notIn: catalogUrls } },
           data: { isActive: false },
         });
 
