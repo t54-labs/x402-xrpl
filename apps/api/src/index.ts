@@ -124,10 +124,13 @@ async function resolveX402ResourceUrls(parsedInput: URL) {
     discoveredUrls.add(parsedInput.toString());
   }
 
-  // Prune only on a full re-crawl of the origin root (not a single-endpoint
-  // submit), so entries advertised in an earlier run but gone from the catalog retire.
+  // Prune only on a full re-crawl of the origin root (not a single-endpoint submit), so
+  // entries advertised in an earlier run but gone from the catalog retire. NOT when the catalog
+  // was truncated at the cap — we'd otherwise deactivate the merchant's own entries beyond #100
+  // (which the uncapped hourly indexer then reactivates, causing a flip-flop).
+  const discoveryTruncated = discoveredUrls.size >= MAX_DISCOVERY_RESOURCES;
   const discoveryComplete =
-    discoveryChecked && discoveryFound > 0 && parsedInput.pathname === "/" && !parsedInput.search;
+    discoveryChecked && discoveryFound > 0 && parsedInput.pathname === "/" && !parsedInput.search && !discoveryTruncated;
 
   return {
     origin,
@@ -1086,7 +1089,11 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       const liveUrls = [...discoveredUrls];
       for (const addr of merchantAddresses) {
         const r = await prisma.resource.updateMany({
-          where: { merchantAddr: addr, isActive: true, url: { startsWith: origin }, NOT: { url: { in: liveUrls } } },
+          // Only auto-discovered rows (isDiscovered), and match the exact origin: `origin + "/"`
+          // avoids "https://foo.co" also prefixing "https://foo.community/…", and the
+          // isDiscovered filter avoids retiring endpoints the merchant registered directly and
+          // intentionally kept out of /.well-known/x402.
+          where: { merchantAddr: addr, isActive: true, isDiscovered: true, url: { startsWith: `${origin}/` }, NOT: { url: { in: liveUrls } } },
           data: { isActive: false },
         });
         pruned += r.count;
