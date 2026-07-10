@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { prisma, normalizeX402Price } from "@x402-xrpl/database";
+import { prisma, normalizeX402Price, toX402WireAmount } from "@x402-xrpl/database";
 import * as dotenv from "dotenv";
 import {
   canIssueAdminSessions,
@@ -930,7 +930,8 @@ app.get("/discovery/resources", async (req, res) => {
       accepts: [{
         scheme: r.schema || "x402",
         network: r.network || "xrpl",
-        amount: r.priceAmount,
+        // exact_xrpl advertises XRP in integer drops; priceAmount is stored as decimal XRP.
+        amount: toX402WireAmount(r.priceAmount, r.priceAsset),
         asset: r.priceAsset,
         payTo: r.merchantAddr,
       }],

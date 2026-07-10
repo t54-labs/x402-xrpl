@@ -30,3 +30,18 @@ export function normalizeX402Price(rawAmount: unknown, asset: string): string {
   }
   return raw;
 }
+
+/**
+ * Inverse of normalizeX402Price, for re-exporting a stored price in x402 wire format.
+ *
+ * Resource.priceAmount is stored as decimal XRP, but the exact_xrpl scheme requires XRP
+ * amounts in accepts[].amount to be an integer *drops* string. IOU amounts (RLUSD etc.)
+ * stay decimal. Rounding absorbs float artifacts (0.022 * 1e6 = 22000.000000000004).
+ */
+export function toX402WireAmount(amount: string, asset: string): string {
+  if (asset === "XRP") {
+    const xrp = Number(amount);
+    if (Number.isFinite(xrp)) return String(Math.round(xrp * 1_000_000));
+  }
+  return amount;
+}
