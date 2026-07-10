@@ -28,6 +28,24 @@ function normalizeDiscoveryResourceUrl(resourceEntry: string, origin: string): s
   }
 }
 
+export type CatalogEntry = { url: string; name?: string; description?: string };
+
+/**
+ * Parse one /.well-known/x402 resource entry (a string URL or an object) into a normalized
+ * catalog entry, or null if it has no usable URL. This defines what the merchant "advertises"
+ * — the authoritative set that pruning keys on, independent of whether the endpoint answers a
+ * probe this run.
+ */
+export function parseCatalogEntry(res: unknown, origin: string): CatalogEntry | null {
+  const obj = res && typeof res === "object" ? (res as Record<string, unknown>) : null;
+  const candidate = typeof res === "string" ? res : (obj?.url ?? obj?.id ?? obj?.resource);
+  if (!candidate || typeof candidate !== "string") return null;
+  const url = normalizeDiscoveryResourceUrl(candidate, origin);
+  if (!url) return null;
+  const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  return { url, name: str(obj?.name) ?? str(obj?.title), description: str(obj?.description) };
+}
+
 function parsePaymentRequired(headerValue: unknown): unknown {
   if (typeof headerValue !== "string") return null;
   try {
@@ -165,61 +183,58 @@ export async function syncMerchantBazaar(merchantAddress: string, website: strin
     
     const response = await safeHttpRequest(discoveryUrl, { method: "GET", timeout: 5000 });
     if (response.status !== 200) {
-      console.log(`[Auto-Discovery] Discovery returned ${response.status} for ${merchantAddress}.`);
+      // Fetch failed — do NOT prune on an untrusted view of the catalog.
+      console.log(`[Auto-Discovery] Discovery returned ${response.status} for ${merchantAddress}; skipping (no prune).`);
       return;
     }
-    const bazaarData = response.data as { resources?: unknown };
+    const bazaarData = response.data;
 
-    // Discovery docs typically store resources as string URLs; support both string and object entries.
-    const resources = Array.isArray(bazaarData)
+    // Only a well-formed catalog (an array, or { resources: [...] }) is trustworthy. An
+    // unparseable 200 body (e.g. an error/HTML page) must NOT be read as "zero resources" and
+    // trigger a full retire — treat it like a failed fetch.
+    const isValidCatalog =
+      Array.isArray(bazaarData) || Array.isArray((bazaarData as { resources?: unknown })?.resources);
+    if (!isValidCatalog) {
+      console.log(`[Auto-Discovery] Unparseable catalog for ${merchantAddress}; skipping (no prune).`);
+      return;
+    }
+    const resources = (Array.isArray(bazaarData)
       ? bazaarData
-      : Array.isArray(bazaarData?.resources)
-        ? bazaarData.resources
-        : [];
-    
-    if (!Array.isArray(resources) || resources.length === 0) {
-      console.log(`[Auto-Discovery] No resources found for ${merchantAddress}.`);
-      return;
-    }
+      : (bazaarData as { resources?: unknown[] }).resources ?? []) as unknown[];
 
-    console.log(`[Auto-Discovery] Found ${resources.length} resources for ${merchantAddress}. Syncing...`);
+    // The set the merchant CURRENTLY advertises — the authoritative basis for pruning,
+    // independent of whether each endpoint answers a probe this run.
+    const entries = resources
+      .map((res) => parseCatalogEntry(res, url.origin))
+      .filter((e): e is CatalogEntry => e !== null);
+    const catalogUrls = entries.map((e) => e.url);
 
+    console.log(`[Auto-Discovery] Found ${catalogUrls.length} resources for ${merchantAddress}. Syncing...`);
+
+    // Refresh price/status for endpoints that answer 402. verifyAndUpsertResource swallows its
+    // own errors (timeout / 5xx / non-402 / unsafe URL — safeHttpRequest validates internally)
+    // and returns false, leaving the last-known row untouched; it stays active because its URL
+    // remains in catalogUrls. No per-resource call throws out of this loop.
     let syncedCount = 0;
-    const syncedUrls: string[] = [];
-    
-    for (const res of resources) {
-      const resourceCandidate =
-        typeof res === "string"
-          ? res
-          : res?.url || res?.id || res?.resource;
-      if (!resourceCandidate || typeof resourceCandidate !== "string") continue;
-
-      const resourceUrl = normalizeDiscoveryResourceUrl(resourceCandidate, url.origin);
-      if (!resourceUrl) continue;
-      await assertSafeHttpUrl(resourceUrl);
-
-      const synced = await verifyAndUpsertResource(resourceUrl, url.origin, {
-        name: res?.name || res?.title,
-        description: res?.description,
-      });
-
-      if (synced) {
+    for (const e of entries) {
+      if (await verifyAndUpsertResource(e.url, url.origin, { name: e.name, description: e.description })) {
         syncedCount++;
-        syncedUrls.push(resourceUrl);
       }
     }
 
-    // Deactivate any resources previously associated with this merchant that are no longer in the discovery file
-    await prisma.resource.updateMany({
-      where: {
-        merchantAddr: merchantAddress,
-        isDiscovered: true,
-        url: { notIn: syncedUrls }
-      },
-      data: { isActive: false }
-    });
+    // Retire ONLY endpoints the merchant no longer advertises. A transient probe failure keeps
+    // its URL in catalogUrls (not retired); a genuinely emptied catalog (200 + []) retires all.
+    const pruned = catalogUrls.length === 0
+      ? await prisma.resource.updateMany({
+          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true },
+          data: { isActive: false },
+        })
+      : await prisma.resource.updateMany({
+          where: { merchantAddr: merchantAddress, isDiscovered: true, isActive: true, url: { notIn: catalogUrls } },
+          data: { isActive: false },
+        });
 
-    console.log(`[Auto-Discovery] Synced ${syncedCount}/${resources.length} resources for ${merchantAddress}.`);
+    console.log(`[Auto-Discovery] Synced ${syncedCount}/${catalogUrls.length} resources for ${merchantAddress}; retired ${pruned.count}.`);
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";

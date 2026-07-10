@@ -1,6 +1,38 @@
 import { describe, expect, it } from "vitest";
 import { normalizeX402Price } from "@x402-xrpl/database";
-import { extractXrplRequirement } from "./bazaarSync";
+import { extractXrplRequirement, parseCatalogEntry } from "./bazaarSync";
+
+describe("parseCatalogEntry", () => {
+  it("parses a bare string URL entry", () => {
+    expect(parseCatalogEntry("https://api.example.com/quote", "https://api.example.com")).toEqual({
+      url: "https://api.example.com/quote",
+      name: undefined,
+      description: undefined,
+    });
+  });
+
+  it("resolves a relative URL against the origin and reads name/description", () => {
+    expect(parseCatalogEntry({ url: "/extract", name: "Extract", description: "d" }, "https://x.com")).toEqual({
+      url: "https://x.com/extract",
+      name: "Extract",
+      description: "d",
+    });
+  });
+
+  it("supports method-prefixed entries and the title alias", () => {
+    expect(parseCatalogEntry({ resource: "GET https://x.com/a", title: "A" }, "https://x.com")).toEqual({
+      url: "https://x.com/a",
+      name: "A",
+      description: undefined,
+    });
+  });
+
+  it("returns null for entries without a usable URL", () => {
+    expect(parseCatalogEntry({ foo: "bar" }, "https://x.com")).toBeNull();
+    expect(parseCatalogEntry(123, "https://x.com")).toBeNull();
+    expect(parseCatalogEntry({ url: "" }, "https://x.com")).toBeNull();
+  });
+});
 
 // Regression: auto-discovery used to store raw drops, so an hourly re-crawl
 // overwrote /verify's converted prices ("22000 XRP" instead of 0.022 XRP).
