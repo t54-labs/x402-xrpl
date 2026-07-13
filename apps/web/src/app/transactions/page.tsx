@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RelativeTime } from "../components/RelativeTime";
-import { VerificationBadge, isVerifiedIntent } from "../components/VerificationBadge";
+import { VerificationBadge } from "../components/VerificationBadge";
+import { isVerifiedIntent } from "../components/verificationIntent";
 import { apiFetch } from "../lib/api";
 import { formatCurrency } from "../utils/currency";
 
