@@ -11,7 +11,8 @@ export async function GET(request: Request) {
       headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
     });
   } catch {
-    // Degrade to empty so the panel never errors the page.
-    return NextResponse.json({ items: [] }, { status: 200 });
+    // Signal a real failure (vs. a genuinely empty window) with a non-2xx so the client can
+    // retry instead of rendering "No merchant activity". Body stays shaped so nothing throws.
+    return NextResponse.json({ items: [], error: true }, { status: 503 });
   }
 }

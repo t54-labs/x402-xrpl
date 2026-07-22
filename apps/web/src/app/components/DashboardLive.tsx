@@ -172,7 +172,7 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
 
         <FacilitatorPanel />
         <ServiceMarquee services={services} total={servicesTotal} />
-        <TopMerchantsPanel initial={data.topMerchants} />
+        <TopMerchantsPanel />
       </div>
     </div>
   );
@@ -378,17 +378,35 @@ const MERCHANT_RANGES = [
   { k: "all" as const, label: "All time" },
 ];
 
-function TopMerchantsPanel({ initial }: { initial: MerchantRank[] }) {
+function TopMerchantsPanel() {
   const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
-  const [merchants, setMerchants] = useState<MerchantRank[]>(initial);
-  const [loaded, setLoaded] = useState(false);
+  // Start empty and always fetch the selected range. Seeding from the dashboard's all-time
+  // top-merchants list (its query has no time window) made the panel paint all-time data under
+  // the 24h tab and, worse, left AnimatePresence mid-swap with stale rows stuck in the DOM.
+  const [merchants, setMerchants] = useState<MerchantRank[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     let active = true;
-    fetch(`/api/top-merchants?range=${range}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((d) => { if (active) { setMerchants(d.items ?? []); setLoaded(true); } })
-      .catch(() => { if (active) setLoaded(true); });
+    setStatus("loading");
+    // The proxy returns a non-2xx on a real backend error (vs. an empty-but-ok window), so a
+    // transient failure/timeout retries instead of flashing "No merchant activity".
+    const load = async (attempt: number) => {
+      try {
+        const r = await fetch(`/api/top-merchants?range=${range}`, { cache: "no-store" });
+        if (!r.ok) throw new Error(String(r.status));
+        const d = await r.json();
+        if (!active) return;
+        setMerchants(Array.isArray(d.items) ? d.items : []);
+        setStatus("ready");
+      } catch {
+        if (!active) return;
+        if (attempt < 2) { setTimeout(() => { if (active) load(attempt + 1); }, 700); return; }
+        setMerchants([]);
+        setStatus("error");
+      }
+    };
+    load(0);
     return () => { active = false; };
   }, [range]);
 
@@ -419,7 +437,11 @@ function TopMerchantsPanel({ initial }: { initial: MerchantRank[] }) {
       </div>
       {merchants.length === 0 ? (
         <div className="px-5 sm:px-6 py-10 text-center text-sm text-[var(--text-muted)]">
-          {loaded ? "No merchant activity in this window yet." : "Loading…"}
+          {status === "loading"
+            ? "Loading…"
+            : status === "error"
+              ? "Couldn't load merchants — try again in a moment."
+              : "No merchant activity in this window yet."}
         </div>
       ) : (
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
