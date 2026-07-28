@@ -1,7 +1,7 @@
 // Ecosystem Signals — XRPL/RLUSD × AI news + allow-list tweets.
 //
-// v1 seed = REAL items gathered from the live web (Jun 2026): real headlines,
-// real source URLs, and real og:image posters scraped from the articles. In
+// Every item is REAL and verified against its live source (headline, date and
+// og:image fetched from the article itself) — seeded Jun 2026, refreshed Jul 2026. In
 // phase 2 this is replaced by a cron pipeline (allow-list tweet API + publisher
 // RSS → Claude relevance filter + short-title + poster → Postgres); the Signal
 // shape below is the contract that pipeline fills. /api/signals serves this list.
@@ -24,6 +24,75 @@ export type Signal = {
 export const SIGNAL_ACCOUNTS = ["Ripple", "RippleXDev", "XRPLF", "BankXRP", "xrpl_commons", "t54ai"] as const;
 
 export const SIGNALS: Signal[] = [
+  {
+    id: "utoday-mastercard-verifiable-intent",
+    kind: "news",
+    source: "U.Today",
+    headline: "Big Win for XRP Ledger as Mastercard Payment Standard Goes Live",
+    shortTitle: "Mastercard standard live on XRPL",
+    url: "https://u.today/big-win-for-xrp-ledger-as-mastercard-payment-standard-goes-live",
+    image: "https://u.today/sites/default/files/styles/twitterwithoutlogo/public/2026-07/100801.jpg",
+    tag: "Mastercard · verifiable intent",
+    publishedAt: "2026-07-25",
+  },
+  {
+    id: "finbold-1-4m-agentic",
+    kind: "news",
+    source: "Finbold",
+    headline: "XRP Ledger surpasses 1.4 million in agentic transactions",
+    shortTitle: "1.4M agentic transactions",
+    url: "https://finbold.com/xrp-ledger-surpasses-1-4-million-in-agentic-transactions/",
+    image: "https://assets.finbold.com/uploads/2026/07/XRP-Ledger-surpasses-1.4-million-in-agentic-transactions-scaled.webp",
+    tag: "XRPL · milestone",
+    publishedAt: "2026-07-22",
+  },
+  {
+    id: "theblock-10m-agentic",
+    kind: "news",
+    source: "The Block",
+    headline: "Ripple sees XRP Ledger agentic transactions hitting 10-million mark soon",
+    shortTitle: "Ripple eyes 10M agentic txs",
+    url: "https://www.theblock.co/post/408987/ripplex-sees-xrp-ledger-agentic-transactions-hitting-10-million-mark-soon",
+    image: "https://www.tbstat.com/wp/uploads/2026/01/20260108_Ripple_News_3-1200x675.jpg",
+    tag: "XRPL · agentic growth",
+    publishedAt: "2026-07-21",
+  },
+  {
+    id: "coindesk-x402-foundation",
+    kind: "news",
+    source: "CoinDesk",
+    headline: "AI agentic payments enter mainstream as Visa, Mastercard, Ripple back x402 standard",
+    shortTitle: "Visa, Mastercard & Ripple back x402",
+    url: "https://www.coindesk.com/tech/2026/07/15/visa-mastercard-and-ripple-join-the-standard-letting-ai-agents-pay-in-stablecoins",
+    image: "https://cdn.sanity.io/images/s3y3vcno/production/46755685f5e11aa30feec15f1afcf981d4ca73ad-4500x3001.jpg?auto=format&w=960&h=540&fit=crop&q=75&fm=jpg",
+    tag: "x402 · standards",
+    publishedAt: "2026-07-15",
+  },
+  {
+    id: "linuxfoundation-x402-foundation",
+    kind: "news",
+    source: "Linux Foundation",
+    verified: true,
+    headline:
+      "Linux Foundation Announces Operational Launch of x402 Foundation to Standardize Internet-Native Payments for AI Agents and Applications",
+    shortTitle: "x402 Foundation goes live",
+    url: "https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications",
+    image:
+      "https://www.linuxfoundation.org/hs-fs/hubfs/Press%20Release%20(18).png?width=911&height=477&name=Press%20Release%20(18).png",
+    tag: "x402 · foundation",
+    publishedAt: "2026-07-14",
+  },
+  {
+    id: "cryptonews-hub-launch-1m",
+    kind: "news",
+    source: "crypto.news",
+    headline: "XRP Ledger hits 1M AI payments as Ripple-backed t54.ai launches hub",
+    shortTitle: "1M AI payments, hub launches",
+    url: "https://crypto.news/xrp-ledger-hits-1m-ai-payments-as-t54-ai-launches-hub/",
+    image: "https://media.crypto.news/2026/06/Xrp1-1380x776.webp",
+    tag: "t54 · XRPL AI Hub",
+    publishedAt: "2026-07-08",
+  },
   {
     id: "coindesk-agents-xrp-rlusd",
     kind: "news",
@@ -83,17 +152,6 @@ export const SIGNALS: Signal[] = [
     publishedAt: "2026-06-10",
   },
   {
-    id: "theblock-toolkit",
-    kind: "news",
-    source: "The Block",
-    headline: "Ripple launches toolkit for agentic payments on XRPL",
-    shortTitle: "Agentic payments on XRPL",
-    url: "https://www.theblock.co/post/404243/ripple-launches-toolkit-for-agentic-payments-on-xrpl",
-    image: "https://www.tbstat.com/wp/uploads/2026/01/20260108_Ripple_News-1200x675.jpg",
-    tag: "XRPL · x402",
-    publishedAt: "2026-06-10",
-  },
-  {
     id: "defiant-mastercard-partner",
     kind: "news",
     source: "The Defiant",
@@ -102,17 +160,6 @@ export const SIGNALS: Signal[] = [
     url: "https://thedefiant.io/converge/tradfi-and-fintech/ripple-xrpl-ai-starter-kit-mastercard-agent-pay-machines",
     image: "https://cdn.sanity.io/images/6oftkxoa/production/9f21c93fd731b1414565228b97a7f864ae0dde8f-2048x1152.png",
     tag: "Mastercard · XRPL",
-    publishedAt: "2026-06-10",
-  },
-  {
-    id: "pymnts-starter-kit",
-    kind: "news",
-    source: "PYMNTS",
-    headline: "Ripple targets the agentic payments market with an XRPL starter kit",
-    shortTitle: "Ripple's XRPL starter kit",
-    url: "https://www.pymnts.com/blockchain/2026/ripple-targets-agentic-payments-market-with-xrpl-starter-kit/",
-    image: "https://www.pymnts.com/wp-content/uploads/2023/07/ripple-xrp.jpg",
-    tag: "XRPL · agentic payments",
     publishedAt: "2026-06-10",
   },
   {
@@ -137,30 +184,5 @@ export const SIGNALS: Signal[] = [
     image: "https://www.tbstat.com/wp/uploads/2022/06/20220603_Funding-Roundup-1200x675.jpg",
     tag: "t54 · agentic finance",
     publishedAt: "2026-02-25",
-  },
-  {
-    id: "bankxrp-tweet",
-    kind: "tweet",
-    source: "@BankXRP",
-    handle: "BankXRP",
-    headline:
-      "Huge for XRP — @RippleXDev amplified @t54ai's trust layer on the XRP Ledger: autonomous AI agents can pay and trade on their own, with built-in fraud checks and safety controls.",
-    shortTitle: "A trust layer on the XRP Ledger",
-    url: "https://x.com/BankXRP/status/2011810271132529056",
-    tag: "XRP · agents",
-    publishedAt: "2026-01-15",
-  },
-  {
-    id: "t54ai-tweet-x402secure",
-    kind: "tweet",
-    source: "@t54ai",
-    handle: "t54ai",
-    verified: true,
-    headline:
-      "Introducing x402 Secure — the essential trust layer for agentic payments. It augments x402 with programmable trust and verifiability, so your agent payments stay safe.",
-    shortTitle: "x402 Secure: the trust layer",
-    url: "https://x.com/t54ai/status/1982809581962052083",
-    tag: "x402 · trust",
-    publishedAt: "2025-10-27",
   },
 ];
