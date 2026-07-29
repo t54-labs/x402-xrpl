@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState, type CSSProperties } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
@@ -10,6 +10,7 @@ import { OverviewMetricsStrip, type TimeBucket } from "./DashboardStats";
 import { CumulativeVolumeChart } from "./HomeCharts";
 import { RecentTransactionsLive } from "./RecentTransactionsLive";
 import { BrandDots, DotField, XrplDotMark } from "./BrandDots";
+import { useT } from "@/app/components/useT";
 import { BrandLogo } from "./BrandLogo";
 import { NewsRail } from "./NewsRail";
 import type { Signal } from "../lib/signals";
@@ -76,6 +77,7 @@ export type DirectoryService = {
 };
 
 export function DashboardLive({ initialData, services, servicesTotal, signals }: { initialData: DashboardData; services: DirectoryService[]; servicesTotal: number; signals: Signal[] }) {
+  const t = useT();
   const [data, setData] = useState(initialData);
   const [range, setRange] = useState<"7d" | "30d" | "all">("all");
 
@@ -134,7 +136,7 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
               aria-pressed={range === v}
               className={`px-2.5 py-1 rounded-md transition-colors ${range === v ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
             >
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -164,9 +166,8 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logos/mastercard.svg" alt="Mastercard" className="h-7 w-auto shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-[13px] sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-            <span className="text-[var(--paper)] font-medium">Verifiable Intent, built in.</span> Every agent payment on the hub can carry
-            Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54&rsquo;s
-            x402 Secure before it settles.
+            <span className="text-[var(--paper)] font-medium">{t("Verifiable Intent, built in.")}</span>{" "}
+            {t("Every agent payment on the hub can carry Mastercard Verifiable Intent — credentialed, consent-bound payments from Agent Pay for Machines — enforced by t54’s x402 Secure before it settles.")}
           </p>
         </div>
 
@@ -179,39 +180,40 @@ export function DashboardLive({ initialData, services, servicesTotal, signals }:
 }
 
 function Hero() {
+  const t = useT();
   return (
     <div className="animate-fade-up relative grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
       <XrplDotMark animated size={760} className="pointer-events-none absolute right-[-50px] top-1/2 -translate-y-1/2 z-0 hidden lg:block text-[var(--paper-faint)] opacity-[0.72]" />
       <div className="relative z-10">
         <span className="inline-flex items-center gap-2.5 text-[10px] font-plek uppercase tracking-[0.22em] text-[var(--paper-mute)]">
-          <BrandDots count={3} className="shrink-0" /> XRPL · AI hub
+          <BrandDots count={3} className="shrink-0" /> {t("XRPL · AI hub")}
         </span>
         <h1 className="text-4xl sm:text-5xl font-medium tracking-[-0.03em] text-[var(--paper)] mt-5 leading-[1.04]">
-          Build the agent economy on XRP Ledger <span className="text-[var(--t54-coral)]">together</span>
+          {t("Build the agent economy on XRP Ledger")} <span className="text-[var(--t54-coral)]">{t("together")}</span>
         </h1>
         <p className="text-[15px] text-[var(--text-secondary)] mt-4 max-w-lg leading-relaxed">
-          An open community of builders, agents, and services growing on the XRP Ledger — where agents transact in XRP and RLUSD.
+          {t("An open community of builders, agents, and services growing on the XRP Ledger — where agents transact in XRP and RLUSD.")}
         </p>
         <div className="flex flex-wrap items-center gap-2.5 mt-5">
-          <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">Join the community</Link>
-          <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Explore the directory</Link>
-          <Link href="/join/service" onClick={() => track("get_listed_click", { location: "hero" })} className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">Get listed</Link>
+          <Link href="/build" className="ui-control px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">{t("Join the community")}</Link>
+          <Link href="/directory" className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">{t("Explore the directory")}</Link>
+          <Link href="/join/service" onClick={() => track("get_listed_click", { location: "hero" })} className="ui-control px-4 py-2 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] font-medium text-sm transition-colors">{t("Get listed")}</Link>
         </div>
       </div>
       <div className="dashboard-panel relative z-10 border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)]" />
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Quickstart</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">{t("Quickstart")}</span>
           </div>
           <span className="text-[10px] font-mono text-[var(--text-muted)]">ts · py</span>
         </div>
         <pre className="p-4 text-[12px] font-mono leading-relaxed overflow-x-auto">
           <div className="text-[var(--brand-blue)]">$ npm i x402-xrpl</div>
           <div className="text-[var(--text-secondary)]">import {"{"} x402Fetch {"}"} from &apos;x402-xrpl&apos;</div>
-          <div className="text-[var(--text-muted)]">→ 402 · xrpl · pay in RLUSD or XRP</div>
-          <div className="text-[var(--brand-blue)]">✓ verified intent L1–L3 · settled 4.2s</div>
-          <div className="text-[var(--text-muted)]">↳ your tx now appears in the Index</div>
+          <div className="text-[var(--text-muted)]">{t("→ 402 · xrpl · pay in RLUSD or XRP")}</div>
+          <div className="text-[var(--brand-blue)]">{t("✓ verified intent L1–L3 · settled 4.2s")}</div>
+          <div className="text-[var(--text-muted)]">{t("↳ your tx now appears in the Index")}</div>
         </pre>
       </div>
     </div>
@@ -219,6 +221,7 @@ function Hero() {
 }
 
 function FacilitatorPanel() {
+  const t = useT();
   return (
     <div className="dashboard-panel glow-border bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8 overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -226,11 +229,11 @@ function FacilitatorPanel() {
           <div className="flex items-center gap-2.5">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">XRPL x402 Facilitator</h2>
             <span className="!rounded-md px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold bg-[rgba(0,140,255,0.08)] text-[var(--brand-blue)] border border-[rgba(0,140,255,0.15)]">
-              Live
+              {t("Live")}
             </span>
           </div>
           <p className="text-sm text-[var(--text-secondary)] max-w-lg leading-relaxed">
-            No API keys, no custody — just plug and play. Supports XRP and IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.
+            {t("No API keys, no custody — just plug and play. Supports XRP and IOU tokens (RLUSD, USDC) with presigned payment verification and settlement.")}
           </p>
           <div className="flex items-center gap-2 mt-2">
             <code className="!rounded-md text-xs font-mono text-[var(--text-secondary)] bg-[rgba(255,255,255,0.04)] px-3 py-1.5 border border-[var(--border)]">
@@ -241,10 +244,10 @@ function FacilitatorPanel() {
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
           <a href="https://xrpl-x402.t54.ai/" target="_blank" rel="noreferrer" className="ui-control !rounded-md px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">
-            Get Started
+            {t("Get Started")}
           </a>
           <a href="https://xrpl-x402.t54.ai/docs/overview" target="_blank" rel="noreferrer" className="ui-control !rounded-md px-4 py-2 bg-[rgba(255,255,255,0.04)] border border-[var(--border)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.07)]">
-            Docs
+            {t("Docs")}
           </a>
         </div>
       </div>
@@ -261,6 +264,7 @@ const hostOf = (u: string) => {
 };
 
 function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
+  const t = useT();
   return (
     <Link
       href={`/address/${s.merchantAddr}`}
@@ -269,7 +273,7 @@ function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
       <div className="flex items-start gap-3">
         <BrandLogo logoUrl={s.merchant?.logoUrl} name={s.name || hostOf(s.url)} className="h-9 w-9" />
         <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">{s.name || "API resource"}</h3>
+          <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-primary)]">{s.name || t("API resource")}</h3>
           <p className="mt-0.5 truncate font-mono text-[11px] text-[var(--text-muted)]">{hostOf(s.url)}</p>
         </div>
       </div>
@@ -278,7 +282,7 @@ function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
           {s.priceAmount} {formatCurrency(s.priceAsset)}
         </span>
         <span className="font-plek text-[8.5px] uppercase tracking-[0.2em] text-[var(--paper-faint)] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          Per call &rarr;
+          {t("Per call →")}
         </span>
       </div>
     </Link>
@@ -286,6 +290,7 @@ function ServiceMarqueeCard({ s }: { s: DirectoryService }) {
 }
 
 function ServiceMarquee({ services, total }: { services: DirectoryService[]; total: number }) {
+  const t = useT();
   const base = services;
   // Label shows the FULL indexed count (not the rendered slice); never less
   // than what's on screen if the total somehow comes back short.
@@ -294,9 +299,9 @@ function ServiceMarquee({ services, total }: { services: DirectoryService[]; tot
   if (base.length === 0) {
     return (
       <div className="dashboard-panel flex flex-col items-center gap-3 border border-[var(--border)] bg-[var(--bg-surface)] py-12 text-center">
-        <p className="text-sm text-[var(--text-muted)]">No services indexed yet.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t("No services indexed yet.")}</p>
         <Link href="/join/service" className="text-xs text-[var(--text-muted)] transition-colors hover:text-[var(--brand-blue)]">
-          List the first one &rarr;
+          {t("List the first one →")}
         </Link>
       </div>
     );
@@ -318,16 +323,16 @@ function ServiceMarquee({ services, total }: { services: DirectoryService[]; tot
               <span className="absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full bg-[var(--brand-blue)] opacity-60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--brand-blue)]" />
             </span>
-            <h2 className="text-base font-medium text-[var(--text-primary)]">Directory</h2>
+            <h2 className="text-base font-medium text-[var(--text-primary)]">{t("Directory")}</h2>
             {/* single coral motif dot — used once, deliberate */}
             <span className="ml-1 h-1 w-1 rounded-full bg-[var(--t54-coral)]" aria-hidden />
           </div>
           <p className="mt-1 font-plek text-[10px] uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            {count} live x402 services &middot; pay per call in RLUSD or XRP
+            {t("{n} live x402 services · pay per call in RLUSD or XRP").replace("{n}", String(count))}
           </p>
         </div>
         <Link href="/directory" className="shrink-0 text-xs font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--brand-blue)]">
-          Browse all &rarr;
+          {t("Browse all →")}
         </Link>
       </div>
 
@@ -350,6 +355,7 @@ function ServiceMarquee({ services, total }: { services: DirectoryService[]; tot
 }
 
 function RecentTransactionsPanel({ transactions }: { transactions: TransactionRow[] }) {
+  const t = useT();
   return (
     <div className="dashboard-panel relative bg-[var(--bg-surface)] border border-[var(--border)] overflow-hidden">
       <DotField className="pointer-events-none absolute top-2 right-4 z-0 text-[var(--paper-faint)] opacity-[0.12]" cols={12} rows={3} />
@@ -357,12 +363,12 @@ function RecentTransactionsPanel({ transactions }: { transactions: TransactionRo
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--brand-blue)] animate-[pulse_2s_infinite] shrink-0" />
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Live settlements</h2>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("Live settlements")}</h2>
           </div>
-          <p className="text-[11px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)] mt-1.5">verified before settle · on the spine</p>
+          <p className="text-[11px] font-plek uppercase tracking-[0.18em] text-[var(--paper-mute)] mt-1.5">{t("verified before settle · on the spine")}</p>
         </div>
         <Link href="/transactions" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors">
-          View All &rarr;
+          {t("View All →")}
         </Link>
       </div>
 
@@ -379,6 +385,7 @@ const MERCHANT_RANGES = [
 ];
 
 function TopMerchantsPanel() {
+  const t = useT();
   const [range, setRange] = useState<"24h" | "7d" | "all">("24h");
   // Start empty and always fetch the selected range. Seeding from the dashboard's all-time
   // top-merchants list (its query has no time window) made the panel paint all-time data under
@@ -415,7 +422,7 @@ function TopMerchantsPanel() {
       <div className="flex flex-wrap justify-between items-center gap-3 px-5 sm:px-6 py-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-[pulse_2s_infinite] shrink-0" />
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Top Merchants</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("Top Merchants")}</h2>
         </div>
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
@@ -426,22 +433,22 @@ function TopMerchantsPanel() {
                 aria-pressed={range === k}
                 className={`px-2.5 py-1 rounded-md transition-colors ${range === k ? "bg-[var(--brand-blue)] text-white" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
           <Link href="/merchants" className="text-xs text-[var(--text-primary)] hover:text-[var(--brand-blue)] font-medium transition-colors whitespace-nowrap">
-            View All &rarr;
+            {t("View All →")}
           </Link>
         </div>
       </div>
       {merchants.length === 0 ? (
         <div className="px-5 sm:px-6 py-10 text-center text-sm text-[var(--text-muted)]">
           {status === "loading"
-            ? "Loading…"
+            ? t("Loading…")
             : status === "error"
-              ? "Couldn't load merchants — try again in a moment."
-              : "No merchant activity in this window yet."}
+              ? t("Couldn’t load merchants — try again in a moment.")
+              : t("No merchant activity in this window yet.")}
         </div>
       ) : (
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
@@ -477,7 +484,7 @@ function TopMerchantsPanel() {
                     </div>
                   </div>
                   <span className="font-mono text-sm text-[var(--brand-blue)] tabular-nums">
-                    <AnimatedNumber value={merchant.txCount} duration={1400} /> <span className="text-xs text-[var(--text-muted)]">txns</span>
+                    <AnimatedNumber value={merchant.txCount} duration={1400} /> <span className="text-xs text-[var(--text-muted)]">{t("txns")}</span>
                   </span>
                 </Link>
               </motion.div>

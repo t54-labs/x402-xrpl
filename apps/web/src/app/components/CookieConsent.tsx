@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
+import { useT } from "@/app/components/useT";
 
 declare global {
   interface Window {
@@ -17,6 +18,7 @@ const REOPEN_EVENT = "cookie-consent:open";
 // It slides up on entry, slides back down on dismiss, and can be reopened later
 // from the footer "Cookie settings" link so consent is genuinely changeable.
 export function CookieConsent() {
+  const t = useT();
   const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -65,18 +67,16 @@ export function CookieConsent() {
         <div className="flex-1 min-w-0">
           <p className="flex items-center gap-2 text-[15px] font-semibold text-[var(--paper)]">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--t54-coral)] shrink-0" />
-            Cookies &amp; analytics
+            {t("Cookies & analytics")}
           </p>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)] max-w-2xl">
-            We use Google Analytics to understand how the hub is used so we can improve it. It&rsquo;s
-            anonymous, there is no advertising, and we never sell or share your data. Accept to help us, or
-            decline to keep analytics off — you can change your choice anytime under{" "}
-            <span className="text-[var(--text-primary)]">Cookie settings</span> in the footer. See our{" "}
+            {t("We use Google Analytics to understand how the hub is used so we can improve it. It’s anonymous, there is no advertising, and we never sell or share your data. Accept to help us, or decline to keep analytics off — you can change your choice anytime under")}{" "}
+            <span className="text-[var(--text-primary)]">{t("Cookie settings")}</span> {t("in the footer. See our")}{" "}
             <Link
               href="/privacy"
               className="text-[var(--paper)] underline underline-offset-2 hover:text-[var(--brand-blue)] transition-colors"
             >
-              Privacy Policy
+              {t("Privacy Policy")}
             </Link>
             .
           </p>
@@ -86,13 +86,13 @@ export function CookieConsent() {
             onClick={() => choose(false)}
             className="ui-control px-5 py-2.5 text-[13px] font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.04)] transition-colors"
           >
-            Decline
+            {t("Decline")}
           </button>
           <button
             onClick={() => choose(true)}
             className="ui-control px-6 py-2.5 text-[13px] font-semibold bg-[var(--brand-blue)] text-white hover:opacity-90 transition-opacity"
           >
-            Accept
+            {t("Accept")}
           </button>
         </div>
       </div>
@@ -102,13 +102,14 @@ export function CookieConsent() {
 
 // Footer affordance to reopen the banner and change a saved choice.
 export function CookieSettingsLink({ className = "" }: { className?: string }) {
+  const t = useT();
   return (
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(REOPEN_EVENT))}
       className={className}
     >
-      Cookie settings
+      {t("Cookie settings")}
     </button>
   );
 }

@@ -3,12 +3,14 @@
 import { useRef, useState } from "react";
 import type { Signal } from "../lib/signals";
 import { RelativeTime } from "./RelativeTime";
+import { useT } from "@/app/components/useT";
 
 // Left offset that lines a full-bleed element's content up with the page's
 // 88vw centered container (DashboardLive uses max-w-7xl == 88vw, padding px-6).
 const EDGE = "var(--page-edge)";
 
 function NewsCard({ s }: { s: Signal }) {
+  const t = useT();
   const [err, setErr] = useState(false);
   const hasImg = !!s.image && !err;
   return (
@@ -53,7 +55,7 @@ function NewsCard({ s }: { s: Signal }) {
           {s.source}
           {s.verified ? " ✓" : ""}
         </span>
-        <span className="font-plek text-[9px] uppercase tracking-[0.14em] text-white/55">{s.kind === "tweet" ? "post" : "news"}</span>
+        <span className="font-plek text-[9px] uppercase tracking-[0.14em] text-white/55">{s.kind === "tweet" ? t("post") : t("news")}</span>
       </div>
 
       <div className="absolute inset-x-0 bottom-0 p-4">
@@ -62,7 +64,7 @@ function NewsCard({ s }: { s: Signal }) {
         <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[10px] text-white/50">
           <RelativeTime date={s.publishedAt} />
           <span>·</span>
-          <span className="transition-colors group-hover:text-white/85">open ↗</span>
+          <span className="transition-colors group-hover:text-white/85">{t("open ↗")}</span>
         </div>
       </div>
     </a>
@@ -70,6 +72,7 @@ function NewsCard({ s }: { s: Signal }) {
 }
 
 export function NewsRail({ signals }: { signals: Signal[] }) {
+  const t = useT();
   const railRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: number) => railRef.current?.scrollBy({ left: dir * 370, behavior: "smooth" });
 
@@ -79,14 +82,14 @@ export function NewsRail({ signals }: { signals: Signal[] }) {
     <div className="animate-fade-up py-6">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
-          <span className="font-plek text-[11px] uppercase tracking-[0.3em] text-[var(--paper-mute)]">Ecosystem</span>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)]">News</h2>
+          <span className="font-plek text-[11px] uppercase tracking-[0.3em] text-[var(--paper-mute)]">{t("Ecosystem")}</span>
+          <h2 className="mt-1 text-2xl sm:text-3xl font-medium tracking-tight text-[var(--paper)]">{t("News")}</h2>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => scroll(-1)}
-            aria-label="Scroll left"
+            aria-label={t("Scroll left")}
             className="ui-control flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--paper-mute)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--paper)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" /></svg>
@@ -94,7 +97,7 @@ export function NewsRail({ signals }: { signals: Signal[] }) {
           <button
             type="button"
             onClick={() => scroll(1)}
-            aria-label="Scroll right"
+            aria-label={t("Scroll right")}
             className="ui-control flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--paper-mute)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--paper)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" /></svg>

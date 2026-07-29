@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Area, AreaChart, CartesianGrid, ReferenceDot, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { TimeBucket } from "./DashboardStats";
 import { formatCurrency } from "../utils/currency";
+import { useT } from "@/app/components/useT";
 
 const BLUE = "#008CFF";
 const CORAL = "#C9462E";
@@ -34,6 +35,7 @@ type Mode = "XRP" | "RLUSD";
 // combined mode: XRP and RLUSD are different units, so summing them into one curve
 // produced a meaningless unitless number.
 export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
+  const t = useT();
   const [mode, setMode] = useState<Mode>("XRP");
   if (!series || series.length < 2) return null;
 
@@ -63,7 +65,7 @@ export function CumulativeVolumeChart({ series }: { series?: TimeBucket[] }) {
             <span className="absolute inline-flex h-full w-full animate-ping motion-reduce:animate-none rounded-full bg-[var(--brand-blue)] opacity-60" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--brand-blue)]" />
           </span>
-          <h2 className="text-base font-medium text-[var(--text-primary)]">Total settled</h2>
+          <h2 className="text-base font-medium text-[var(--text-primary)]">{t("Total settled")}</h2>
         </div>
         <div className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[rgba(255,255,255,0.03)] p-0.5 text-[11px] font-medium">
           {opts.map((k) => (

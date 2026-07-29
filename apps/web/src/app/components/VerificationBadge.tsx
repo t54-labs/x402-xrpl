@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "@/app/components/useT";
 
 export { isVerifiedIntent } from "./verificationIntent";
 
@@ -26,6 +27,7 @@ export function VerificationBadge({
   compact = false,
   className = "",
 }: VerificationBadgeProps) {
+  const t = useT();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [pos, setPos] = useState<Pos | null>(null);
@@ -73,14 +75,14 @@ export function VerificationBadge({
   const verified = Boolean(riskChecked || verifiableIntent);
   if (!verified && !showIdle) return null;
 
-  const label = verified ? "Verified" : "Unverified";
-  const heading = verified ? "Verifiable Intent — verified" : "Unverified intent";
+  const label = verified ? t("Verified") : t("Unverified");
+  const heading = verified ? t("Verifiable Intent — verified") : t("Unverified intent");
   const body = verified
     ? riskChecked
-      ? "This payment carried a Mastercard Verifiable Intent chain — a signed, consent-bound authorization from the paying agent — and cleared t54's x402 Secure risk checks before it settled on the XRP Ledger."
-      : "This payment carried a Mastercard Verifiable Intent chain — a signed, consent-bound authorization from the paying agent — verified before it settled on the XRP Ledger."
-    : "A valid XRPL x402 payment, but it settled without a Mastercard Verifiable Intent chain — no signed authorization or x402 Secure risk gating was attached.";
-  const linkText = verified ? "How to get your payments verified" : "Add Verifiable Intent to your payments";
+      ? t("This payment carried a Mastercard Verifiable Intent chain — a signed, consent-bound authorization from the paying agent — and cleared t54's x402 Secure risk checks before it settled on the XRP Ledger.")
+      : t("This payment carried a Mastercard Verifiable Intent chain — a signed, consent-bound authorization from the paying agent — verified before it settled on the XRP Ledger.")
+    : t("A valid XRPL x402 payment, but it settled without a Mastercard Verifiable Intent chain — no signed authorization or x402 Secure risk gating was attached.");
+  const linkText = verified ? t("How to get your payments verified") : t("Add Verifiable Intent to your payments");
 
   return (
     <span
@@ -90,7 +92,7 @@ export function VerificationBadge({
       onMouseLeave={hide}
     >
       <span
-        aria-label={verified ? "Verifiable Intent verified" : "Unverified intent"}
+        aria-label={verified ? t("Verifiable Intent verified") : t("Unverified intent")}
         className={[
           "inline-flex items-center gap-1.5 rounded-md border font-plek uppercase tracking-[0.14em] cursor-default",
           compact ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-1 text-[10px]",
