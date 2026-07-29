@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/app/components/useT";
 
 export function SearchBar() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const router = useRouter();
@@ -52,7 +54,7 @@ export function SearchBar() {
       }`}>
         <button
           type="submit"
-          aria-label="Search"
+          aria-label={t("Search")}
           className="ml-3 shrink-0 appearance-none border-0 bg-transparent p-0 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,13 +64,13 @@ export function SearchBar() {
         <input
           ref={inputRef}
           type="text"
-          aria-label="Search by address or transaction hash"
+          aria-label={t("Search by address or transaction hash")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder="Search by address or tx hash..."
+          placeholder={t("Search by address or tx hash...")}
           className="w-full bg-transparent text-[13px] text-[var(--text-primary)] px-2.5 py-1.5 outline-none placeholder:text-[var(--text-muted)] min-w-[220px] 2xl:min-w-[260px]"
         />
         {!focused && (

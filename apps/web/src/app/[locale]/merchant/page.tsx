@@ -1,0 +1,89 @@
+import { isLocale } from "@/app/lib/i18n";
+import { makeT } from "@/app/lib/i18n-t";
+
+export const metadata = {
+  title: "Merchant",
+  description: "Onboard established merchants to RLUSD and XRP settlement on XRPL through network partners.",
+  alternates: { canonical: "/merchant" },
+};
+
+const BRANDS = ["Macy's", "Saks Fifth Avenue", "Harrods", "Michael Kors", "Zappos"];
+
+const INTAKE_FIELDS = [
+  "Company name",
+  "Estimated monthly settlement volume",
+  "Current payment rails",
+  "Target launch window",
+  "RLUSD / XRP readiness",
+  "Region / country",
+  "BD contact",
+];
+
+export default async function MerchantPage(props: { params: Promise<{ locale: string }> }) {
+  const { locale } = await props.params;
+  const t = makeT(isLocale(locale) ? locale : "en");
+  return (
+    <div className=" max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+
+      <header className="animate-fade-up max-w-3xl">
+        <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">{t("Merchant")}</span>
+        <h1 className="mt-5 text-4xl sm:text-5xl font-medium tracking-[-0.03em] leading-[1.02] text-[var(--paper)]">
+          {t("Real brands,")}<br />{t("reachable by agents")}
+        </h1>
+        <p className="mt-5 text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-xl">
+          {t("We bring established merchants onto RLUSD and XRP settlement on XRPL through merchant-network partners.")}
+        </p>
+      </header>
+
+      <section className="animate-fade-up dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8" style={{ animationDelay: "60ms" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("Flagship partner — CloudStore")}</h2>
+          <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium border text-amber-400 bg-amber-500/8 border-amber-500/15">{t("in discussion")}</span>
+        </div>
+        <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+          {t("CloudStore (nubestore.ai) is a plug-and-play agentic-checkout platform. Its existing network already includes major retailers — 500+ merchants, $1B+ GMV fulfilled. Through a CloudStore integration, established brands can settle agent purchases in RLUSD or XRP on XRPL.")}
+        </p>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {BRANDS.map((b) => (
+            <span key={b} className="px-2.5 py-1 rounded-md text-[12px] font-medium text-[var(--text-secondary)] bg-[rgba(255,255,255,0.04)] border border-[var(--border)]">
+              {b}
+            </span>
+          ))}
+          <span className="px-2.5 py-1 rounded-md text-[12px] font-medium text-[var(--text-muted)]">{t("& 500+ more")}</span>
+        </div>
+      </section>
+
+      <section className="animate-fade-up grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ animationDelay: "120ms" }}>
+        <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("Why a network, not one-by-one")}</h3>
+          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-2">
+            {t("Onboarding traditional merchants is a B2B integration, not a self-serve flow. Partnering with merchant networks brings many brands onto XRPL rails at once.")}
+          </p>
+        </div>
+        <div className="dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("Institutional backdrop")}</h3>
+          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-2">
+            {t("Ripple is one of 30+ launch partners for Mastercard’s Agent Pay for Machines — agent commerce is arriving at the card-network scale, and XRPL — with RLUSD and XRP — is a settlement-grade rail for it.")}
+          </p>
+        </div>
+      </section>
+
+      <section className="animate-fade-up dashboard-panel bg-[var(--bg-surface)] border border-[var(--border)] p-6 sm:p-8" style={{ animationDelay: "180ms" }}>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">{t("Bring your network")}</h2>
+        <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">
+          {t("Run a merchant network, or a brand exploring agent commerce? Talk to us — this is a guided onboarding, not self-serve. We’ll ask about:")}
+        </p>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {INTAKE_FIELDS.map((f) => (
+            <span key={f} className="px-2.5 py-1 rounded-md text-[12px] text-[var(--text-secondary)] bg-[rgba(255,255,255,0.04)] border border-[var(--border)]">
+              {t(f)}
+            </span>
+          ))}
+        </div>
+        <a href="https://www.t54.ai" target="_blank" rel="noreferrer" className="ui-control inline-block mt-6 px-4 py-2 bg-[var(--brand-blue)] text-white font-medium text-sm">
+          {t("Contact sales")}
+        </a>
+      </section>
+    </div>
+  );
+}

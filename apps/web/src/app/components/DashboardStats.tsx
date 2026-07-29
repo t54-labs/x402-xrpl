@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
 import { Area, AreaChart, ResponsiveContainer, YAxis } from "recharts";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { formatCurrency } from "../utils/currency";
+import { useT } from "@/app/components/useT";
 
 type AssetVolume = { asset: string; total: number };
 export type TimeBucket = { t: string; txCount: number; volume: number; merchants: number; byAsset: Record<string, number> };
@@ -21,6 +22,7 @@ export function OverviewMetricsStrip({
   totalMerchants: number;
   timeSeries?: TimeBucket[];
 }) {
+  const t = useT();
   // Canonicalize asset codes before matching — RLUSD arrives as its 40-hex
   // currency code (524C555344…) on-chain, which formatCurrency decodes to "RLUSD".
   const byAsset = new Map<string, number>();
@@ -54,10 +56,10 @@ export function OverviewMetricsStrip({
   return (
     <div className="dashboard-panel border border-[var(--border)] overflow-hidden" style={{ background: "rgba(255,255,255,0.03)" }}>
       <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[var(--border)]">
-        <CurrencyCell label="XRP settled" value={xrp} asset="XRP" series={xrpSeries} />
-        <CurrencyCell label="RLUSD settled" value={rlusd} asset="RLUSD" series={rlusdSeries} />
-        <MetricCell label="Transactions" value={totalTransactions} href="/transactions" series={txSeries} />
-        <MetricCell label="Merchants" value={totalMerchants} href="/directory" series={merchSeries} />
+        <CurrencyCell label={t("XRP settled")} value={xrp} asset="XRP" series={xrpSeries} />
+        <CurrencyCell label={t("RLUSD settled")} value={rlusd} asset="RLUSD" series={rlusdSeries} />
+        <MetricCell label={t("Transactions")} value={totalTransactions} href="/transactions" series={txSeries} />
+        <MetricCell label={t("Merchants")} value={totalMerchants} href="/directory" series={merchSeries} />
       </div>
     </div>
   );
@@ -87,6 +89,7 @@ function MetricSpark({ values }: { values: number[] }) {
 
 // ▲/▼ change of the recent half vs the prior half of the window.
 function DeltaBadge({ values }: { values: number[] }) {
+  const t = useT();
   if (!values || values.length < 4) return null;
   const half = Math.floor(values.length / 2);
   const prior = values.slice(0, half).reduce((a, b) => a + b, 0);
@@ -95,7 +98,7 @@ function DeltaBadge({ values }: { values: number[] }) {
   let label: string;
   let color: string;
   if (prior === 0) {
-    label = "NEW";
+    label = t("NEW");
     color = "text-[var(--brand-blue)]";
   } else {
     const pct = ((recent - prior) / prior) * 100;

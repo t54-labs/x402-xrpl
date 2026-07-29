@@ -16,6 +16,7 @@ const ROUTES: Entry[] = [
   { path: "/agora", priority: 0.8, changeFrequency: "daily" },
   { path: "/resources", priority: 0.8, changeFrequency: "weekly" },
   { path: "/build", priority: 0.7, changeFrequency: "weekly" },
+  { path: "/faq", priority: 0.7, changeFrequency: "weekly" },
   { path: "/why-xrpl", priority: 0.7, changeFrequency: "monthly" },
   { path: "/transactions", priority: 0.6, changeFrequency: "hourly" },
   { path: "/merchants", priority: 0.6, changeFrequency: "daily" },
@@ -34,5 +35,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified,
     changeFrequency: r.changeFrequency,
     priority: r.priority,
+    alternates: {
+      languages: {
+        en: `${BASE}${r.path}`,
+        ko: `${BASE}/ko${r.path}`,
+      },
+    },
   }));
 }

@@ -1,27 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-
-const links = [
-  { href: "/", label: "Index" },
-  { href: "/build", label: "Build" },
-  { href: "/resources", label: "Resources" },
-  { href: "/directory", label: "Directory" },
-  // { href: "/merchant", label: "Merchant" }, // hidden for now (page kept)
-  // { href: "/events", label: "Events" }, // hidden for now (page emptied; CMO to fill)
-  { href: "/why-xrpl", label: "Why XRPL" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/merchants", label: "Merchants" },
-  { href: "/agora", label: "Agora" },
-];
+import { useLocale } from "./LocaleProvider";
+import { stripLocale } from "../lib/i18n";
+import { CHROME } from "../lib/chrome-i18n";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const [mounted] = useState(true);
-  const pathname = usePathname();
+  const locale = useLocale();
+  const t = CHROME[locale].nav;
+  const links = [
+    { href: "/", label: t.index },
+    { href: "/build", label: t.build },
+    { href: "/resources", label: t.resources },
+    { href: "/faq", label: t.faq },
+    { href: "/directory", label: t.directory },
+    // { href: "/merchant", label: "Merchant" }, // hidden for now (page kept)
+    // { href: "/events", label: "Events" }, // hidden for now (page emptied; CMO to fill)
+    { href: "/why-xrpl", label: t.why },
+    { href: "/transactions", label: t.transactions },
+    { href: "/merchants", label: t.merchants },
+    { href: "/agora", label: t.agora },
+  ];
+  const pathname = stripLocale(usePathname() ?? "/");
 
   return (
     <div className="lg:hidden relative">
@@ -73,6 +79,9 @@ export function MobileNav() {
                     </Link>
                   );
                 })}
+                <div className="flex justify-end px-3 py-2">
+                  <LanguageSwitcher />
+                </div>
               </div>
             </div>
           </>,

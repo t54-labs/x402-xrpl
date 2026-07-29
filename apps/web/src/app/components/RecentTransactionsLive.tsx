@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/app/components/LocaleLink";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { RelativeTime } from "./RelativeTime";
 import { VerificationBadge } from "./VerificationBadge";
 import { formatCurrency } from "../utils/currency";
+import { useT } from "@/app/components/useT";
 
 type TransactionRow = {
   hash: string;
@@ -49,6 +50,7 @@ function SpineDefs() {
 // SINGLE dot (the agent's signature) that locks into the shield (the seal).
 // The spacing carries the meaning: what is bound, what acts, what is sealed.
 function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
+  const t = useT();
   const reduce = useReducedMotion();
   const animateIn = fresh && !reduce;
   const active = state !== "idle";
@@ -56,7 +58,7 @@ function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
   const dotFill = active ? "var(--brand-blue)" : "var(--paper-faint)";
   const dots = [14, 25, 64]; // pair (14,25 — tight) · gap · signature (64) → seal
   return (
-    <svg viewBox="0 0 112 16" width="100%" height="16" fill="none" role="img" aria-label="verification: delegation pair, signature, seal">
+    <svg viewBox="0 0 112 16" width="100%" height="16" fill="none" role="img" aria-label={t("verification: delegation pair, signature, seal")}>
       {dots.map((x, i) => (
         <motion.circle
           key={x}
@@ -88,6 +90,7 @@ function CompactChain({ state, fresh }: { state: ChainState; fresh: boolean }) {
 }
 
 function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
+  const t = useT();
   const state = stateOf(tx);
   const sealed = state === "sealed";
   const verified = state !== "idle";
@@ -118,7 +121,7 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
       <span className="absolute left-0 right-0 top-0 h-[2px]" style={{ background: "var(--brand-blue)" }} />
       {/* whole card is clickable → tx detail */}
       <span className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" style={{ background: "rgba(255,255,255,0.03)" }} />
-      <Link href={`/tx/${tx.hash}`} aria-label="View transaction details" className="absolute inset-0 z-20" />
+      <Link href={`/tx/${tx.hash}`} aria-label={t("View transaction details")} className="absolute inset-0 z-20" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-baseline gap-1 min-w-0">
@@ -144,6 +147,7 @@ function SettlementCard({ tx, fresh }: { tx: TransactionRow; fresh: boolean }) {
 }
 
 export function RecentTransactionsLive({ transactions }: { transactions: TransactionRow[] }) {
+  const t = useT();
   const [freshHashes, setFreshHashes] = useState<Set<string>>(new Set());
   const knownHashesRef = useRef<Set<string>>(new Set(transactions.map((tx) => tx.hash)));
 
@@ -175,7 +179,7 @@ export function RecentTransactionsLive({ transactions }: { transactions: Transac
   const rows = transactions.slice(0, 12);
 
   if (rows.length === 0) {
-    return <div className="px-6 py-10 text-center text-[var(--text-muted)] text-sm">No settlements indexed yet.</div>;
+    return <div className="px-6 py-10 text-center text-[var(--text-muted)] text-sm">{t("No settlements indexed yet.")}</div>;
   }
 
   return (
