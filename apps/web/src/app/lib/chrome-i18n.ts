@@ -58,13 +58,13 @@ const ko: ChromeStrings = {
     "build": "개발 시작",
     "resources": "자료",
     "faq": "FAQ",
-    "directory": "생태계 목록",
+    "directory": "디렉터리",
     "why": "왜 XRPL인가",
-    "transactions": "거래 내역",
-    "merchants": "가맹점",
+    "transactions": "트랜잭션",
+    "merchants": "머천트",
     "agora": "아고라"
   },
-  "badgeMainnet": "XRPL 메인넷(실제 운영망)",
+  "badgeMainnet": "XRPL 메인넷",
   "footer": {
     "terms": "이용약관",
     "privacy": "개인정보 처리방침"
@@ -72,8 +72,8 @@ const ko: ChromeStrings = {
   "faq": {
     "kicker": "엔지니어링 FAQ",
     "questionsLabel": "질문",
-    "h1": "엔지니어가 반드시 묻게 될\n질문에 대한 답",
-    "intro": "XRPL에서 x402 에이전트 결제가 어떻게 동작하는지, 연동 검토에 실제로 필요한 깊이로 다룹니다 — 프로토콜과 와이어 포맷, SDK, 지갑 동작 원리, 커스터디, Verifiable Intent, 그리고 운영까지. 모든 답변은 딥링크로 공유할 수 있습니다. 질문 위에 마우스를 올려 링크를 복사하면 팀에 답변 하나만 정확히 전달할 수 있습니다. 이 스택이 처음이라면 {buildGuide}부터 시작한 뒤, 어려운 질문이 생기면 이 페이지로 돌아오세요.",
+    "h1": "개발자들이 궁금해 할만한 사항",
+    "intro": "XRPL에서 x402 에이전트 결제가 어떻게 작동하는지, 프로토콜과 와이어 포맷, SDK, 지갑 동작 원리, 커스터디, Verifiable Intent, 그리고 운영까지 포함해 인터그레이션(integration) 검토에 실제로 필요한 정도로 자세히 다룹니다. 모든 답변은 딥링크가 가능합니다. 질문 위에 마우스를 올려 링크를 복사하면 특정 답변만 팀에 전달할 수 있습니다. 이 스택이 처음이라면 {buildGuide}부터 시작하시고, 질문이 생기면 해당 페이지로 돌아오시면 됩니다.",
     "buildGuide": "빌드 가이드",
     "sections": "섹션",
     "filterPlaceholder": "질문 필터링 — “트러스트 라인”, “커스터디”, “수수료” 등으로 검색해 보세요",
