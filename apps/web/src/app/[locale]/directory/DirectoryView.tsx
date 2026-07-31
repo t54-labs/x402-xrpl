@@ -95,7 +95,7 @@ function SectionHead({ n, title, count, sub }: { n: string; title: string; count
 function ServiceCard({ service: s }: { service: Service }) {
   const t = useT();
   const title = serviceTitle(s, t("API provider"));
-  const description = serviceDescription(s, t("Pay-per-call x402 endpoint at {host}.").replace("{host}", hostOf(s.url)));
+  const description = t(serviceDescription(s, t("Pay-per-call x402 endpoint at {host}.").replace("{host}", hostOf(s.url))));
 
   return (
     <Link href={`/address/${s.merchantAddr}`} className={cardHover}>

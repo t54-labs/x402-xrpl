@@ -1,16 +1,16 @@
 // Korean FAQ content — technical register for engineer readers (per KR-team feedback,
-// the plain-language pass applies to general pages only, not the engineering FAQ).
+// question phrasing and terminology proofread by the KR team, 2026-07-31).
 import type { FaqCategory } from "./faq-data";
 
 export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "protocol",
     "title": "프로토콜 및 아키텍처",
-    "blurb": "XRPL 위의 x402가 실제로 무엇인지, 그리고 에이전트 결제가 와이어 상에서와 원장 위에서 어떤 모습인지 다룹니다.",
+    "blurb": "XRPL에서 x402가 실제로 어떻게 구현되는지, 그리고 에이전트 결제가 와이어와 렛저 상에서 각각 어떻게 보이는지 다룹니다.",
     "items": [
       {
         "id": "what-is-x402-xrpl",
-        "q": "x402란 무엇이며, XRPL에서는 어떻게 동작합니까?",
+        "q": "x402란 무엇이며, XRPL에선 어떻게 작동하나요?",
         "a": [
           {
             "kind": "p",
@@ -18,7 +18,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "전체 흐름은 다음과 같습니다. (1) 에이전트가 여러분의 엔드포인트에 요청을 보냅니다. (2) 서버는 결제 요구 사항(스킴, 네트워크, 자산, 금액, `payTo`, 일회성 `invoiceId`)을 담은 `PAYMENT-REQUIRED` 헤더와 함께 `402`로 응답합니다. (3) 에이전트는 해당 인보이스를 바인딩한 XRPL `Payment`에 서명하고 `PAYMENT-SIGNATURE` 헤더를 붙여 재시도합니다. (4) 서버는 서명된 블롭을 facilitator에 전달하고, facilitator가 이를 검증한 뒤 XRPL에 제출합니다. (5) 원장에서 검증이 완료되면 서버는 리소스와 함께, 정산된 트랜잭션 해시를 담은 `PAYMENT-RESPONSE` 헤더를 반환합니다."
+            "text": "전체 흐름은 다음과 같습니다. (1) 에이전트가 여러분의 엔드포인트에 요청을 보냅니다. (2) 서버는 결제 요구 사항(스킴, 네트워크, 자산, 금액, `payTo`, 일회성 `invoiceId`)을 담은 `PAYMENT-REQUIRED` 헤더와 함께 `402`로 응답합니다. (3) 에이전트는 해당 인보이스를 바인딩한 XRPL `Payment`에 서명하고 `PAYMENT-SIGNATURE` 헤더를 붙여 재시도합니다. (4) 서버는 서명된 블롭을 facilitator에 전달하고, facilitator가 이를 검증한 뒤 XRPL에 제출합니다. (5) 렛저에서 검증이 완료되면 서버는 리소스와 함께, 정산된 트랜잭션 해시를 담은 `PAYMENT-RESPONSE` 헤더를 반환합니다."
           }
         ],
         "links": [
@@ -50,7 +50,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "wire-format",
-        "q": "와이어로는 정확히 무엇이 전송됩니까 — 헤더, 페이로드, 버전?",
+        "q": "와이어로는 헤더, 페이로드, 버전 중에 정확히 무엇이 전송되나요?",
         "a": [
           {
             "kind": "p",
@@ -77,7 +77,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "onchain-footprint",
-        "q": "x402 결제는 온체인에서 어떤 모습입니까?",
+        "q": "x402 결제는 온체인에서 어떻게 보이나요?",
         "a": [
           {
             "kind": "p",
@@ -112,7 +112,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "why-presigned",
-        "q": "왜 사전 서명 트랜잭션입니까? facilitator는 왜 존재합니까?",
+        "q": "왜 사전 서명 트랜잭션을 쓰나요? facilitator는 왜 필요한 거예요?",
         "a": [
           {
             "kind": "p",
@@ -120,7 +120,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "facilitator는 모든 리소스 서버가 XRPL 인프라를 직접 운영하지 않아도 되도록 존재합니다. 블롭을 디코딩하고, 스킴의 불변 조건(금액이 인보이스와 일치하는지, 인보이스 바인딩이 존재하는지, 수수료가 상한 이내인지, 올바른 네트워크인지)을 확인한 뒤 XRPL에 제출하고 검증을 기다립니다. 머천트는 원장 노드와 재시도 로직을 직접 운영하는 대신 `/verify`와 `/settle` 두 개의 엔드포인트 계약만 다루면 됩니다."
+            "text": "facilitator는 모든 리소스 서버가 XRPL 인프라를 직접 운영하지 않아도 되도록 존재합니다. 블롭을 디코딩하고, 스킴의 불변 조건(금액이 인보이스와 일치하는지, 인보이스 바인딩이 존재하는지, 수수료가 상한 이내인지, 올바른 네트워크인지)을 확인한 뒤 XRPL에 제출하고 검증을 기다립니다. 머천트는 렛저 노드와 재시도 로직을 직접 운영하는 대신 `/verify`와 `/settle` 두 개의 엔드포인트 계약만 다루면 됩니다."
           }
         ],
         "keywords": [
@@ -140,7 +140,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "networks-assets",
-        "q": "어떤 네트워크와 자산이 지원됩니까?",
+        "q": "어떤 네트워크와 자산이 지원되나요?",
         "a": [
           {
             "kind": "p",
@@ -170,11 +170,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "replay-protection",
-        "q": "리플레이와 이중 지불은 어떻게 방지됩니까?",
+        "q": "리플레이(replay)와 이중 지불은 어떻게 방지하나요?",
         "a": [
           {
             "kind": "p",
-            "text": "서로 독립적인 세 개의 계층이 있습니다. **인보이스 바인딩**: 모든 결제는 일회성 `invoiceId`를 반드시 포함해야 합니다 — `Memos`에 hex로, `InvoiceID`에 SHA-256 해시로, 또는 둘 다(SDK 기본값은 둘 다) 넣습니다. facilitator는 바인딩이 결제 대상 인보이스와 일치하지 않는 블롭을 거부합니다. **일회용 인보이스**: 서버 미들웨어는 정산이 성공하면 해당 인보이스를 소진 처리하므로, 같은 서명 블롭으로 리소스를 두 번 구매할 수 없습니다. **원장 수준**: XRPL 트랜잭션은 하나의 시퀀스 번호와 `LastLedgerSequence`를 가지므로, 한 번 검증(또는 만료)되면 다시는 실행될 수 없습니다."
+            "text": "서로 독립적인 세 개의 계층이 있습니다. **인보이스 바인딩**: 모든 결제는 일회성 `invoiceId`를 반드시 포함해야 합니다 — `Memos`에 hex로, `InvoiceID`에 SHA-256 해시로, 또는 둘 다(SDK 기본값은 둘 다) 넣습니다. facilitator는 바인딩이 결제 대상 인보이스와 일치하지 않는 블롭을 거부합니다. **일회용 인보이스**: 서버 미들웨어는 정산이 성공하면 해당 인보이스를 소진 처리하므로, 같은 서명 블롭으로 리소스를 두 번 구매할 수 없습니다. **렛저 수준**: XRPL 트랜잭션은 하나의 시퀀스 번호와 `LastLedgerSequence`를 가지므로, 한 번 검증(또는 만료)되면 다시는 실행될 수 없습니다."
           },
           {
             "kind": "p",
@@ -196,7 +196,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "is-it-standard",
-        "q": "더 넓은 x402 생태계와 호환됩니까, 아니면 XRPL 전용 포크입니까?",
+        "q": "더 넓은 x402 생태계와 호환되나요, 아니면 XRPL 전용 포크인가요?",
         "a": [
           {
             "kind": "p",
@@ -236,11 +236,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "integration",
     "title": "연동: SDK와 코드",
-    "blurb": "TypeScript 또는 Python으로 엔드포인트에 과금하고 에이전트로서 결제하는 방법, 그리고 그 외 스택에서의 대응 방법까지 다룹니다.",
+    "blurb": "TypeScript 또는 Python으로 엔드포인트에 요금을 부과하고 에이전트로서 결제하는 방법, 그리고 그 외 스택에서의 대응 방법까지 다룹니다.",
     "items": [
       {
         "id": "sdks",
-        "q": "어떤 SDK가 있고, 무엇을 제공합니까?",
+        "q": "어떤 SDK가 있고, 무엇을 제공하나요?",
         "a": [
           {
             "kind": "p",
@@ -277,7 +277,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "charge-for-api",
-        "q": "API 라우트에 어떻게 과금합니까?",
+        "q": "API 라우트에 어떻게 과금하나요?",
         "a": [
           {
             "kind": "p",
@@ -311,7 +311,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "pay-as-agent",
-        "q": "에이전트는 402에 어떻게 결제합니까?",
+        "q": "에이전트는 402에 어떻게 결제하나요?",
         "a": [
           {
             "kind": "p",
@@ -344,7 +344,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "rlusd-charge",
-        "q": "라우트 가격을 RLUSD로 지정하려면 어떻게 합니까?",
+        "q": "라우트 가격을 RLUSD로 지정하려면 어떻게 하나요?",
         "a": [
           {
             "kind": "p",
@@ -376,7 +376,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "testnet-story",
-        "q": "테스트넷과 로컬 개발 환경은 어떻게 지원됩니까?",
+        "q": "테스트넷과 로컬 개발 환경은 어떻게 지원되나요?",
         "a": [
           {
             "kind": "p",
@@ -410,7 +410,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "other-stacks",
-        "q": "Express나 FastAPI를 쓰지 않습니다 — Kotlin, Swift, Go, Rust, Java는요?",
+        "q": "저희는 Express나 FastAPI를 쓰지 않습니다 — Kotlin, Swift, Go, Rust, Java는 지원되나요?",
         "a": [
           {
             "kind": "p",
@@ -452,15 +452,15 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "wallets",
     "title": "지갑, 키, 커스터디",
-    "blurb": "지갑 팀이 가장 먼저 묻는 질문들: 누가 무엇을 보유하는지, 사용자에게 무엇이 보이는지, 그리고 XRPL 고유의 동작 방식.",
+    "blurb": "지갑을 개발하는 팀이 가장 먼저 묻는 질문들: 누가 무엇을 보유하는지, 사용자에게 무엇이 보이는지, XRPL 고유의 작동 방식은 무엇인지.",
     "items": [
       {
         "id": "custody",
-        "q": "플로우의 어느 시점에서든 키나 자금을 보유하는 주체는 누구입니까?",
+        "q": "플로우 진행 중 어느 단계에서든 키나 자금을 보유하는 주체는 누구인가요?",
         "a": [
           {
             "kind": "p",
-            "text": "오직 지불인뿐입니다. 서명 키는 지갑 또는 에이전트 런타임에 머무릅니다 — SDK가 로컬에서 서명한 뒤 **서명된 블롭(signed blob)**을 전송하며, 이 블롭은 제출 아니면 폐기만 가능합니다: facilitator는 서명을 무효화하지 않고서는 목적지, 금액, 수수료를 물리적으로 변경할 수 없습니다. 자금은 구매자에서 머천트로 단일 원자적 원장 트랜잭션으로 이동하며, 중간에 에스크로 계정도, 풀링된 잔액도, facilitator 지갑도 없고, 유출될 수 있는 API 키도 없습니다."
+            "text": "오직 지불인뿐입니다. 서명 키는 지갑 또는 에이전트 런타임에 머무릅니다 — SDK가 로컬에서 서명한 뒤 **서명된 블롭(signed blob)**을 전송하며, 이 블롭은 제출 아니면 폐기만 가능합니다: facilitator는 서명을 무효화하지 않고서는 목적지, 금액, 수수료를 물리적으로 변경할 수 없습니다. 자금은 구매자에서 머천트로 단일 원자적 렛저 트랜잭션으로 이동하며, 중간에 에스크로 계정도, 풀링된 잔액도, facilitator 지갑도 없고, 유출될 수 있는 API 키도 없습니다."
           },
           {
             "kind": "p",
@@ -484,7 +484,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "wallet-402-ux",
-        "q": "지갑을 개발하고 있습니다. 402를 가로챘을 때 무엇을 렌더링해야 합니까?",
+        "q": "저희가 지갑을 개발 중이라면, 402를 인터셉트(intercept) 했을 때 무엇을 렌더링해야 합니까?",
         "a": [
           {
             "kind": "p",
@@ -512,7 +512,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "trust-lines",
-        "q": "RLUSD 지불인에게 트러스트 라인과 준비금(리저브)은 어떻게 동작합니까?",
+        "q": "RLUSD 지불자에게 트러스트 라인(trust line)과 리저브(reserve)는 어떻게 작동합니까?",
         "a": [
           {
             "kind": "p",
@@ -545,7 +545,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "issuer-safety",
-        "q": "가짜 RLUSD 발행자로부터 사용자를 어떻게 보호합니까?",
+        "q": "가짜 RLUSD 발행자로부터 사용자를 어떻게 보호하나요?",
         "a": [
           {
             "kind": "p",
@@ -574,11 +574,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "sequence-concurrency",
-        "q": "사전 서명된 블롭은 시퀀스 번호를 소비합니다. 동시 트랜잭션은 어떻게 처리합니까?",
+        "q": "사전 서명된 블롭은 시퀀스 번호를 써버립니다. 그러면 동시 트랜잭션은 어떻게 처리하나요?",
         "a": [
           {
             "kind": "p",
-            "text": "이 윈도우는 \"사전 서명\"이라는 표현이 시사하는 것보다 짧습니다: 구매자 클라이언트는 **402 수신 시점에** 서명하고 facilitator가 즉시 제출하므로, 블롭이 전송 중인 시간은 보통 수 초이며 `LastLedgerSequence`(원장 마감을 약 5초로 가정하고 `maxTimeoutSeconds`에서 파생)로 상한이 정해집니다. 그래도 XRPL 시퀀스 규칙은 그대로 적용됩니다 — 같은 계정의 다른 트랜잭션이 먼저 반영되면 블롭은 제출 시점에 깔끔하게 실패하고 facilitator가 실패를 보고하며, 자금은 이동하지 않습니다."
+            "text": "이 윈도우는 \"사전 서명\"이라는 표현이 시사하는 것보다 짧습니다: 구매자 클라이언트는 **402 수신 시점에** 서명하고 facilitator가 즉시 제출하므로, 블롭이 전송 중인 시간은 보통 수 초이며 `LastLedgerSequence`(렛저 마감을 약 5초로 가정하고 `maxTimeoutSeconds`에서 파생)로 상한이 정해집니다. 그래도 XRPL 시퀀스 규칙은 그대로 적용됩니다 — 같은 계정의 다른 트랜잭션이 먼저 반영되면 블롭은 제출 시점에 깔끔하게 실패하고 facilitator가 실패를 보고하며, 자금은 이동하지 않습니다."
           },
           {
             "kind": "p",
@@ -600,7 +600,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "signing-infra",
-        "q": "RegularKey, SignerList 멀티시그, MPC/HSM 구성도 동작합니까?",
+        "q": "RegularKey, SignerList 멀티시그, MPC/HSM 구성도 동작하나요?",
         "a": [
           {
             "kind": "p",
@@ -632,7 +632,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "tags-memos",
-        "q": "이미 Source/Destination 태그와 메모를 사용하고 있습니다. x402와 충돌합니까?",
+        "q": "이미 Source/Destination 태그와 메모를 사용하고 있습니다. 이 경우 x402랑 충돌하나요?",
         "a": [
           {
             "kind": "p",
@@ -640,7 +640,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "`Memos[0]`과 `InvoiceID`는 인보이스 바인딩용으로 예약되어 있습니다. SDK가 발급하는 인보이스 ID는 무작위 UUID로, 의도적으로 불투명합니다. 서버를 직접 구축한다면 이 원칙을 유지하세요: 주문 상세나 개인 정보를 invoiceId에 절대 인코딩하지 마세요. 메모는 원장에 영구히 공개되기 때문입니다."
+            "text": "`Memos[0]`과 `InvoiceID`는 인보이스 바인딩용으로 예약되어 있습니다. SDK가 발급하는 인보이스 ID는 무작위 UUID로, 의도적으로 불투명합니다. 서버를 직접 구축한다면 이 원칙을 유지하세요: 주문 상세나 개인 정보를 invoiceId에 절대 인코딩하지 마세요. 메모는 렛저에 영구히 공개되기 때문입니다."
           }
         ],
         "keywords": [
@@ -660,7 +660,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "spend-controls",
-        "q": "에이전트가 지출할 수 있는 금액을 어떻게 제한합니까?",
+        "q": "에이전트가 지출할 수 있는 금액을 어떻게 제한하나요?",
         "a": [
           {
             "kind": "p",
@@ -691,7 +691,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "security",
     "title": "보안과 Verifiable Intent",
-    "blurb": "리스크 레이어: 자금이 이동하기 전에 에이전트가 승인되었음을 증명하는 방법과, 문제가 생겼을 때 벌어지는 일을 다룹니다.",
+    "blurb": "리스크 레이어(Risk Layer): 자금이 이동하기 전에 에이전트가 승인되었음을 증명하는 방법과, 문제가 생겼을 때 생기는 일을 다룹니다.",
     "items": [
       {
         "id": "what-is-x402-secure",
@@ -703,7 +703,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "호스티드 facilitator는 이 봉투를 받으면 정산 전에 x402 Secure를 호출합니다. Trustline이 체인과 해당 리스크 정책을 검증하고 허용/거부를 반환합니다. 거부되면 결제는 원장에 도달하지 않으며, 이 게이트는 **fail-closed**로 동작합니다. 즉, 리스크 서비스에 연결할 수 없으면 결정은 \"검사 없이 진행\"이 아니라 거부입니다. Verifiable Intent는 Mastercard가 Agent Pay for Machines와 함께 공개한 프레임워크이며, t54 Labs는 이를 XRPL에서 구현하는 공식 런칭 파트너입니다."
+            "text": "호스티드 facilitator는 이 봉투를 받으면 정산 전에 x402 Secure를 호출합니다. Trustline이 체인과 해당 리스크 정책을 검증하고 허용/거부를 반환합니다. 거부되면 결제는 렛저에 도달하지 않으며, 이 게이트는 **fail-closed**로 동작합니다. 즉, 리스크 서비스에 연결할 수 없으면 결정은 \"검사 없이 진행\"이 아니라 거부입니다. Verifiable Intent는 Mastercard가 Agent Pay for Machines와 함께 공개한 프레임워크이며, t54 Labs는 이를 XRPL에서 구현하는 공식 런칭 파트너입니다."
           }
         ],
         "links": [
@@ -818,7 +818,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
         "a": [
           {
             "kind": "p",
-            "text": "SDK는 npm과 PyPI에 공개 저장소와 함께 오픈소스(MIT)로 배포됩니다. x402 Secure 게이트웨이는 게이팅 로직, 정책 병합, OpenAPI 프로토콜 스펙을 포함해 Apache 2.0 오픈소스이며, Verifiable Intent 크리덴셜은 표준 SD-JWT라서 표준 도구로 검사할 수 있습니다(리스크 정책에 대한 체인 검증은 Trustline에서 실행됩니다). XRPL 스킴 자체도 공개 명세이고, 정산되는 모든 것은 공개 원장에서 확인할 수 있습니다. 이 스택은 외부에서 감사할 수 있는 범위가 이례적으로 넓습니다."
+            "text": "SDK는 npm과 PyPI에 공개 저장소와 함께 오픈소스(MIT)로 배포됩니다. x402 Secure 게이트웨이는 게이팅 로직, 정책 병합, OpenAPI 프로토콜 스펙을 포함해 Apache 2.0 오픈소스이며, Verifiable Intent 크리덴셜은 표준 SD-JWT라서 표준 도구로 검사할 수 있습니다(리스크 정책에 대한 체인 검증은 Trustline에서 실행됩니다). XRPL 스킴 자체도 공개 명세이고, 정산되는 모든 것은 공개 렛저에서 확인할 수 있습니다. 이 스택은 외부에서 감사할 수 있는 범위가 이례적으로 넓습니다."
           },
           {
             "kind": "p",
@@ -860,7 +860,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "이는 규제 대상 스테이블코인을 쓰는 데 따르는 반대급부입니다. 발행자 통제 수단이 존재하고, 원장 자체가 이를 강제하며, 외부에서 확인할 수 있습니다. 지갑은 서명 전에 트러스트 라인의 Freeze 상태를 확인할 수 있고, 이것이 바로 툴링이 권장하는 종류의 사전 점검(preflight)입니다."
+            "text": "이는 규제 대상 스테이블코인을 쓰는 데 따르는 반대급부입니다. 발행자 통제 수단이 존재하고, 렛저 자체가 이를 강제하며, 외부에서 확인할 수 있습니다. 지갑은 서명 전에 트러스트 라인의 Freeze 상태를 확인할 수 있고, 이것이 바로 툴링이 권장하는 종류의 사전 점검(preflight)입니다."
           }
         ],
         "keywords": [
@@ -881,11 +881,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "operations",
     "title": "Facilitator와 운영",
-    "blurb": "엔드포인트, 비용, 한도, 장애 유형 — SRE 팀과 결제 팀이 묻게 될 내용입니다.",
+    "blurb": "엔드포인트, 비용, 한도, 장애 유형 — SRE 팀과 결제 팀을 위해 준비했습니다.",
     "items": [
       {
         "id": "endpoints",
-        "q": "호스팅 facilitator의 엔드포인트와 그 계약은 무엇인가요?",
+        "q": "호스팅 facilitator의 엔드포인트와 그 컨트랙트는 무엇인가요?",
         "a": [
           {
             "kind": "code",
@@ -893,7 +893,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "`/verify`는 블롭을 디코딩하여 모든 불변 조건을 정적으로 검사합니다 — 금액의 정확한 일치, 인보이스 바인딩의 존재와 정확성, 상한 이하의 수수료, 올바른 네트워크와 목적지 — 이 과정에서 원장에는 접근하지 않습니다. `/settle`은 트랜잭션을 제출하고 기본적으로 원장에서 **검증(validated)**될 때까지 대기한 뒤(1초 간격 폴링, 최대 60초), 서버가 `PAYMENT-RESPONSE`로 전달할 트랜잭션 해시를 반환합니다. 어느 엔드포인트에도 API 키는 필요 없습니다."
+            "text": "`/verify`는 블롭을 디코딩하여 모든 불변 조건을 정적으로 검사합니다 — 금액의 정확한 일치, 인보이스 바인딩의 존재와 정확성, 상한 이하의 수수료, 올바른 네트워크와 목적지 — 이 과정에서 렛저에는 접근하지 않습니다. `/settle`은 트랜잭션을 제출하고 기본적으로 렛저에서 **검증(validated)**될 때까지 대기한 뒤(1초 간격 폴링, 최대 60초), 서버가 `PAYMENT-RESPONSE`로 전달할 트랜잭션 해시를 반환합니다. 어느 엔드포인트에도 API 키는 필요 없습니다."
           }
         ],
         "keywords": [
@@ -947,11 +947,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
         "a": [
           {
             "kind": "p",
-            "text": "XRPL은 약 4–5초마다 원장을 닫으며, `/settle`은 실제 검증이 완료될 때까지 대기합니다 — 따라서 정상 경로에서는 결제된 요청이 원장 클로즈 한 번 안에 완료됩니다. 402부터 리소스 수신까지 한 자릿수 초 단위이며, 낙관적 승인이 아니라 **최종성(finality)**을 갖습니다. 멤풀 경매도, 컨펌 횟수 계산도 없습니다. 검증되었다면 완료된 것입니다."
+            "text": "XRPL은 약 4–5초마다 렛저를 닫으며, `/settle`은 실제 검증이 완료될 때까지 대기합니다 — 따라서 정상 경로에서는 결제된 요청이 렛저 클로즈 한 번 안에 완료됩니다. 402부터 리소스 수신까지 한 자릿수 초 단위이며, 낙관적 승인이 아니라 **최종성(finality)**을 갖습니다. 멤풀 경매도, 컨펌 횟수 계산도 없습니다. 검증되었다면 완료된 것입니다."
           },
           {
             "kind": "p",
-            "text": "진정한 고빈도 플로우(토큰 단위 또는 추론 호출 단위 과금)에는 요청별 정산이 적합한 프리미티브가 아닙니다 — 그런 경우를 위한 것이 XRPL Payment Channels입니다: 서명 속도로 만들어지는 오프레저 서명 클레임을 원장에서 한 번에 정산합니다. 이런 형태를 설계 중이라면 기꺼이 함께 스케치해 드리겠습니다."
+            "text": "진정한 고빈도 플로우(토큰 단위 또는 추론 호출 단위 과금)에는 요청별 정산이 적합한 프리미티브가 아닙니다 — 그런 경우를 위한 것이 XRPL Payment Channels입니다: 서명 속도로 만들어지는 오프레저 서명 클레임을 렛저에서 한 번에 정산합니다. 이런 형태를 설계 중이라면 기꺼이 함께 스케치해 드리겠습니다."
           }
         ],
         "keywords": [
@@ -970,15 +970,15 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "failure-modes",
-        "q": "장애 유형에는 어떤 것이 있고, 우리 서버에서는 무엇을 보게 되나요?",
+        "q": "장애 유형에는 어떤 것이 있고, 저희 서버에서는 어떤게 보이나요?",
         "a": [
           {
             "kind": "p",
-            "text": "실패는 유형화되어 있으며 안전한 순서 — 제출 전 검증 — 로 발생합니다. `/verify`는 기계가 읽을 수 있는 사유(`amount_mismatch`, `invoice_binding_mismatch`, `fee_too_high`, 알 수 없는 인보이스 등)와 함께 거부하고, 미들웨어는 클라이언트에 새로운 402로 응답하므로 올바르게 동작하는 에이전트는 깔끔하게 재시도할 수 있습니다. 만료된 블롭(`LastLedgerSequence` 경과)은 절대 검증될 수 없습니다 — 만료는 신뢰해야 하는 타이머가 아니라 원장이 강제합니다."
+            "text": "실패는 유형화되어 있으며 안전한 순서 — 제출 전 검증 — 로 발생합니다. `/verify`는 기계가 읽을 수 있는 사유(`amount_mismatch`, `invoice_binding_mismatch`, `fee_too_high`, 알 수 없는 인보이스 등)와 함께 거부하고, 미들웨어는 클라이언트에 새로운 402로 응답하므로 올바르게 동작하는 에이전트는 깔끔하게 재시도할 수 있습니다. 만료된 블롭(`LastLedgerSequence` 경과)은 절대 검증될 수 없습니다 — 만료는 신뢰해야 하는 타이머가 아니라 렛저가 강제합니다."
           },
           {
             "kind": "p",
-            "text": "모호한 구간 — 제출은 되었지만 아직 검증이 관측되지 않은 상태 — 은 60초 검증 대기와 **멱등 정산(idempotent settle)**으로 처리됩니다. 동일한 정산을 재시도하면 이중 제출 대신 캐시된 결과가 반환되고, 동시 중복 요청은 409를 받으며, 트랜잭션 해시를 이용해 최종 권위인 원장과 직접 대사할 수 있습니다."
+            "text": "모호한 구간 — 제출은 되었지만 아직 검증이 관측되지 않은 상태 — 은 60초 검증 대기와 **멱등 정산(idempotent settle)**으로 처리됩니다. 동일한 정산을 재시도하면 이중 제출 대신 캐시된 결과가 반환되고, 동시 중복 요청은 409를 받으며, 트랜잭션 해시를 이용해 최종 권위인 렛저과 직접 대사할 수 있습니다."
           }
         ],
         "keywords": [
@@ -999,7 +999,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "rate-limits",
-        "q": "레이트 리밋이나 처리량 상한이 있나요?",
+        "q": "레이트 리밋(rate limit)이나 처리량 한도가 있나요?",
         "a": [
           {
             "kind": "p",
@@ -1057,7 +1057,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "sla",
-        "q": "가동률, SLA, 상태 페이지, 인시던트 연락처는요?",
+        "q": "가동률, SLA, 상태 페이지, 인시던트 연락처(incident contact)는요?",
         "a": [
           {
             "kind": "p",
@@ -1093,7 +1093,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
   {
     "id": "ecosystem",
     "title": "인덱스와 생태계",
-    "blurb": "이 사이트의 실시간 수치가 집계되는 방식, 여기에 등재되는 방법, 그리고 t54 툴킷의 나머지 구성 요소를 다룹니다.",
+    "blurb": "본 사이트에 실시간 수치가 집계되는 방식, 해당 인덱스에 오는 방법, 그리고 t54 툴킷(toolkit)의 나머지 구성 요소를 다룹니다.",
     "items": [
       {
         "id": "how-index-counts",
@@ -1101,7 +1101,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
         "a": [
           {
             "kind": "p",
-            "text": "허브는 XRPL을 구독하는 자체 독립 인덱서를 운영합니다. `SourceTag`가 등록된 facilitator 태그와 일치하는 모든 검증된 `Payment`가 기록되며, 금액은 원장의 권위 있는 `delivered_amount`에서 가져오고(요청 금액은 절대 사용하지 않음), 자산별로 분리 집계되며(XRP와 RLUSD는 결코 하나의 수치로 합산되지 않음), 트랜잭션마다 구매자, 머천트, facilitator, 인보이스 바인딩이 저장됩니다. 사이트의 모든 수치는 익스플로러에서 직접 열어볼 수 있는 원장상의 트랜잭션으로 추적됩니다."
+            "text": "허브는 XRPL을 구독하는 자체 독립 인덱서를 운영합니다. `SourceTag`가 등록된 facilitator 태그와 일치하는 모든 검증된 `Payment`가 기록되며, 금액은 렛저의 권위 있는 `delivered_amount`에서 가져오고(요청 금액은 절대 사용하지 않음), 자산별로 분리 집계되며(XRP와 RLUSD는 결코 하나의 수치로 합산되지 않음), 트랜잭션마다 구매자, 머천트, facilitator, 인보이스 바인딩이 저장됩니다. 사이트의 모든 수치는 익스플로러에서 직접 열어볼 수 있는 렛저상의 트랜잭션으로 추적됩니다."
           },
           {
             "kind": "p",
@@ -1168,7 +1168,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "get-listed",
-        "q": "저희 AI 서비스는 어떻게 디렉터리에 등재되나요?",
+        "q": "저희 AI 서비스를 어떻게 디렉터리에 등록할 수 있나요?",
         "a": [
           {
             "kind": "p",
@@ -1205,7 +1205,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "toolkit",
-        "q": "SDK 외에 t54 툴킷에는 무엇이 포함되나요?",
+        "q": "SDK 외에 t54 툴킷(toolkit)에는 무엇이 포함되나요?",
         "a": [
           {
             "kind": "p",

@@ -1,13 +1,13 @@
-// Korean copy for the Resources page — generated from the translation pass.
+// Korean copy for the Resources page — proofread by the KR team, 2026-07-31.
 export const RESOURCES_KO = {
   "groups": [
     {
-      "title": "개발자 도구 & SDK",
-      "blurb": "XRPL에서 AI 에이전트로부터 결제를 받는 데 필요한 모든 것을 모았습니다. t54가 직접 만든 도구와 공식 XRPL 도구를 함께 담았습니다.",
+      "title": "개발자 툴 & SDK",
+      "blurb": "XRPL에서 AI 에이전트로부터 결제를 받는 데 필요한 모든 툴을 제공합니다. t54의 자체 개발 툴과 공식 XRPL 툴킷(toolkit)을 함께 확인할 수 있습니다.",
       "items": [
         {
           "name": "x402-xrpl — TypeScript SDK",
-          "description": "Express 미들웨어(중간 프로그램)인 requirePayment + x402Fetch 구매자 클라이언트 + 통화(화폐) 단위 헬퍼 + Verifiable Intent."
+          "description": "Express 미들웨어인 requirePayment + x402Fetch 구매자 클라이언트 + 통화 단위 헬퍼 + Verifiable Intent."
         },
         {
           "name": "x402-xrpl — Python SDK",
@@ -61,11 +61,11 @@ export const RESOURCES_KO = {
     },
     {
       "title": "더 빠른 출시",
-      "blurb": "XRPL-AI 프로젝트가 자리 잡도록 돕는 지원 프로그램들입니다.",
+      "blurb": "XRPL-AI 프로젝트의 시작과 성장을 지원하는 프로그램 및 액셀러레이터를 만나보세요.",
       "items": [
         {
           "name": "XRPL Commons — Aquarium & HAKS",
-          "description": "입주형 지원 프로그램과 해커톤(개발 경진 대회)으로, AI & 블록체인 부문을 포함합니다."
+          "description": "AI & 블록체인 트랙을 포함하는 레지던시(Residency) 프로그램과 해커톤입니다."
         },
         {
           "name": "Tenity — XRPL Accelerator",
@@ -88,10 +88,10 @@ export const RESOURCES_KO = {
   ],
   "strings": {
     "kicker": "자료",
-    "h1": "XRPL 위에서 개발하기 위한\n도구 모음",
-    "intro": "개발에 쓰는 도구와 출시를 돕는 프로그램을 모았습니다. AI 에이전트(사람 대신 자동으로 일하는 인공지능 프로그램)가 바로 호출해 쓸 수 있는 실서비스를 찾고 계신가요? 디렉터리를 확인하세요. 자산 보관, 지갑, 운영 같은 깊이 있는 기술 질문은 엔지니어링 FAQ에서 다룹니다.",
-    "cta_title": "서비스를 등재하고 싶으신가요?",
-    "cta_sub": "x402 엔드포인트(접속 주소)를 XRPL AI 생태계에 추가하세요.",
-    "cta_button": "등재하기"
+    "h1": "XRPL 위에서 개발하기 위한\n툴킷(Toolkit)",
+    "intro": "개발에 필요한 도구 및 출시를 위한 프로그램까지 준비했습니다. AI 에이전트가 바로 호출해 쓸 수 있는 실서비스를 찾고 계신가요? 디렉터리를 확인하세요. 자산 보관, 지갑, 운영 같은 개발 및 기술 관련 질문은 엔지니어링 FAQ에서 다룹니다.",
+    "cta_title": "서비스를 등록하고 싶으신가요?",
+    "cta_sub": "x402 엔드포인트를 XRPL AI 생태계에 추가하세요.",
+    "cta_button": "등록하기"
   }
 } as const;

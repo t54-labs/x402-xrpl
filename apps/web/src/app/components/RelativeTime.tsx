@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useT } from "@/app/components/useT";
+import { useLocale } from "@/app/components/LocaleProvider";
 
-function getRelativeTime(date: Date, t: (en: string) => string): string {
+function getRelativeTime(date: Date, t: (en: string) => string, locale: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSec = Math.floor(diffMs / 1000);
@@ -16,11 +17,12 @@ function getRelativeTime(date: Date, t: (en: string) => string): string {
   if (diffMin < 60) return t("{n}m ago").replace("{n}", String(diffMin));
   if (diffHour < 24) return t("{n}h ago").replace("{n}", String(diffHour));
   if (diffDay < 30) return t("{n}d ago").replace("{n}", String(diffDay));
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US");
 }
 
 export function RelativeTime({ date }: { date: string }) {
   const t = useT();
+  const locale = useLocale();
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function RelativeTime({ date }: { date: string }) {
     return () => clearInterval(interval);
   }, []);
 
-  const text = getRelativeTime(new Date(date), t);
+  const text = getRelativeTime(new Date(date), t, locale);
 
   return (
     <time dateTime={date} title={new Date(date).toLocaleString()} suppressHydrationWarning>

@@ -68,7 +68,7 @@ export function DirectoryGrid({ listings }: { listings: Listing[] }) {
                 {l.category}
               </span>
             ) : null}
-            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-3 line-clamp-3">{l.tagline || l.description}</p>
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mt-3 line-clamp-3">{t(l.tagline || l.description || "")}</p>
             <div className="flex items-center gap-2 mt-3 text-[11px] text-[var(--text-muted)]">
               {l.useCase ? <span>{l.useCase}</span> : null}
               {l.asset ? <span className="font-mono text-[var(--brand-blue)]">{l.asset}</span> : null}
