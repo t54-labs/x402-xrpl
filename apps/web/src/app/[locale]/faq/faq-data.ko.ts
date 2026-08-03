@@ -460,7 +460,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
         "a": [
           {
             "kind": "p",
-            "text": "오직 지불인뿐입니다. 서명 키는 지갑 또는 에이전트 런타임(runtime)에 머무릅니다 — SDK가 로컬에서 서명한 뒤 **서명된 블롭(signed blob)**을 전송하며, 이 블롭(blob)은 제출 아니면 폐기만 가능합니다: 퍼실리테이터(facilitator)는 서명을 무효화하지 않고서는 목적지, 금액, 수수료를 물리적으로 변경할 수 없습니다. 자금은 구매자에서 머천트로 단일 원자적 렛저 트랜잭션으로 이동하며, 중간에 에스크로 계정도, 풀링된 잔액도, 퍼실리테이터 지갑도 없고, 유출될 수 있는 API 키도 없습니다."
+            "text": "오직 지불인뿐입니다. 서명 키는 지갑 또는 에이전트 런타임(runtime)에 머무릅니다 — SDK가 로컬에서 서명한 뒤 **서명된 블롭(signed blob)**을 전송하며, 이 블롭은 제출 아니면 폐기만 가능합니다: 퍼실리테이터(facilitator)는 서명을 무효화하지 않고서는 목적지, 금액, 수수료를 물리적으로 변경할 수 없습니다. 자금은 구매자에서 머천트로 단일 원자적 렛저 트랜잭션으로 이동하며, 중간에 에스크로 계정도, 풀링된 잔액도, 퍼실리테이터 지갑도 없고, 유출될 수 있는 API 키도 없습니다."
           },
           {
             "kind": "p",
@@ -970,11 +970,11 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
       },
       {
         "id": "failure-modes",
-        "q": "장애 유형에는 어떤 것이 있고, 저희 서버에서는 어떤게 보이나요?",
+        "q": "장애 유형에는 어떤 것이 있고, 저희 서버에서는 어떤 게 보이나요?",
         "a": [
           {
             "kind": "p",
-            "text": "실패는 유형화되어 있으며 안전한 순서 — 제출 전 검증 — 로 발생합니다. `/verify`는 기계가 읽을 수 있는 사유(`amount_mismatch`, `invoice_binding_mismatch`, `fee_too_high`, 알 수 없는 인보이스(invoice) 등)와 함께 거부하고, 미들웨어는 클라이언트에 새로운 402로 응답하므로 올바르게 동작하는 에이전트는 깔끔하게 재시도할 수 있습니다. 만료된 블롭(`LastLedgerSequence` 경과)은 절대 검증될 수 없습니다 — 만료는 신뢰해야 하는 타이머가 아니라 렛저가 강제합니다."
+            "text": "실패는 유형화되어 있으며 안전한 순서 — 제출 전 검증 — 로 발생합니다. `/verify`는 기계가 읽을 수 있는 사유(`amount_mismatch`, `invoice_binding_mismatch`, `fee_too_high`, 알 수 없는 인보이스(invoice) 등)와 함께 거부하고, 미들웨어는 클라이언트에 새로운 402로 응답하므로 올바르게 동작하는 에이전트는 깔끔하게 재시도할 수 있습니다. 만료된 블롭(blob)은 (`LastLedgerSequence` 경과) 절대 검증될 수 없습니다 — 만료는 신뢰해야 하는 타이머가 아니라 렛저가 강제합니다."
           },
           {
             "kind": "p",
@@ -1249,7 +1249,7 @@ export const FAQ_CATEGORIES_KO: FaqCategory[] = [
           },
           {
             "kind": "p",
-            "text": "이와 함께 **XRPL Docs MCP Server**는 에이전트에게 XRPL 문서에 근거한 접근을 제공합니다. `xrpl-up`은 로컬 개발을 위한 Ripple의 CLI로, 사전 충전된 계정, 스크립팅, 스냅샷, 테스트넷/데브넷 접근을 갖춘 로컬 샌드박스(sandbox)이며 Claude Code 플러그인(plugin)도 제공합니다. 그리고 **XRPL Commons가 `xrpl-dev-skills`를 유지 관리하며**, 이는 XRPL 개발을 위한 커뮤니티 에이전트 스킬입니다. 이들은 t54 스택과 깔끔하게 조합됩니다. 공식 스킬이 지갑과 결제를 담당하고, `x402-xrpl`이 그 위에 유료 API 핸드셰이크(handshake)와 퍼실리테이터(facilitator) 정산을 더합니다."
+            "text": "이와 함께 **XRPL Docs MCP Server**는 에이전트에게 XRPL 문서에 근거한 접근을 제공합니다. **`xrpl-up`**은 로컬 개발을 위한 Ripple의 CLI로, 사전 충전된 계정, 스크립팅, 스냅샷, 테스트넷/데브넷 접근을 갖춘 로컬 샌드박스(sandbox)이며 Claude Code 플러그인(plugin)도 제공합니다. 그리고 **XRPL Commons가 `xrpl-dev-skills`를 유지 관리하며**, 이는 XRPL 개발을 위한 커뮤니티 에이전트 스킬입니다. 이들은 t54 스택과 깔끔하게 조합됩니다. 공식 스킬이 지갑과 결제를 담당하고, `x402-xrpl`이 그 위에 유료 API 핸드셰이크(handshake)와 퍼실리테이터(facilitator) 정산을 더합니다."
           }
         ],
         "links": [
