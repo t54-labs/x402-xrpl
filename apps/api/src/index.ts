@@ -1105,6 +1105,27 @@ app.post("/verify", verifyRateLimit, async (req, res) => {
       }
     }
 
+    // Self-heal nameless rows: if a merchant row already existed WITHOUT a name (e.g. the
+    // indexer created it from a settled payment, or auto-discovery created it, before the
+    // owner ever registered), backfill the name the origin declares for itself — the exact
+    // value the create branch above would have set on a fresh row.
+    //
+    // The write-once anti-defacement guarantee for REAL identities still holds: the WHERE
+    // clause matches only rows whose name is still empty, so an already-named identity is
+    // never overwritten (overwriting a live name/website was the phishing vector the
+    // upsert's `update: {}` closes). updateMany is a single conditional UPDATE, so
+    // concurrent /verify calls race safely — first writer wins, the rest match zero rows.
+    // Residual exposure: a currently-nameless address can be named via endpoint
+    // verification (payTo in a 402 is not proof of key control) — the same exposure the
+    // create branch already carries for brand-new addresses, now extended to nameless rows.
+    const backfillName = discoveredMerchantName || displayName || null;
+    if (backfillName) {
+      await prisma.merchant.updateMany({
+        where: { address: { in: merchantAddresses }, OR: [{ name: null }, { name: "" }] },
+        data: { name: backfillName },
+      });
+    }
+
     const merchants = await prisma.merchant.findMany({
       where: { address: { in: merchantAddresses } },
       select: { address: true, name: true, logoUrl: true },
