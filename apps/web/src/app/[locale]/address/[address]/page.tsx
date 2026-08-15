@@ -134,6 +134,10 @@ function hostOf(u: string) {
 
 function MerchantView({ address, data, t }: { address: string; data: AddressResponse; t: T }) {
   const merchant = data.merchant!;
+  // Fall back to the endpoint's domain (like the directory card does) so a merchant
+  // whose name was never captured reads as its host instead of "Unknown merchant".
+  // Prefer `website`, but indexer-born rows have none — derive from a resource URL then.
+  const displayName = merchant.name?.trim() || hostOf(merchant.website || merchant.resources[0]?.url || "") || null;
   const totalTxCount = data.totalTxCount ?? 0;
   const series = data.txSeries ?? [];
   const hasChart = series.length >= 2;
@@ -150,10 +154,10 @@ function MerchantView({ address, data, t }: { address: string; data: AddressResp
           <DotField className="pointer-events-none absolute top-5 right-6 z-0 hidden sm:block text-[var(--paper-faint)] opacity-[0.1]" cols={10} rows={4} />
         )}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-5 sm:gap-6">
-          <Avatar logoUrl={merchant.logoUrl} name={merchant.name} accent="blue" />
+          <Avatar logoUrl={merchant.logoUrl} name={displayName} accent="blue" />
           <div className="min-w-0">
             <span className="text-[10px] font-plek uppercase tracking-[0.28em] text-[var(--paper-mute)]">{t("Merchant")}</span>
-            <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">{merchant.name || t("Unknown merchant")}</h1>
+            <h1 className="mt-1.5 text-3xl sm:text-4xl font-medium tracking-tight text-[var(--paper)]">{displayName || t("Unknown merchant")}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-2.5">
               <span className="font-mono text-[12px] text-[var(--brand-blue)] bg-[rgba(0,140,255,0.06)] px-3 py-1 rounded-md border border-[rgba(0,140,255,0.12)] break-all">{address}</span>
               <CopyButton text={address} />
