@@ -1,0 +1,5 @@
+[commons]
+mode = "remote"
+remote = "default"
+project = "xrpl-agent-wallet"
+scope = "work"

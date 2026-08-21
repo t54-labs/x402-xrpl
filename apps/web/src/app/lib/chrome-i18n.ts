@@ -3,7 +3,7 @@
 import type { Locale } from "./i18n";
 
 export type ChromeStrings = {
-  nav: { index: string; build: string; resources: string; faq: string; directory: string; why: string; transactions: string; merchants: string; agora: string };
+  nav: { index: string; agentLeague: string; build: string; resources: string; faq: string; directory: string; why: string; transactions: string; merchants: string; agora: string };
   badgeMainnet: string;
   footer: { terms: string; privacy: string };
   faq: {
@@ -27,7 +27,7 @@ export type ChromeStrings = {
 };
 
 const en: ChromeStrings = {
-  nav: { index: "Index", build: "Build", resources: "Resources", faq: "FAQ", directory: "Directory", why: "Why XRPL", transactions: "Transactions", merchants: "Merchants", agora: "Agora" },
+  nav: { index: "Index", agentLeague: "Agent League", build: "Build", resources: "Resources", faq: "FAQ", directory: "Directory", why: "Why XRPL", transactions: "Transactions", merchants: "Merchants", agora: "Agora" },
   badgeMainnet: "XRPL Mainnet",
   footer: { terms: "Terms", privacy: "Privacy" },
   faq: {
@@ -55,6 +55,7 @@ const en: ChromeStrings = {
 const ko: ChromeStrings = {
   "nav": {
     "index": "거래 인덱스",
+    "agentLeague": "에이전트 리그",
     "build": "개발 시작",
     "resources": "자료",
     "faq": "FAQ",

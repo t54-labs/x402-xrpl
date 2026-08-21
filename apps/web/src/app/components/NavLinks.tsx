@@ -11,6 +11,7 @@ export function NavLinks() {
   const t = CHROME[locale].nav;
   const links = [
     { href: "/", label: t.index },
+    { href: "/agent-league", label: t.agentLeague },
     { href: "/build", label: t.build },
     { href: "/resources", label: t.resources },
     { href: "/faq", label: t.faq },
